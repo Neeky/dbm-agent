@@ -1,0 +1,9 @@
+# 执行成功
+SUCCESS = 200
+# 文件不存在
+FILE_NOT_EXIST = 500
+# 目录不存在
+DIRECTOR_NOT_EXIST = 501
+
+# 不支持的操作
+NOT_SUPPORT_OPERATION = 600
