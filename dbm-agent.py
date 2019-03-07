@@ -16,7 +16,7 @@ def log_config(root_logger_name='dbma',filename="/usr/local/dbma/logs/dbma.log",
     logger.addHandler(file_handler)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='dbm-agent')
+    parser = argparse.ArgumentParser(description='dbm(DataBase Management center)-agent')
     parser.add_argument('--user',default='dbma')
     args = parser.parse_args()
 
