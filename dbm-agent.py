@@ -15,9 +15,15 @@ def log_config(root_logger_name='dbma',filename="/usr/local/dbma/logs/dbma.log",
     file_handler.setFormatter(formater)
     logger.addHandler(file_handler)
 
+supported_actions = {
+    'init':'init'
+}
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='dbm(DataBase Management center)-agent')
-    parser.add_argument('--user',default='dbma')
+    parser.add_argument('action',choices=supported_actions.keys())
+    parser.add_argument('--user',default='dbma',help='worker process\' user default \'dbma\'')
+    parser.add_argument('--group',default='mysql',help='worker process\' group default \'dbma\' ')
     args = parser.parse_args()
 
 
