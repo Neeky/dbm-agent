@@ -98,6 +98,26 @@ class OSOperator(object):
                 with open(profile_path,'w') as f2:
                     f2.writelines(lines)
 
+    @staticmethod
+    def reload_so():
+        """从新加载一次 so 文件
+        """
+        with sudo():
+            cmd="ldconfig"
+            subprocess.call(cmd,shell=True)
+
+    @staticmethod
+    def edit_head_file(source_dir="/usr/local/mysqlmysql-8.0.14-linux-glibc2.12-x86_64/include",target_link_file="/usr/include/mysql-8.0.14-linux-glibc2.12-x86_64",action='insert'):
+        """导出 C 语言的 .h 文件
+        """
+        with sudo():
+            if action == 'insert':
+                os.symlink(source_dir,target_link_file)
+            elif action == 'delete':
+                os.remove(target_link_file)
+
+
+
 
 
 

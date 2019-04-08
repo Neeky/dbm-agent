@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+import os
+import sys
+abs_path = os.path.abspath(sys.argv[0])
+basedir = os.path.dirname(os.path.dirname(abs_path)) 
+if 'lib' not in basedir:
+    sys.path.insert(0,basedir)
+
+from dbma import start_daemon,stop_daemon,get_config_from_cmd
+
+
+if __name__ == "__main__":
+    args = get_config_from_cmd()
+    print(args)
+
+
+
