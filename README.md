@@ -28,7 +28,7 @@
    #running install_egg_info
    #Writing /usr/local/python/lib/python3.7/site-packages/dbmc_agent-0.0.0.0-py3.7.egg-info   
    ```
-   >目前 dbm-agent 的开发测试环境为 centos-7.6 + python-3.7.3 ；并且以后也不要兼容 centos7 以下的版本，但是 python 会支持到 python3.6.0
+   >目前 dbm-agent 的开发测试环境为 centos-7.6 + python-3.7.3 ；并且以后也不会兼容 centos-7.0 以下的版本，但是 python 会支持到 python3.6.0
    ---
 
 ## 初始化
