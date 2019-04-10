@@ -6,12 +6,16 @@ basedir = os.path.dirname(os.path.dirname(abs_path))
 if 'lib' not in basedir:
     sys.path.insert(0,basedir)
 
-from dbma import start_daemon,stop_daemon,get_config_from_cmd
+from dbma import start_daemon,stop_daemon,get_config_from_cmd,init_dbma
+
 
 
 if __name__ == "__main__":
     args = get_config_from_cmd()
-    print(args)
+    if args.action == 'init':
+        # 初始化命令
+        init_dbma('/usr/local/dbm-agent')
+        
 
 
 

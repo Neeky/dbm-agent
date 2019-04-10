@@ -1,6 +1,5 @@
 *.pyc
 *.retry
 *.DS_Store
-logs
 .vscode
 dist
