@@ -36,10 +36,11 @@
    ```bash
    # 由于要创建用户和目录，dbm-agent 需要 root 权限
    sudo su
-   # init 
-   dbm-agent init
-   # dbm-agent init compeleted .
+   # init ，通过--dbmc-site 选项指定管理端的访问路径
+   dbm-agent --dbmc-site=https://192.168.100.100 init
+   #dbm-agent init compeleted .
 
+   # 执行完成上面的步骤整个初始化就算完成了，实现上只是创建一些必要的用户，目录，文件 
    # 创建 dbma 用户
    grep dbm /etc/passwd    
    dbma:x:2048:2048::/home/dbma:/bin/bash
@@ -52,4 +53,12 @@
    |   `-- mysqlcnfs
    |-- logs
    `-- pkgs
+
+   # 创建配置文件，日志文件中会在直接运行的时候才长成
+   cat /usr/local/dbm-agent/etc/dbmc.cnf 
+   
+   [dbma]
+   dbmc_site          = https://192.168.100.100                # web 管理端的地址
+   dbma_uuid          = 87de08f8-5c1f-11e9-a293-0242ac110003   # dbmauuid 为每一个 dbm-agent 分配一个唯一的 id 用来标识它
+   log_file           = ./logs/dbma.log   
    ```
