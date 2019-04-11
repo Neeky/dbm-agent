@@ -48,6 +48,8 @@
    tree /usr/local/dbm-agent/
    /usr/local/dbm-agent/
    |-- etc
+   |   |-- dbmc.cnf
+   |   `-- mysqlcnfs
    |-- logs
    `-- pkgs
    ```

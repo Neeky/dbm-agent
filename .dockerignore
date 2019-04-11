@@ -2,4 +2,5 @@
 *.retry
 *.DS_Store
 .vscode
-dist
+*dist
+*__pycache__

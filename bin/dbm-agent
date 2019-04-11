@@ -14,7 +14,7 @@ if __name__ == "__main__":
     args = get_config_from_cmd()
     if args.action == 'init':
         # 初始化命令
-        init_dbma('/usr/local/dbm-agent')
+        init_dbma(args)
         
 
 

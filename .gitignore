@@ -3,4 +3,5 @@
 *.DS_Store
 logs
 .vscode
-dist
+*dist
+*__pycache__
