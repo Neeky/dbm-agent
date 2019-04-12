@@ -1,8 +1,9 @@
 
 from distutils.core import setup
+from dbma import config
 
 setup(name='dbmc-agent',
-      version='0.0.0.1',
+      version=config.__version,
       description='dbm-agent 数据库管理中心客户端程序',
       author="Neeky",
       author_email="neeky@live.com",

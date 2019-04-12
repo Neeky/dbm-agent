@@ -9,7 +9,7 @@ import argparse
 import configparser
 
 
-__version = '0.0.0.1'
+__version = '0.0.0.2'
 
 __ALL__ = ['get_config_from_cmd','get_config_from_file']
 
