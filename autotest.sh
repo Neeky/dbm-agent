@@ -5,3 +5,4 @@
 
 python3 -m unittest tests/dbma/utils/users_test.py
 python3 -m unittest tests/dbma/utils/directorys_test.py
+python3 -m unittest tests/dbma/config_test.py
