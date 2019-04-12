@@ -7,10 +7,6 @@ dbma/daemon.py
 dbma/init.py
 dbma/log.py
 dbma/native/__init__.py
-dbma/native/actions.py
-dbma/native/daemon.py
-dbma/native/installer.py
-dbma/native/osops.py
 dbma/utils/__init__.py
 dbma/utils/directors.py
 dbma/utils/users.py

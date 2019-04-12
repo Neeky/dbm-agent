@@ -11,10 +11,12 @@ import configparser
 
 __version = '0.0.0.2'
 
+version = lambda : f'dbm-agent-{__version}'
+
 __ALL__ = ['get_config_from_cmd','get_config_from_file']
 
 def get_config_from_cmd():
-    parser = argparse.ArgumentParser('dbmc-agent ' + __version)
+    parser = argparse.ArgumentParser(version())
     parser.add_argument('--basedir',default='/usr/local/dbm-agent/',help='dbm-agent work dir')
     parser.add_argument('--config-file',default='etc/dbma.cnf',help='dbm-agent config file path')
     parser.add_argument('--log-file',default='logs/dbma.log',help='dbm-agent log file')
