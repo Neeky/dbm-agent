@@ -36,7 +36,9 @@ RUN set -ex \
 			\( -type f -a \( -name '*.pyc' -o -name '*.pyo' \) \) \
 		\) -exec rm -rf '{}' + \
     && rm -rf /usr/src/python \
-    && python3 --version
+    && python3 --version 
+
+RUN pip3 install jinja2
 
 ADD . /tmp/
 

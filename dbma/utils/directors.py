@@ -2,6 +2,7 @@
 实现所有目录相关的操作
 """
 import os
+import shutil
 from dbma.utils import users
 
 __ALL__ = ['create_dbm_agent_directorys']
@@ -33,9 +34,14 @@ def create_dbm_agent_directorys(basedir='/usr/local/dbm-agent'):
     # 创建用于保存日志的目录
     create_directory_if_not_exists(os.path.join(basedir,'logs'),owner='dbma')
     create_directory_if_not_exists(os.path.join(basedir,'etc'),owner='dbma',mode=600)
-    create_directory_if_not_exists(os.path.join(basedir,'etc/mysqlcnfs'),owner='dbma',mode=600)
     create_directory_if_not_exists(os.path.join(basedir,'pkgs'),owner='dbma')
 
     print("dbm-agent init compeleted .")
+
+def remove_dbm_agent_directorys(basedir='/usr/local/dbm-agent'):
+    if not os.path.isdir(basedir):
+        raise RuntimeError(f'{basedir} must be a directory .')
+    with users.sudo(f'su root for remove {basedir}'):
+        shutil.rmtree(basedir)
 
 

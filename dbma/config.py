@@ -9,7 +9,7 @@ import argparse
 import configparser
 
 
-__version = '0.0.0.2'
+__version = '0.0.0.6'
 
 version = lambda : f'dbm-agent-{__version}'
 

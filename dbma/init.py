@@ -7,6 +7,7 @@
 import os
 import sys
 import uuid
+import shutil
 import configparser
 from dbma.utils import users,directors
 
@@ -26,6 +27,7 @@ def init_dbma(args):
     os.setegid(gid)
     os.seteuid(uid)
     init_dbma_cnf_config_file(args)
+    init_cnf_templates(args)
 
 
 def init_dbma_cnf_config_file(args):
@@ -37,7 +39,21 @@ def init_dbma_cnf_config_file(args):
     if not os.path.exists(args.config_file):
         with open(args.config_file,'w') as config_file_obj:
             parser.write(config_file_obj)
- 
+
+def init_cnf_templates(args):
+     sdir = os.path.join(os.path.dirname(__file__),'static/cnfs')
+     tdir = os.path.join(os.path.join(args.basedir,'etc/cnfs'))
+     shutil.copytree(sdir,tdir)
+
+def uninit_dbma(args):
+    if not users.is_root():
+        print(f'must use the root user to uninit dbm-agent.')
+        sys.exit(1)
+    if users.is_user_exists(args.user):
+        users.delete_user(args.user)
+        users.delete_group('dbm')
+    directors.remove_dbm_agent_directorys(args.basedir)
+        
 
 
     
