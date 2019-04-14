@@ -13,7 +13,7 @@ setup(name='dbm-agent',
       packages=['dbma','dbma.native','dbma.utils'],
       package_data={'dbma':['static/cnfs/*']},
       url='https://github.com/Neeky/dbm-agent',
-      install_requires=['Jinja2>=2.10.1','mysql-connector-python==8.0.15'],
+      install_requires=['Jinja2>=2.10.1','mysql-connector-python==8.0.15','psutil==5.6.1'],
       python_requires='>=3.6.*',
       classifiers=[
           'Development Status :: 4 - Beta',

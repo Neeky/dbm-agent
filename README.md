@@ -7,10 +7,11 @@
    **安装方法一）：源码安装**
    ```bash
    sudo su
+   # 安装依赖
+   pip3 install jinja2 psutil mysql-connector-python==8.0.15
 
-   cd dbm-agent
    # 先手工运行一下自动化测试用例，以确保你的平台有被支持
-
+   cd dbm-agent
    bash autotest.sh
 
    # 输出大致如下
@@ -49,8 +50,11 @@
    tree /usr/local/dbm-agent/
    /usr/local/dbm-agent/
    |-- etc
-   |   |-- dbmc.cnf
-   |   `-- mysqlcnfs
+   |   |-- cnfs
+   |   |   |-- 5_7.cnf.jinja
+   |   |   |-- 8_0.cnf.jinja
+   |   |   `-- mysqld.service.jinja
+   |   `-- dbma.cnf
    |-- logs
    `-- pkgs
 

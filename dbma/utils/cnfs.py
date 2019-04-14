@@ -2,8 +2,39 @@
 1、根据给定的资源信息自动化的计算出一个比较合理的 MySQL 配置文件
 """
 import os
+import psutil
 from dbma.utils import users
 from jinja2 import Environment,FileSystemLoader
+
+__ALL__ = ['mysql_auto_config','get_host_info','MyCnf','My57Cnf','My80Cnf']
+
+def get_package_templates_dir():
+    import dbma
+    d = os.path.dirname(dbma.__file__)
+    template_dir = os.path.join(d,'static/cnfs')
+    return template_dir
+
+def get_host_info():
+    """
+    返回主机的 cpus(逻辑核心数),mem_size(内存大小G),磁盘大小，磁盘类型(ssd)
+    """
+    cpu_cores = psutil.cpu_count()
+    mem_size,*_ = psutil.virtual_memory()
+    mem_size = mem_size / (1024 * 1024 * 1024)
+
+    for disk in psutil.disk_partitions():
+        if disk.mountpoint == 'databases/':
+            disk_size,*_ = psutil.disk_usage(disk.mountpoint)
+            break
+        elif disk.mountpoint == 'data/':
+            disk_size,*_ = psutil.disk_usage(disk.mountpoint)
+            break
+    else:
+        disk_size,*_ = psutil.disk_usage('/')
+    disk_size = disk_size / (1024 * 1024 * 1024)
+
+    return cpu_cores,mem_size,disk_size,'SSD'
+    
 
 class MyCnf(object):
     def __init__(self,cpu_cores=40,mem_size=128,disk_size=2000,disk_type='SSD',mysql_version='mysql-5.7.25-linux-glibc2.12-x86_64'):
@@ -13,6 +44,15 @@ class MyCnf(object):
         disk_size: 数据磁盘大小(GB)
         disk_type: 磁盘的类型(PCIE,SSD,HDD)
         """
+        if cpu_cores <=0:
+            raise ValueError('cpu_cors must gt 0')
+        if mem_size <= 0:
+            raise ValueError('mem_size must gt 0')
+        if disk_size <= 0:
+            raise ValueError('disk_size must gt 0')
+        if disk_type not in ('PCIE','SSD','HDD'):
+            raise ValueError('disk_type must in ("PCIE","SSD","HDD")')
+        
         self.mem_size = mem_size
         self.cpu_cores = cpu_cores
         self.disk_size = disk_size
@@ -151,7 +191,7 @@ class MyCnf(object):
 
     @property
     def socket(self):
-        return f'/tmp/mysql_{self.port}.sock'
+        return f'/tmp/mysql{self.port}.sock'
 
     @property
     def user(self):
@@ -700,63 +740,110 @@ class MyCnf(object):
     def write_systemd_file(self,systemd_template):
         raise NotImplementedError('MyCnf.write_systemd_file is not emplemented')
 
+    def change_to_mgr_mode(self):
+        raise NotImplementedError('MyCnf.change_to_mgr_mode is not emplemented')
+
 
 class My57Cnf(MyCnf):
     def __init__(self,cpu_cores=40,mem_size=128,disk_size=2000,disk_type='SSD',mysql_version='mysql-5.7.25-linux-glibc2.12-x86_64'):
+        if 'mysql-5.7' not in mysql_version:
+            raise ValueError('mysql_version must be like "mysql-5.7.xx.-linux-glibcx.xx.-x86_64" ')
         super().__init__(cpu_cores,mem_size,disk_size,disk_type,mysql_version)
 
-    def write_cnf_file(self,cnf_template_dir='/usr/local/dbm-agent/etc/cnfs/'):
-        loader = FileSystemLoader(cnf_template_dir)
+    def write_cnf_file(self,cnf_template_dir='/usr/local/dbm-agent/etc/cnfs/',tpath=None):
+        """
+        渲染my.cnf 文件到 tpath ，在 tpath 为 None 的时候直接渲染到 /etc/my{self.port}.cnf
+        """
+        loader = FileSystemLoader([cnf_template_dir,get_package_templates_dir()])
         env = Environment(loader=loader)
         my57cnf = env.get_template('5_7.cnf.jinja')
-        with users.sudo(f'create mysql config file /etc/my-{self.port}.cnf'):
-            with open(f'/etc/my_{self.port}.cnf','w') as cnf_file_obj:
+        if tpath == None:
+            tpath = f'/etc/my{self.port}.cnf'
+        with users.sudo(f'su root for create mysql config file {tpath}'):
+            with open(f'{tpath}','w') as cnf_file_obj:
                 cnf_file_obj.write(my57cnf.render(cnf=self))
 
+    def write_mysqld_file(self,cnf_template_dir='/usr/local/dbm-agent/etc/cnfs/',tpath=None):
+        """
+        渲染 mysqld.service 文件到 tpath ，在 tpath 为 None 的时候直接渲染到 /etc/mysqld{self.port}.cnf
+        """
+        loader = FileSystemLoader([cnf_template_dir,get_package_templates_dir()])
+        env = Environment(loader=loader)
+        mysqld_service = env.get_template('mysqld.service.jinja')
+        if tpath == None:
+            tpath = f'/usr/lib/systemd/system/mysqld{self.port}.service'
+        with users.sudo('su root for create file ' + tpath):
+            with open(tpath,'w') as mysqld_file_obj:
+                mysqld_file_obj.write(mysqld_service.render(cnf=self))
     
 
+class My80Cnf(MyCnf):
+    def __init__(self,cpu_cores=40,mem_size=128,disk_size=2000,disk_type='SSD',mysql_version='mysql-8.0.14-linux-glibc2.12-x86_64'):
+        if 'mysql-8.0' not in mysql_version:
+            raise ValueError('mysql_version must be like "mysql-8.0.xx.-linux-glibcx.xx.-x86_64" ')
+        super().__init__(cpu_cores,mem_size,disk_size,disk_type,mysql_version)
+        self._sql_require_primary_key = 'ON'
+        self._cte_max_recursion_depth = 1000
+        self._auto_generate_certs = 'ON'
+    
+    @property
+    def sql_require_primary_key(self):
+        return self._sql_require_primary_key
+    
+    @property
+    def cte_max_recursion_depth(self):
+        return self._cte_max_recursion_depth
 
-    
-    
-            
-
-    
-
-        
-        
-        
-        
-        
-    
-        
-    
-    
-    
-    
-
-    
-
-    
-    
-        
-    
-    
-
-
+    @property
+    def auto_generate_certs(self):
+        return self._auto_generate_certs
 
     
 
+    def write_cnf_file(self,cnf_template_dir='/usr/local/dbm-agent/etc/cnfs/',tpath=None):
+        """
+        渲染my.cnf 文件到 tpath ，在 tpath 为 None 的时候直接渲染到 /etc/my{self.port}.cnf
+        """
+        loader = FileSystemLoader([cnf_template_dir,get_package_templates_dir()])
+        env = Environment(loader=loader)
+        my57cnf = env.get_template('8_0.cnf.jinja')
+        if tpath == None:
+            tpath = f'/etc/my{self.port}.cnf'
+        with users.sudo(f'su root for create mysql config file {tpath}'):
+            with open(f'{tpath}','w') as cnf_file_obj:
+                cnf_file_obj.write(my57cnf.render(cnf=self))
+
+    def write_mysqld_file(self,cnf_template_dir='/usr/local/dbm-agent/etc/cnfs/',tpath=None):
+        """
+        渲染 mysqld.service 文件到 tpath ，在 tpath 为 None 的时候直接渲染到 /etc/mysqld{self.port}.cnf
+        """
+        loader = FileSystemLoader([cnf_template_dir,get_package_templates_dir()])
+        env = Environment(loader=loader)
+        mysqld_service = env.get_template('mysqld.service.jinja')
+        if tpath == None:
+            tpath = f'/usr/lib/systemd/system/mysqld{self.port}.service'
+        with users.sudo('su root for create file ' + tpath):
+            with open(tpath,'w') as mysqld_file_obj:
+                mysqld_file_obj.write(mysqld_service.render(cnf=self))
     
 
+def mysql_auto_config(cpu_cores=40,mem_size=128,disk_size=2000,disk_type='SSD',mysql_version='mysql-5.7.25-linux-glibc2.12-x86_64',ismgr=False):
+    """
+    MyCnf 的工厂方法
+    """
+    # 目前还不支持 mgr 的配置
+    if ismgr == True:
+        raise ValueError('current mgr is not suported')
+    # 根据不同的版本生成不同的对象
+    if 'mysql-5.7' in mysql_version:
+        cnf = My57Cnf(cpu_cores,mem_size,disk_size,disk_type,mysql_version)
+    elif 'mysql-8.0' in mysql_version:
+        cnf = My80Cnf(cpu_cores,mem_size,disk_size,disk_type,mysql_version)
+    else:
+        raise ValueError('dbm only suport mysql-8.0 & mysql-5.7')
+    # 增加上 mgr 相关的配置
+    if ismgr == True:
+        cnf.change_to_mgr_mode()
     
-
-    
-    
-
-
-
-
-
-
-
-
+    return cnf
+ 

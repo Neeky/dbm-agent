@@ -38,7 +38,7 @@ RUN set -ex \
     && rm -rf /usr/src/python \
     && python3 --version 
 
-RUN pip3 install jinja2
+RUN pip3 install jinja2 psutil mysql-connector-python==8.0.15 
 
 ADD . /tmp/
 

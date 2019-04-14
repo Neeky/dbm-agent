@@ -5,147 +5,144 @@ socket                              ={{cnf.socket}}              #   /tmp/mysql.
 
 [mysqld]
 ####: for global
-user                                =mysql                          #	mysql
-basedir                             =/usr/local/mysql/              #	/usr/local/mysql/
-datadir                             =/database/mysql/data/3306/     #	/usr/local/mysql/data
-server_id                           =1986                           #	0
-port                                =3306                           #	3306
-character_set_server                =utf8                           #	latin1
-log_bin_trust_function_creators     =ON                             #   0
-max_prepared_stmt_count             =1048576                        #   
-log_timestamps                      =system                         #	utc
-socket                              =/tmp/mysql.sock                #	/tmp/mysql.sock
-read_only                           =OFF                            #	off
-skip_name_resolve                   =1                              #   0
-auto_increment_increment            =1                              #	1
-auto_increment_offset               =1                              #	1
-lower_case_table_names              =1                              #	0
+user                                ={{cnf.user}}                          #	mysql
+basedir                             ={{cnf.basedir}}              #	/usr/local/mysql/
+datadir                             ={{cnf.datadir}}     #	/usr/local/mysql/data
+server_id                           ={{cnf.server_id}}                           #	0
+port                                ={{cnf.port}}                           #	3306
+character_set_server                ={{cnf.character_set_server}}                           #	latin1
+log_bin_trust_function_creators     ={{cnf.log_bin_trust_function_creators}}                             #   0
+max_prepared_stmt_count             ={{cnf.max_prepared_stmt_count}}                        #   
+log_timestamps                      ={{cnf.log_timestamps}}                         #	utc
+socket                              ={{cnf.socket}}                #	/tmp/mysql.sock
+read_only                           ={{cnf.read_only}}                            #	off
+skip_name_resolve                   ={{cnf.skip_name_resolve}}                              #   0
+auto_increment_increment            ={{cnf.auto_increment_increment}}                              #	1
+auto_increment_offset               ={{cnf.auto_increment_offset}}                              #	1
+lower_case_table_names              ={{cnf.lower_case_table_names}}                              #	0
 secure_file_priv                    =                               #	null
-open_files_limit                    =65536                          #   1024
-max_connections                     =256                            #   151
-thread_cache_size                   =64                             #   9
-table_open_cache                    =4000                           #   2000
-table_definition_cache              =2000                           #   1400
-table_open_cache_instances          =32                             #   16
+open_files_limit                    ={{cnf.open_files_limit}}                          #   1024
+max_connections                     ={{cnf.max_connections}}                            #   151
+thread_cache_size                   ={{cnf.thread_cache_size}}                             #   9
+table_open_cache                    ={{cnf.table_open_cache}}                           #   2000
+table_definition_cache              ={{cnf.table_definition_cache}}                           #   1400
+table_open_cache_instances          ={{cnf.table_open_cache_instances}}                             #   16
 
 ####: for binlog
-binlog_format                       =ROW                            #	row
-log_bin                             =mysql-bin                      #	off
-binlog_rows_query_log_events        =ON                             #	off
-log_slave_updates                   =ON                             #	off
-expire_logs_days                    =7                              #	0
-binlog_cache_size                   =64k                            #	65536(64k)
-binlog_checksum                     =none                           #	CRC32
-sync_binlog                         =1                              #	1
-slave_preserve_commit_order         =ON                             #    
+binlog_format                       ={{cnf.binlog_format}}                            #	row
+log_bin                             ={{cnf.log_bin}}                      #	off
+binlog_rows_query_log_events        ={{cnf.binlog_rows_query_log_events}}                             #	off
+log_slave_updates                   ={{cnf.log_slave_updates}}                             #	off
+expire_logs_days                    ={{cnf.expire_logs_days}}                              #	0
+binlog_cache_size                   ={{cnf.binlog_cache_size}}                            #	65536(64k)
+binlog_checksum                     ={{cnf.binlog_checksum}}                           #	CRC32
+sync_binlog                         ={{cnf.sync_binlog}}                              #	1
+slave_preserve_commit_order         ={{cnf.slave_preserve_commit_order}}                             #    
 
 ####: for error-log
-log_error                           =err.log                        #	/usr/local/mysql/data/localhost.localdomain.err
+log_error                           ={{cnf.log_error}}                        #	/usr/local/mysql/data/localhost.localdomain.err
 
 ####: for general-log
-general_log                         =OFF                            #   off
-general_log_file                    =general.log                    #   hostname.log
+general_log                         ={{cnf.general_log}}                            #   off
+general_log_file                    ={{cnf.general_log_file}}                    #   hostname.log
 
 ####: for slow query log
-slow_query_log                      =ON                             #    off
-slow_query_log_file                 =slow.log                       #    hostname.log
-log_queries_not_using_indexes       =OFF                            #    off
-long_query_time                     =2.0                            #    10.000000
+slow_query_log                      ={{cnf.slow_query_log}}                             #    off
+slow_query_log_file                 ={{cnf.slow_query_log_file}}                       #    hostname.log
+log_queries_not_using_indexes       ={{cnf.log_queries_not_using_indexes}}                            #    off
+long_query_time                     ={{cnf.long_query_time}}                            #    10.000000
 
 ####: for gtid
-gtid_executed_compression_period    =1000                           #	1000
-gtid_mode                           =ON                             #	off
-enforce_gtid_consistency            =ON                             #	off
+gtid_executed_compression_period    ={{cnf.gtid_executed_compression_period}}                           #	1000
+gtid_mode                           ={{cnf.gtid_mode}}                             #	off
+enforce_gtid_consistency            ={{cnf.enforce_gtid_consistency}}                             #	off
 
 
 ####: for replication
-skip_slave_start                    =0                              #	
-master_info_repository              =table                          #	file
-relay_log_info_repository           =table                          #	file
-slave_parallel_type                 =logical_clock                  #    database | LOGICAL_CLOCK
-slave_parallel_workers              =4                              #    0
-rpl_semi_sync_master_enabled        =1                              #    0
-rpl_semi_sync_slave_enabled         =1                              #    0
-rpl_semi_sync_master_timeout        =1000                           #    1000(1 second)
+skip_slave_start                    ={{cnf.skip_slave_start}}                              #	
+master_info_repository              ={{cnf.master_info_repository}}                          #	file
+relay_log_info_repository           ={{cnf.relay_log_info_repository}}                          #	file
+slave_parallel_type                 ={{cnf.slave_parallel_type}}                  #    database | LOGICAL_CLOCK
+slave_parallel_workers              ={{cnf.slave_parallel_workers}}                              #    0
+rpl_semi_sync_master_enabled        ={{cnf.rpl_semi_sync_master_enabled}}                              #    0
+rpl_semi_sync_slave_enabled         ={{cnf.rpl_semi_sync_slave_enabled}}                              #    0
+rpl_semi_sync_master_timeout        ={{cnf.rpl_semi_sync_master_timeout}}                           #    1000(1 second)
 plugin_load_add                     =semisync_master.so             #
 plugin_load_add                     =semisync_slave.so              #
-binlog_group_commit_sync_delay      =100                            #    0      500(0.05% seconde) 
-binlog_group_commit_sync_no_delay_count = 10                        #    0
-binlog_transaction_dependency_tracking  = WRITESET                  #    COMMIT_ORDER | WRITESET       
-transaction_write_set_extraction        = XXHASH64
+binlog_group_commit_sync_delay      ={{cnf.binlog_group_commit_sync_delay}}                            #    0      500(0.05% seconde) 
+binlog_group_commit_sync_no_delay_count = {{cnf.binlog_group_commit_sync_no_delay_count}}                        #    0
+binlog_transaction_dependency_tracking  = {{cnf.binlog_transaction_dependency_tracking}}                  #    COMMIT_ORDER | WRITESET       
+transaction_write_set_extraction        = {{cnf.transaction_write_set_extraction}}
 
 
 ####: for innodb
-default_storage_engine                          =innodb                     #	innodb
-default_tmp_storage_engine                      =innodb                     #	innodb
-innodb_data_file_path                           =ibdata1:256M;ibdata2:256M:autoextend    #	ibdata1:12M:autoextend
-innodb_temp_data_file_path                      =ibtmp1:64M:autoextend      #	ibtmp1:12M:autoextend
-innodb_buffer_pool_filename                     =ib_buffer_pool             #	ib_buffer_pool
-innodb_log_group_home_dir                       =./                         #	./
-innodb_log_files_in_group                       =8                          #	2
-innodb_log_file_size                            =128M                       #	50331648(48M)
-innodb_file_per_table                           =ON                         #	on
-innodb_online_alter_log_max_size                =128M                       #   134217728(128M)
-innodb_open_files                               =64000                      #   2000
-innodb_page_size                                =16k                        #	16384(16k)
-innodb_thread_concurrency                       =0                          #	0
-innodb_read_io_threads                          =4                          #	4
-innodb_write_io_threads                         =4                          #	4
-innodb_purge_threads                            =4                          #	4(garbage collection)
-innodb_page_cleaners                            =4                          #   4(flush lru list)
-innodb_print_all_deadlocks                      =ON                         #	off
-innodb_deadlock_detect                          =ON                         #	on
-innodb_lock_wait_timeout                        =50                         #	50
-innodb_spin_wait_delay                          =6                          #	6
-innodb_autoinc_lock_mode                        =2                          #	1
-innodb_flush_sync                               =off                        #   on
-innodb_io_capacity                              =4000                       #   200
-innodb_io_capacity_max                          =20000                      #   2000
+default_storage_engine                          ={{cnf.default_storage_engine}}                     #	innodb
+default_tmp_storage_engine                      ={{cnf.default_tmp_storage_engine}}                     #	innodb
+innodb_data_file_path                           ={{cnf.innodb_data_file_path}}    #	ibdata1:12M:autoextend
+innodb_temp_data_file_path                      ={{cnf.innodb_temp_data_file_path}}      #	ibtmp1:12M:autoextend
+innodb_buffer_pool_filename                     ={{cnf.innodb_buffer_pool_filename}}             #	ib_buffer_pool
+innodb_log_group_home_dir                       ={{cnf.innodb_log_group_home_dir}}                         #	./
+innodb_log_files_in_group                       ={{cnf.innodb_log_files_in_group}}                          #	2
+innodb_log_file_size                            ={{cnf.innodb_log_file_size}}                       #	50331648(48M)
+innodb_file_per_table                           ={{cnf.innodb_file_per_table}}                         #	on
+innodb_online_alter_log_max_size                ={{cnf.innodb_online_alter_log_max_size}}                       #   134217728(128M)
+innodb_open_files                               ={{cnf.innodb_open_files}}                      #   2000
+innodb_page_size                                ={{cnf.innodb_page_size}}                        #	16384(16k)
+innodb_thread_concurrency                       ={{cnf.innodb_thread_concurrency}}                          #	0
+innodb_read_io_threads                          ={{cnf.innodb_read_io_threads}}                          #	4
+innodb_write_io_threads                         ={{cnf.innodb_write_io_threads}}                          #	4
+innodb_purge_threads                            ={{cnf.innodb_purge_threads}}                          #	4(garbage collection)
+innodb_page_cleaners                            ={{cnf.innodb_page_cleaners}}                          #   4(flush lru list)
+innodb_print_all_deadlocks                      ={{cnf.innodb_print_all_deadlocks}}                         #	off
+innodb_deadlock_detect                          ={{cnf.innodb_deadlock_detect}}                         #	on
+innodb_lock_wait_timeout                        ={{cnf.innodb_lock_wait_timeout}}                         #	50
+innodb_spin_wait_delay                          ={{cnf.innodb_spin_wait_delay}}                          #	6
+innodb_autoinc_lock_mode                        ={{cnf.innodb_autoinc_lock_mode}}                          #	1
+innodb_flush_sync                               ={{cnf.innodb_flush_sync}}                        #   on
+innodb_io_capacity                              ={{cnf.innodb_io_capacity}}                       #   200
+innodb_io_capacity_max                          ={{cnf.innodb_io_capacity_max}}                      #   2000
 #--------Persistent Optimizer Statistics
-innodb_stats_auto_recalc                        =ON                         #   on
-innodb_stats_persistent                         =ON                         #	on
-innodb_stats_persistent_sample_pages            =20                         #	20
-innodb_buffer_pool_instances                    =2                          #   1
-innodb_adaptive_hash_index                      =ON                         #	on
-innodb_change_buffering                         =all                        #	all
-innodb_change_buffer_max_size                   =25                         #	25
-innodb_flush_neighbors                          =0                          #	1
-innodb_flush_method                             =O_DIRECT                   #	
-innodb_doublewrite                              =ON                         #	on
-innodb_log_buffer_size                          =128M                       #	16777216(16M)
-innodb_flush_log_at_timeout                     =1                          #	1
-innodb_flush_log_at_trx_commit                  =1                          #	1
-innodb_buffer_pool_size                         =2G                         #   128M
-autocommit                                      =ON                          #	1
+innodb_stats_auto_recalc                        ={{cnf.innodb_stats_auto_recalc}}                         #   on
+innodb_stats_persistent                         ={{cnf.innodb_stats_persistent}}                         #	on
+innodb_stats_persistent_sample_pages            ={{cnf.innodb_stats_persistent_sample_pages}}                         #	20
+innodb_buffer_pool_instances                    ={{cnf.innodb_buffer_pool_instances}}                          #   1
+innodb_adaptive_hash_index                      ={{cnf.innodb_adaptive_hash_index}}                         #	on
+innodb_change_buffering                         ={{cnf.innodb_change_buffering}}                        #	all
+innodb_change_buffer_max_size                   ={{cnf.innodb_change_buffer_max_size}}                         #	25
+innodb_flush_neighbors                          ={{cnf.innodb_flush_neighbors}}                          #	1
+innodb_flush_method                             ={{cnf.innodb_flush_method}}                   #	
+innodb_doublewrite                              ={{cnf.innodb_doublewrite}}                         #	on
+innodb_log_buffer_size                          ={{cnf.innodb_log_buffer_size}}                       #	16777216(16M)
+innodb_flush_log_at_timeout                     ={{cnf.innodb_flush_log_at_timeout}}                          #	1
+innodb_flush_log_at_trx_commit                  ={{cnf.innodb_flush_log_at_trx_commit}}                         #	1
+innodb_buffer_pool_size                         ={{cnf.innodb_buffer_pool_size}}                         #   128M
+autocommit                                      ={{cnf.autocommit}}                          #	1
 #--------innodb scan resistant
-innodb_old_blocks_pct                           =37                         #    37
-innodb_old_blocks_time                          =1000                       #    1000
+innodb_old_blocks_pct                           ={{cnf.innodb_old_blocks_pct}}                         #    37
+innodb_old_blocks_time                          ={{cnf.innodb_old_blocks_time}}                       #    1000
 #--------innodb read ahead
-innodb_read_ahead_threshold                     =56                         #    56 (0..64)
-innodb_random_read_ahead                        =off                        #    OFF
+innodb_read_ahead_threshold                     ={{cnf.innodb_read_ahead_threshold}}                         #    56 (0..64)
+innodb_random_read_ahead                        ={{cnf.innodb_random_read_ahead}}                        #    OFF
 #--------innodb buffer pool state
-innodb_buffer_pool_dump_pct                     =50                         #    25 
-innodb_buffer_pool_dump_at_shutdown             =ON                         #    ON
-innodb_buffer_pool_load_at_startup              =ON                         #    ON
-
-
-
+innodb_buffer_pool_dump_pct                     ={{cnf.innodb_buffer_pool_dump_pct}}                         #    25 
+innodb_buffer_pool_dump_at_shutdown             ={{cnf.innodb_buffer_pool_dump_at_shutdown}}                         #    ON
+innodb_buffer_pool_load_at_startup              ={{cnf.innodb_buffer_pool_load_at_startup}}                         #    ON
 
 
 ####  for performance_schema
-performance_schema                                                      =on    #    on
-performance_schema_consumer_global_instrumentation                      =on    #    on
-performance_schema_consumer_thread_instrumentation                      =on    #    on
-performance_schema_consumer_events_stages_current                       =on    #    off
-performance_schema_consumer_events_stages_history                       =on    #    off
-performance_schema_consumer_events_stages_history_long                  =off   #    off
-performance_schema_consumer_statements_digest                           =on    #    on
-performance_schema_consumer_events_statements_current                   =on    #    on
-performance_schema_consumer_events_statements_history                   =on    #    on
-performance_schema_consumer_events_statements_history_long              =off   #    off
-performance_schema_consumer_events_waits_current                        =on    #    off
-performance_schema_consumer_events_waits_history                        =on    #    off
-performance_schema_consumer_events_waits_history_long                   =off   #    off
+performance_schema                                                      ={{cnf.performance_schema}}    #    on
+performance_schema_consumer_global_instrumentation                      ={{cnf.performance_schema_consumer_global_instrumentation}}    #    on
+performance_schema_consumer_thread_instrumentation                      ={{cnf.performance_schema_consumer_thread_instrumentation}}    #    on
+performance_schema_consumer_events_stages_current                       ={{cnf.performance_schema_consumer_events_stages_current}}    #    off
+performance_schema_consumer_events_stages_history                       ={{cnf.performance_schema_consumer_events_stages_history}}    #    off
+performance_schema_consumer_events_stages_history_long                  ={{cnf.performance_schema_consumer_events_stages_history_long}}   #    off
+performance_schema_consumer_statements_digest                           ={{cnf.performance_schema_consumer_statements_digest}}    #    on
+performance_schema_consumer_events_statements_current                   ={{cnf.performance_schema_consumer_events_statements_current}}    #    on
+performance_schema_consumer_events_statements_history                   ={{cnf.performance_schema_consumer_events_statements_history}}    #    on
+performance_schema_consumer_events_statements_history_long              ={{cnf.performance_schema_consumer_events_statements_history_long}}   #    off
+performance_schema_consumer_events_waits_current                        ={{cnf.performance_schema_consumer_events_waits_current}}    #    off
+performance_schema_consumer_events_waits_history                        ={{cnf.performance_schema_consumer_events_waits_history}}    #    off
+performance_schema_consumer_events_waits_history_long                   ={{cnf.performance_schema_consumer_events_waits_history_long}}   #    off
 performance_schema_instrument                                           ='memory/%=COUNTED'
 
 
