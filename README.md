@@ -33,7 +33,7 @@
    ---
 
 ## 初始化
-   **要 dbm-agent 能运行起来还要有一些其它的工作要，比如创建 dbma 用户，创建工作目录 /usr/local/dbma-agent 和一些重要的配置文件。作为一个成熟的软件，这一切都是可以自动完成的。**
+   **要 dbm-agent 能运行起来还要有一些其它的工作要，比如创建 dbma 用户，创建工作目录 /usr/local/dbm-agent 和一些重要的配置文件。作为一个成熟的软件，这一切都是可以自动完成的。**
    ```bash
    # 由于要创建用户和目录，dbm-agent 需要 root 权限
    sudo su
@@ -49,14 +49,15 @@
    # 创建如下目录结构
    tree /usr/local/dbm-agent/
    /usr/local/dbm-agent/
-   |-- etc
-   |   |-- cnfs
-   |   |   |-- 5_7.cnf.jinja
-   |   |   |-- 8_0.cnf.jinja
-   |   |   `-- mysqld.service.jinja
-   |   `-- dbma.cnf
-   |-- logs
-   `-- pkgs
+   ├── etc
+   │   ├── cnfs
+   │   │   ├── 5_7.cnf.jinja
+   │   │   ├── 8_0.cnf.jinja
+   │   │   └── mysqld.service.jinja
+   │   └── dbma.cnf
+   ├── logs
+   │   └── dbma.log
+   └── pkgs
 
    # 创建配置文件，日志文件中会在直接运行的时候才长成
    cat /usr/local/dbm-agent/etc/dbmc.cnf 
@@ -66,3 +67,26 @@
    dbma_uuid          = 87de08f8-5c1f-11e9-a293-0242ac110003   # dbmauuid 为每一个 dbm-agent 分配一个唯一的 id 用来标识它
    log_file           = ./logs/dbma.log   
    ```
+
+   ---
+
+## 启动
+   **dbm-agent 默认会自动以守护进程的方式运行**
+
+   **1、** 启动
+   ```bash
+   dbm-agent start
+   ```
+   **2、** 观察进程的运行状态
+   ```bash
+   ps -ef | grep dbm                                                         
+   dbma       7225      1  0 11:31 ?        00:00:00 /usr/local/python-3.7.3/bin/python3.7 /usr/local/python/bin/dbm-agent start
+   root       7229   7167  0 11:32 pts/0    00:00:00 grep --color=auto dbm
+   ```
+   **3、** dbm-agent 的日志保存在 /usr/local/dbm-agent/logs/dbma.log 文件中
+   ```bash
+   cat /usr/local/dbm-agent/logs/dbma.log
+   [2019-07-13 11:31:43,190] [dbm-agent] [WARNING]    dbm-agent get start
+   ```
+
+   ---
