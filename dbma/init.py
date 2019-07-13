@@ -29,13 +29,12 @@ def init_dbma(args):
     init_dbma_cnf_config_file(args)
     init_cnf_templates(args)
 
-
 def init_dbma_cnf_config_file(args):
     """
     根据命令行参数创建配置文件
     """
     parser = configparser.ConfigParser()
-    parser['dbma'] = {'dbmc_site':args.dbmc_site,'dbma_uuid':uuid.uuid1(),'log_file':args.log_file}
+    parser['dbma'] = {'dbmc_site':args.dbmc_site,'dbma_uuid':uuid.uuid1(),'log_file':args.log_file,'user':args.user}
     if not os.path.exists(args.config_file):
         with open(args.config_file,'w') as config_file_obj:
             parser.write(config_file_obj)
@@ -54,9 +53,3 @@ def uninit_dbma(args):
         users.delete_group('dbm')
     directors.remove_dbm_agent_directorys(args.basedir)
         
-
-
-    
-
-
-    
