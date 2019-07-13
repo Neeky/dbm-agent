@@ -7,13 +7,24 @@ import errno
 import signal
 import argparse
 from datetime import datetime
+import atexit
+
 
 __ALL__ = ['start_daemon','stop_daemon']
+
+def auto_clean_pid(fileno,pid_file):
+    """
+    当程序自动退出时清理 pid 文件
+    """
+    os.close(fileno)
+    os.remove(pid_file)
 
 def signal_handler(sig,_):
     """定义信息处理逻辑
     """
     if sig == signal.SIGINT or sig == signal.SIGTERM:
+        # signal.SIGINT == 2
+        # signal.SIGTERM == 15
         sys.exit(1)
 
 
@@ -33,6 +44,7 @@ def write_pid_file(pid,pid_file):
     os.truncate(pid_desc,0)
     s_pid = str(pid)
     os.write(pid_desc,s_pid.encode('utf8'))
+    atexit.register(auto_clean_pid,pid_desc,pid_file)
     return 0
     # 注意 pid 文件不应该被 close ，因为如果 close 的话其它进程就查询不到是否有进程在用着它了，pid 文件应该是独占的
 
@@ -92,7 +104,9 @@ def stop_server(pid_file="/tmp/daemon.pid"):
     else:
         sys.exit(1)
     # 删除 pid 文件
-    os.remove(pid_file)
+    if os.path.isfile(pid_file):
+        # 如果守护进程已经主动清理了，那我们就不清理了
+        os.remove(pid_file)
     sys.exit(0)
 
 start_daemon = start_server
