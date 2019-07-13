@@ -8,6 +8,8 @@ dbma/init.py
 dbma/log.py
 dbma/native/__init__.py
 dbma/static/cnfs/5_7.cnf.jinja
+dbma/static/cnfs/8_0.cnf.jinja
+dbma/static/cnfs/mysqld.service.jinja
 dbma/utils/__init__.py
 dbma/utils/cnfs.py
 dbma/utils/directors.py
