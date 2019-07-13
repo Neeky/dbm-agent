@@ -9,8 +9,7 @@ from dbma.utils import users
 class GetConfigFromFileTestCase(TestCase):
     """
     测试 get_config_from_file 函数
-    """
-    
+    """   
 
     def setUp(self):
         """
