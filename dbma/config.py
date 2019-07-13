@@ -3,6 +3,8 @@
 1、命令行参数优先于配置文件
 2、支持持久化参数，持久化参数优先与配置文件
 """
+import os
+import sys
 import json
 import uuid
 import argparse
@@ -30,6 +32,6 @@ def get_config_from_file(config_file='/usr/local/dbm-agent/etc/dbma.cnf'):
     parser = configparser.ConfigParser()
     parser.read(config_file)
     return parser
-    
+
 
 
