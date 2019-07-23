@@ -65,7 +65,9 @@
    [dbma]
    dbmc_site          = https://192.168.100.100                # web 管理端的地址
    dbma_uuid          = 87de08f8-5c1f-11e9-a293-0242ac110003   # dbmauuid 为每一个 dbm-agent 分配一个唯一的 id 用来标识它
-   log_file           = ./logs/dbma.log   
+   log_file           = ./logs/dbma.log  
+   user = dbma
+   idc_name = mysql-idc 
    ```
 
    ---
@@ -90,3 +92,16 @@
    ```
 
    ---
+
+## 参数说明
+   **dbm-agent 支持若干参数，详细内容如下**
+
+   |**参数名** | **意义** | **默认值** |
+   |--------------|----------|-----------|
+   |-- dbmc-site  | dbm服务端http(s)根路径 | https://192.168.100.100 |
+   |-- basedir    | dbm-agent 的安装目标 | /usr/local/dbm-agent/ |
+   |-- config-file| dbm-agent 配置文件的位置 | etc/dbma.cnf |
+   |-- log-file   | dbm-agent 的日志文件位置  | logs/dbma.log |
+   |-- idc-name   | 主机所属的机房信息         | mysql-idc |
+   |-- user       | 运行 dbm-agent 的主机用户 | dbma       |
+   |action        | 要执行的操作 {start \| stop} | |
