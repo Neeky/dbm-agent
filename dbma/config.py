@@ -23,6 +23,7 @@ def get_config_from_cmd():
     parser.add_argument('--config-file',default='etc/dbma.cnf',help='dbm-agent config file path')
     parser.add_argument('--log-file',default='logs/dbma.log',help='dbm-agent log file')
     parser.add_argument('--dbmc-site',default='https://192.168.100.100',help='database manage')
+    parser.add_argument('--idc-name',default="mysql-idc",help="idc name")
     parser.add_argument('--user',default='dbma',help='used for execute dbm-agent')
     parser.add_argument('action',default='start',choices=('start','stop','init'),help='actions')
     args = parser.parse_args()
