@@ -1,4 +1,16 @@
+import requests
 from dbma.log import root_loger
+
+
+class JobPuller(object):
+    """
+    """
+    def __init__(self):
+        #self.session = requests.Session()
+        pass
+
+    
+
 
 class BaseState(object):
     """

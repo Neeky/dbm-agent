@@ -15,8 +15,8 @@ class GetConfigFromFileTestCase(TestCase):
         """
         配置测试环境，由于要生成配置文件所以要执行 init 操作
         """
-        Args = namedtuple('Args',['user','dbmc_site','log_file','config_file','basedir'])
-        args = Args('dbma','https://192.168.100.10','logs/dbm-agent.log','etc/dbma.cnf','/usr/local/dbm-agent')
+        Args = namedtuple('Args',['user','dbmc_site','log_file','config_file','basedir','idc_name'])
+        args = Args('dbma','https://192.168.100.10','logs/dbm-agent.log','etc/dbma.cnf','/usr/local/dbm-agent','mysql-idc')
         # 由于执行了 init_dbma 所以 setUp 的时候会执行一次完整的“初始化”
         init_dbma(args)
         self.args = args

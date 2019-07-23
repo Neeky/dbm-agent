@@ -1,4 +1,4 @@
-FROM 1721900707/dbma:0.0.0.0
+FROM 1721900707/dbma:0.0.0.7
 #FROM centos:7.6.1810
 
 
@@ -40,7 +40,8 @@ MAINTAINER neeky@live.com
 #    && rm -rf /usr/src/python \
 #    && python3 --version 
 #
-#RUN pip3 install jinja2 psutil mysql-connector-python==8.0.15 
+#RUN pip3 install jinja2 psutil mysql-connector-python==8.0.15 request
+#RUN pip3 install request
 
 ADD . /tmp/
 
