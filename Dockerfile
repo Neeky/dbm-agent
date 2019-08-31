@@ -1,4 +1,4 @@
-FROM 1721900707/dbma:0.0.0.7
+FROM 1721900707/dbma:0.0.0.8
 #FROM centos:7.6.1810
 
 
@@ -40,8 +40,8 @@ MAINTAINER neeky@live.com
 #    && rm -rf /usr/src/python \
 #    && python3 --version 
 #
-#RUN pip3 install jinja2 psutil mysql-connector-python==8.0.15 request
-#RUN pip3 install request
+#RUN pip3 config set global.index-url  https://mirrors.aliyun.com/pypi/simple && pip3 config set global.trusted-host  mirrors.aliyun.com
+#RUN pip3 install jinja2 psutil mysql-connector-python==8.0.17 requests
 
 ADD . /tmp/
 
