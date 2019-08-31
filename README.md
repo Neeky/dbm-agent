@@ -8,7 +8,7 @@
    ```bash
    sudo su
    # 安装依赖
-   pip3 install jinja2 psutil mysql-connector-python==8.0.15
+   pip3 install jinja2 psutil requests mysql-connector-python==8.0.17
 
    # 先手工运行一下自动化测试用例，以确保你的平台有被支持
    cd dbm-agent
@@ -50,24 +50,22 @@
    tree /usr/local/dbm-agent/
    /usr/local/dbm-agent/
    ├── etc
-   │   ├── cnfs
-   │   │   ├── 5_7.cnf.jinja
-   │   │   ├── 8_0.cnf.jinja
-   │   │   └── mysqld.service.jinja
    │   └── dbma.cnf
    ├── logs
    │   └── dbma.log
    └── pkgs
 
    # 创建配置文件，日志文件中会在直接运行的时候才长成
-   cat /usr/local/dbm-agent/etc/dbmc.cnf 
+   cat /usr/local/dbm-agent/etc/dbma.cnf 
    
    [dbma]
-   dbmc_site          = https://192.168.100.100                # web 管理端的地址
-   dbma_uuid          = 87de08f8-5c1f-11e9-a293-0242ac110003   # dbmauuid 为每一个 dbm-agent 分配一个唯一的 id 用来标识它
-   log_file           = ./logs/dbma.log  
-   user = dbma
-   idc_name = mysql-idc 
+   dbmc_site = https://192.168.100.100
+   base_dir = /usr/local/dbm-agent/
+   config_file = etc/dbma.cnf
+   log_file = logs/dbma.log
+   log_level = info
+   user_name = dbma
+   pid = /tmp/dbm-agent.pid
    ```
 
    ---
@@ -78,6 +76,7 @@
    **1、** 启动
    ```bash
    dbm-agent start
+   Successful start and log file save to '/usr/local/dbm-agent/logs/dbma.log'
    ```
    **2、** 观察进程的运行状态
    ```bash
@@ -88,9 +87,17 @@
    **3、** dbm-agent 的日志保存在 /usr/local/dbm-agent/logs/dbma.log 文件中
    ```bash
    cat /usr/local/dbm-agent/logs/dbma.log
-   [2019-07-13 11:31:43,190] [dbm-agent] [WARNING]    dbm-agent get start
+   2019-08-31 07:57:08,409 - dbm-agent.server - MainThread - INFO - dbm-agent starting
    ```
 
+   ---
+
+## 关闭
+   **关闭 dbm-agent 守护进程**
+   ```bash
+   dbm-agent stop                                                              
+   Successful exit
+   ```
    ---
 
 ## 参数说明
@@ -101,7 +108,6 @@
    |-- dbmc-site  | dbm服务端http(s)根路径 | https://192.168.100.100 |
    |-- basedir    | dbm-agent 的安装目标 | /usr/local/dbm-agent/ |
    |-- config-file| dbm-agent 配置文件的位置 | etc/dbma.cnf |
-   |-- log-file   | dbm-agent 的日志文件位置  | logs/dbma.log |
    |-- idc-name   | 主机所属的机房信息         | mysql-idc |
    |-- user       | 运行 dbm-agent 的主机用户 | dbma       |
    |action        | 要执行的操作 {start \| stop} | |
