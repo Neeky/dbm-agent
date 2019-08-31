@@ -98,7 +98,7 @@ def stop_server(pid_file="/tmp/daemon.pid"):
             os.kill(pid,signal.SIGTERM)
         except OSError as err:
             if err.errno == errno.ESRCH:
-                print("守护进程退出成功 .")
+                print("Successful exit")
                 break # 说明上一次已经 kill 成功了
         time.sleep(0.02)
     else:
