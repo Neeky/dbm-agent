@@ -1,79 +1,61 @@
-#!/usr/bin/env python3
+#!/usr/bin/evn python3
+
 import os
 import sys
-import time
-abs_path = os.path.abspath(sys.argv[0])
-basedir = os.path.dirname(os.path.dirname(abs_path)) 
+import argparse
+from dbma.daemon import start_daemon,stop_daemon
+from dbma import server
+from dbma import __dbma_version
+from dbma import initialization
 
-if 'lib' not in basedir:
-    sys.path.insert(0,basedir)
-from dbma import config,daemon
-from dbma.utils import users
-from dbma import log
+def parser_cmd_args():
+    parser = argparse.ArgumentParser(f'dbma-agent {__dbma_version}')
+    parser.add_argument('--dbmc-site',type=str,default="https://192.168.100.100",help='dbm-center url')
+    parser.add_argument('--base-dir',type=str,default="/usr/local/dbm-agent/",help='dbm-agent work dir')
+    parser.add_argument('--config-file',type=str,default="etc/dbma.cnf",help="dbm-agent config file")
+    parser.add_argument('--log-file',type=str,default="logs/dbma.log",help="dbm-agent log file")
+    parser.add_argument('--log-level',type=str,default="info",choices=['info','debug','error'])
+    parser.add_argument('--user-name',type=str,default="dbma",help="user")
+    parser.add_argument('--pid',type=str,default="/tmp/dbm-agent.pid",help="pid file")
+    parser.add_argument('--net-if',type=str,default="ens33",help="if es eth0,eth1,ens33")
+    parser.add_argument('--heartbeat-api',type=str,default="hosts/heatheat",help="heartbeat http interface")
+    parser.add_argument('--heartbeat-interval',type=int,default=5,help="the interval between heartbeat")
+    parser.add_argument('action',type=str,default='start',choices=('init','start','stop','version'),help='')
+    args = parser.parse_args()
+    return args
 
-# 权限验证，一定要用 root 用户来运行 dbm-agent
-if os.geteuid() != 0 or os.getegid() != 0:
-    print('error !!! you must use root user execute this program .')
-    sys.exit(1)
-
-def start(args):
-    """
-    处理 start 命令时执行的逻辑
-    """
-    # 测试配置文件是否存在
-    config_file_path = os.path.join(args.basedir,args.config_file)
-    if not os.path.isfile(config_file_path):
-        print(f"config file '{config_file_path}' is not exists. execute 'sudo su ; dbm-agent init;' fix this problem.")
-        sys.exit(0)
-    # 检测配置文件中是否正常的配置了用户信息
-    # 并把进程的权限切到普通用户
-    global_config = config.get_config_from_file(config_file_path)
-    program_user = global_config['dbma'].get('user','dbma')
-    uid,gid = users.get_uid_gid(program_user)
-    os.setegid(gid)
-    os.seteuid(uid)
-    # 处理日志文件的路径,配置文件中 log 是以相对路径配置的
-    # 所以要在这里导出全路径
-    log_file_path = global_config['dbma'].get('log','logs/dbma.log')
-    if not log_file_path.startswith('/'):
-        log_file_path = os.path.join(args.basedir,log_file_path)
-    log.log_config(filename=log_file_path)
-
-    logger = log.get_root_logger('dbm-agent')
-    logger.warning(f"dbm-agent get start")
-
-    # 以守护进程的方式启动
-    daemon.start_daemon('/tmp/dbm-agent.pid')
-    # 以下部分已经是守护进程
-    logger.error("hello dbm-agent.")
-
-    time.sleep(30)
-    
 
 def main():
-    """
-    dbm-agent 入口点函数
-    """
-    args = config.get_config_from_cmd()
+    args = parser_cmd_args()
+    
     if args.action == 'init':
-        # 初始化指令
-        _,s = str(time.time()).split('.')  # 产生一个随机的字符串
-        os.makedirs(f'/tmp/{s}/logs') # 创建临时目录
-        os.chdir(f'/tmp/{s}')
-        from dbma import init
-        init.init_dbma(args)
+        initialization.init(args)
     elif args.action == 'start':
-        # 启动指令
-        start(args)
+        server.start(args)
+    elif args.action == 'version':
+        print(f'dbma-agent {__dbma_version}')
     elif args.action == 'stop':
-        daemon.stop_daemon('/tmp/dbm-agent.pid')
+        stop_daemon(args.pid)
+    
+    
 
 if __name__ == "__main__":
     main()
 
-        
 
-        
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
