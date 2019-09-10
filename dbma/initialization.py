@@ -10,6 +10,8 @@ import sys
 import pwd
 import grp
 import time
+import dbma
+import shutil
 import logging
 import argparse
 import subprocess
@@ -43,8 +45,6 @@ def is_user_exists(user_name:str)->bool:
         pwd.getpwnam(user_name)
         return True
     except KeyError as err:
-        pass
-    except Exception as err:
         pass
     return False
 
@@ -112,6 +112,10 @@ def init(args):
     parser['dbma'] = {k:v for k,v in args.__dict__.items() if k != 'action'}
     with open(cnf,'w') as cnf:
         parser.write(cnf)
+
+    # 复制 MySQL 配置文件模板
+    pkg_dir = os.path.join(os.path.dirname(dbma.__file__),'static/cnfs')
+    shutil.copytree(pkg_dir,os.path.join(args.base_dir,'etc/templates'))
 
     # 修改 /usr/local/dbm-agent 目录的权限
     if is_user_exists(args.user_name):
