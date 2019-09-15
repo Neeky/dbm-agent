@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+
+import logging
+import argparse
+from dbma.mysql import MySQLInstaller,MySQLUninstaller
+
+def parser_cmd_args():
+    """
+    """
+    parser = argparse.ArgumentParser(__name__)
+    parser.add_argument('--port',type=int,default=3306,help="instance port")
+    parser.add_argument('--pkg',type=str,default="mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz",help="mysql install package")
+    parser.add_argument('--max-mem',type=int,default=1024,help="the max memory mysql instances can use")
+    parser.add_argument('action',type=str,choices=['install','uninstall'])
+    args = parser.parse_args()
+    return args
+
+def main():
+    # config logger
+    logger = logging.getLogger('dbm-agent')
+    logger.setLevel(logging.DEBUG)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(message)s')
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
+
+    args = parser_cmd_args()
+
+    pkg = args.pkg
+    max_mem = args.max_mem
+    port = args.port
+    action = args.action
+
+    if action == 'install':
+        logger.info(f'enter install mysql instance logic port={port}')
+        m = MySQLInstaller(port=port,pkg=pkg,max_mem=max_mem)
+        m.install()
+    elif action == 'uninstall':
+        logger.info(f'enter uninstall mysql instance logic port={port}')
+        m = MySQLUninstaller(port=port)
+        m.uninstall()
+
+
+if __name__ == "__main__":
+    main()
+
+

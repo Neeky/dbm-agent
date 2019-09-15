@@ -5,6 +5,10 @@
 3、让 dbm-agent 以守护进程的方式进行
 4、为不同目的的工作开启不同的线程
 """
+# (c) 2019, LeXing Jinag <neeky@live.com 1721900707@qq.com https://www.sqlpy.com/> 
+# Copyright: (c) 2019, dbm Project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
 
 import re
 import os
@@ -28,7 +32,7 @@ from dbma.initialization import is_user_exists,get_uid_gid,is_root
 
 # exit 1
 
-__dbma_version = "0.1.0"
+__dbma_version = "0.1.1"
 
 # 临时日志、再没有能读取配置文件前
 #logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s",level=logging.DEBUG)

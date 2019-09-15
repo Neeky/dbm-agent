@@ -7,3 +7,5 @@
 #python3 -m unittest tests/dbma/utils/directorys_test.py
 #python3 -m unittest tests/dbma/config_test.py
 #python3 -m unittest tests/dbma/utils/cnfs_test.py
+
+python3 -m unittest discover --start-directory tests ${1}

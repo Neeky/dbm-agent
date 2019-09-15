@@ -1,9 +1,15 @@
 """
+
 实现自动初始化 dbm-agent 相关的功能
 1、创建用户
 2、创建用户组
 3、创建相应的目录
+
+# 目前给 initilization 的定义是作为代码库中相对独立的部分不参与任何代码重用
 """
+# (c) 2019, LeXing Jinag <neeky@live.com 1721900707@qq.com https://www.sqlpy.com/> 
+# Copyright: (c) 2019, dbm Project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 import os
 import sys
@@ -19,6 +25,7 @@ import contextlib
 import configparser
 import logging.handlers
 
+from . import errors
 # exit 1
 
 # 初始化时使用如下日志格式
@@ -48,36 +55,73 @@ def is_user_exists(user_name:str)->bool:
         pass
     return False
 
+def is_group_exists(group_name:str)->bool:
+    """
+    检查用户组是否存在
+    """
+    try:
+        grp.getgrnam(group_name)
+        return True
+    except KeyError as err:
+        logging.warning(f"user group {group_name} not exits")
+        #raise errors.UserNotExistsError()
+        return False
+
 def is_root()->bool:
     """
-    检查当前的 euser 是不是 rot
+    检查当前的 euser 是不是 root
     """
     return os.geteuid() == 0
 
-def create_user(user_name:str)->bool:
+def create_user(user_name:str):
     """
     创建 user_name 给定的用户
+    :errors.UserAlreadyExistsError
+    :
     """
+    if is_user_exists(user_name) == True:
+        # 如果用户已经存在就报异常
+        raise errors.UserAlreadyExistsError()
+
     try:
         with sudo(f"create user {user_name} and user group {user_name}"):
-            logging.info(f"groupadd {user_name}")
-            subprocess.run(f"groupadd {user_name}",shell=True)
+            if not is_group_exists(user_name):
+                logging.info(f"groupadd {user_name}")
+                subprocess.run(f"groupadd {user_name}",shell=True)
             subprocess.run(f"useradd {user_name} -g {user_name} ",shell=True)
     except Exception as err:
         logging.error(f"an exception been tiggered in create usere stage. {str(err)}")
         logging.error(f"{type(err)}")
+        raise errors.ExternalError(f"an exception raise in fun 'create_user' ")
+
+def delete_user(user_name:str):
+    """
+    删除操作系统级别的用户组
+    :errors.UserNotExistsError
+    :errors.ExternalError
+    """
+    if not is_user_exists(user_name):
+        raise errors.UserNotExistsError()
+
+    try:
+        with sudo(f"delete user {user_name}"):
+            subprocess.run(f"userdel {user_name}",shell=True)
+        
+    except Exception as err:
+        raise errors.ExternalError(f"an exception raise in fun 'delete_user' raw error {err}")
 
 def get_uid_gid(user_name):
     """
     返回给定用户的 (uid,gid) 组成的元组.
-    如果用户不存在就返回 None
+    :errors.UserNotExistsError
     """
     try:
         user = pwd.getpwnam(user_name)
         return user.pw_uid,user.pw_gid
     except KeyError as err:
         # 当给定的用户不存在的话会报 KeyError
-        return None
+        # 把 KeyError 异常转化为 errors.UserNotExistsError
+        raise errors.UserNotExistsError()
 
 def init(args):
     """
@@ -121,8 +165,53 @@ def init(args):
     if is_user_exists(args.user_name):
         subprocess.run(["chown","-R",f"{args.user_name}:{args.user_name}",args.base_dir ])
 
+def uninit(args):
+    """
+    重置 dbm-agent
+    1、检查 dbm-agent 是否在运行、如果是就退出 uninit 操作
+    """ 
+    logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s",level=logging.DEBUG)
 
+    # 检查 dbm-agent 是否已经初始化
+    logging.info("checking is dbm-agent has been inited.")
+    cnfpath = '/usr/local/dbm-agent/etc/dbma.cnf'
+    if not os.path.isdir('/usr/local/dbm-agent') or not os.path.isfile(cnfpath):
+        logging.error(f"your dbm-agent has not been inited,so unnecessary to uninit it.")
+        return
+        #raise errors.DBMANotInitedError()
+
+    # 获取 pid 文件保存的路径
     
+    logging.info("checking dbm-agent is runing or not.")
+    config = configparser.ConfigParser()
+    config.read(cnfpath)
+    pid = config['dbma']['pid']
+
+    if os.path.isfile(pid):
+        # 如果 pid 文件存在说明 dbm-agent 还在运行中
+        # 这个时候不能对它进行 uninit 要先 stop
+        logging.error("dbm-agent is runing please stop it 'dbm-agent stop' ")
+        return
+        #raise errors.DBMAIsRuningError()
+
+    # 可以执行到这里，说明 dbm-agent 已经 init 过，并且已经关闭服务
+    logging.info("going to uninit dbm-agent")
+    # 第一步：删除用户
+    user_name = config['dbma']['user_name']
+    delete_user(user_name)
+
+    # 第二步：删除 /usr/local/dbm-agent 目录
+    shutil.rmtree('/usr/local/dbm-agent')
+
+    logging.info("uninit compelted goodbye ...")
+
+
+
+
+
+
+
+        
 
 
 

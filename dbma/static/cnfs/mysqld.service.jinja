@@ -9,9 +9,9 @@ After=syslog.target
 WantedBy=multi-user.target
 
 [Service]
-User=mysql
+User={{user}}
 Group=mysql
-ExecStart={{cnf.basedir}}/bin/mysqld --defaults-file=/etc/my-{{ cnf.port }}.cnf
+ExecStart={{basedir}}/bin/mysqld --defaults-file=/etc/my-{{ port }}.cnf
 LimitNOFILE = 102400
 Environment=MYSQLD_PARENT_PID=1
 #Restart=on-failure

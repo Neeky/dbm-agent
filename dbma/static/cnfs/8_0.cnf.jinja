@@ -29,8 +29,7 @@ end_markers_in_json                 ={{cnf.end_markers_in_json}}                
 tmpdir                              ={{cnf.tmpdir}}
 max_connections                     ={{cnf.max_connections}}                            # 151
 autocommit                          ={{cnf.autocommit}}                             # ON
-sort_buffer_size                    ={{cnf.sort_buffer_size}}                         # 262144(256k) ! fix too many Sort_merge_passes per second 
-#                                                                    # in SHOW GLOBAL STATUS output; speed up ORDER BY or GROUP BY operations
+sort_buffer_size                    ={{cnf.sort_buffer_size}}                         # 262144(256k) !
 
 ####: for table cache
 table_open_cache                    ={{cnf.table_open_cache}}                           #   2000
@@ -82,7 +81,7 @@ binlog_rows_query_log_events                  =ON                            # O
 sync_binlog                                   =1                             # 1 | 0 | N
 binlog_stmt_cache_size                        =32k                           # 32768(32k)
 log_slave_updates                             =ON                            # ON
-binlog_group_commit_sync_delay                =500                           # 0
+binlog_group_commit_sync_delay                =4                             # 0
 binlog_group_commit_sync_no_delay_count       =10                            # 0
 binlog_cache_size                             =96k                           # 32768(32k)
 binlog_transaction_dependency_history_size    =25000                         # 25000
@@ -186,31 +185,16 @@ innodb_status_output_locks          =OFF                            # OFF
 innodb_buffer_pool_dump_now         =OFF                            # OFF
 innodb_buffer_pool_load_abort       =OFF                            # OFF
 innodb_buffer_pool_load_now         =OFF                            # OFF
-## configuring thread concurrency for innodb
 innodb_thread_concurrency           =0                              # 0
-#? if innodb_thread_concurrency is 0, the value of innodb_thread_sleep_delay is ignored; 
-#? so default the next 3 are ignored.
 innodb_concurrency_tickets          =5000                           # 5000
 innodb_thread_sleep_delay           =15000                          # 10000  ( 1/100 s)
 innodb_adaptive_max_sleep_delay     =150000                         # 150000 (15/100 s)
-## configuring the number of background innoDB i/o threads
-#? if you see more than 64 × innodb_read_io_threads pending read requests in 
-#? SHOW ENGINE INNODB STATUS output, you might improve performance 
-#? by increasing the value of innodb_read_io_threads.
 innodb_read_io_threads              =4                              # 4
 innodb_write_io_threads             =4                              # 4
-## using asynchronous i/o on linux
-#? 1):perform read-ahead and write requests for data file pages.
-#? 2):Too many I/O write requests dispatched to the operating system for parallel processing could, 
-#? in some cases, result in I/O read starvation
 innodb_use_native_aio               =ON                             # ON
-## configuring the innodb master thread i/o rate
 innodb_flush_sync                   =OFF                            # ON
-#? To adhere to the limit on InnoDB background I/O activity defined by the innodb_io_capacity setting, 
-#? disable innodb_flush_sync.
 innodb_io_capacity                  =4000                            # 200
 innodb_io_capacity_max              =20000                           # 2000
-## configuring spin lock polling
 innodb_spin_wait_delay              =6                              # 6
 ## configuring innoDB purge scheduling
 innodb_purge_threads                =4                              # 4

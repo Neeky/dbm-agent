@@ -1,4 +1,4 @@
-# dbm-agent
+## dbm-agent
   **dbm(DataBase Management center)-agent：MySQL 数据库管理中心客户端程序**
 
   **dbm-agent 的要解决什么问题**
@@ -118,6 +118,17 @@
    ```
    ---
 
+## 卸载
+   **卸载 dbm-agent 要分两步走、第一步：删除 dbm-agent 对应的用户和数据 第二步：卸载 dbm-agent 软件包**
+   ```bash
+   # uninit 会自动完成相关用户(dbma)和数据(/usr/local/dbm-agent/)的删除
+   dbm-agent uninit
+   # 卸载 dbm-agent
+   pip3 uninstall dbm-agent
+   ```
+
+   ---
+
 ## 参数说明
    **dbm-agent 支持若干参数，详细内容如下**
 
@@ -129,3 +140,119 @@
    |-- idc-name   | 主机所属的机房信息         | mysql-idc |
    |-- user       | 运行 dbm-agent 的主机用户 | dbma       |
    |action        | 要执行的操作 {start \| stop} | |
+
+   ---
+
+## 当前可用的功能列表
+   **1、自动化安装与卸载MySQL**
+
+   最初的设想是 dbm-agent 安装在客户机上，通过 https 协议与 dbm-center (web后台) 进行通信；以此得到它要执行的任务，dbm-agent 把任务执行完成之后再把信息回传
+   到 dbm-center。 dba 通过浏览器向 dbm-center 提任务这样 dba 就从琐事中抽身了。但是整个完成起来过于宏大，所以目前的想法是先把 dbm-agent 的各个功能作成一个个
+   单独的模板并为它配上适当的入口脚本，这个就是“当前可用功能的由来”
+
+   ---
+
+## 自动化安装卸载MySQL
+   **1、安装 dbm-agent 并 初始化**
+   ```bash
+   pip3 install dbm-agent
+   dbm-agent init
+   ```
+   **2、复制 mysql 二进制安装包到 /usr/local/dbm-agent/pkg/ 目录**
+   ```bash
+   # dbm-agent 只支持 mysql-8.0.17 及以上版本
+   cp mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz /usr/local/dbm-agent/pkg
+   ```
+   **3、自动安装 MySQL 单机(支持单机多实例)**
+   ```bash
+   -- max_mem 指定实例使用的内存大小
+   -- port 指定实例监控的端口端口
+
+
+   dbma-cli-install-single install --max-mem=1024  --port=3306
+
+   2019-09-15 13:26:21,899 - dbm-agent - MainThread - INFO - enter install mysql instance logic
+   2019-09-15 13:26:21,899 - dbm-agent.dbma.mysql - MainThread - INFO - install mysql instance with this mysql version mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz port 3306 max_mem 1024 MB
+   2019-09-15 13:26:21,899 - dbm-agent.dbma.mysql - MainThread - INFO - check port 3306 is in use or not
+   2019-09-15 13:26:21,899 - dbm-agent.dbma.mysql - MainThread - INFO - check config file  /etc/my-3306.cnf 
+   2019-09-15 13:26:21,899 - dbm-agent.dbma.mysql - MainThread - INFO - check datadir /database/mysql/data/3306
+   2019-09-15 13:26:21,899 - dbm-agent.dbma.mysql - MainThread - INFO - check mysql version mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz
+   2019-09-15 13:26:21,912 - dbm-agent.dbma.mysql - MainThread - INFO - create datadir /database/mysql/data/3306
+   2019-09-15 13:26:21,913 - dbm-agent.dbma.mysql - MainThread - INFO - unarchive mysql pkg to /usr/local/
+   2019-09-15 13:26:21,913 - dbm-agent.dbma.mysql - MainThread - WARNING - /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64 exists mysql may has been installed. skip untar mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz to /usr/local/
+   2019-09-15 13:26:21,913 - dbm-agent.dbma.configrender - MainThread - INFO - load template from /usr/local/dbm-agent/etc/templates/
+   2019-09-15 13:26:21,913 - dbm-agent.dbma.configrender - MainThread - INFO - template file name mysql-8.0.17.cnf.jinja
+   2019-09-15 13:26:21,916 - dbm-agent.dbma.configrender - MainThread - INFO - mysql pkg mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz max memory 1024
+   2019-09-15 13:26:21,916 - dbm-agent.dbma.configrender - MainThread - INFO - config cpu options
+   2019-09-15 13:26:21,916 - dbm-agent.dbma.configrender - MainThread - INFO - config memory options
+   2019-09-15 13:26:21,916 - dbm-agent.dbma.configrender - MainThread - INFO - config disk options
+   2019-09-15 13:26:21,916 - dbm-agent.dbma.configrender - MainThread - INFO - going to render config file
+   2019-09-15 13:26:21,917 - dbm-agent.dbma.mysql - MainThread - INFO - init database with --initialize-insecure
+   2019-09-15 13:26:21,917 - dbm-agent.dbma.mysql - MainThread - WARNING - ['/usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld', '--defaults-file=/etc/my-3306.cnf', '--initialize-insecure', '--user=mysql3306']
+   2019-09-15 13:26:25,709 - dbm-agent.dbma.mysql - MainThread - INFO - config systemd
+   2019-09-15 13:26:25,709 - dbm-agent.dbma.configrender - MainThread - INFO - load template from /usr/local/dbm-agent/etc/templates/
+   2019-09-15 13:26:25,709 - dbm-agent.dbma.configrender - MainThread - INFO - template file name mysqld.service.jinja
+   2019-09-15 13:26:25,789 - dbm-agent.dbma.mysql - MainThread - INFO - config path env variable /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/
+   2019-09-15 13:26:25,790 - dbm-agent.dbma.mysql - MainThread - INFO - start mysqld-3306 by systemcl start mysqld-3306
+
+   # 检查 mysql 数据为是否正常启动
+   ps -ef | grep mysql                                                        
+   mysql33+   9879      1  1 13:26 ?        00:00:02 /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3306.cn
+
+   # 如果要实现单机多实例只要把端口改一下就行了
+   dbma-cli-install-single install --max-mem=1024  --port=3309
+
+   2019-09-15 13:36:38,769 - dbm-agent - MainThread - INFO - enter install mysql instance logic port=3309
+   2019-09-15 13:36:38,769 - dbm-agent.dbma.mysql - MainThread - INFO - install mysql instance with this mysql version mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz port 3309 max_mem 1024 MB
+   2019-09-15 13:36:38,769 - dbm-agent.dbma.mysql - MainThread - INFO - check port 3309 is in use or not
+   2019-09-15 13:36:38,770 - dbm-agent.dbma.mysql - MainThread - INFO - check config file  /etc/my-3309.cnf 
+   2019-09-15 13:36:38,770 - dbm-agent.dbma.mysql - MainThread - INFO - check datadir /database/mysql/data/3309
+   2019-09-15 13:36:38,770 - dbm-agent.dbma.mysql - MainThread - INFO - check mysql version mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz
+   2019-09-15 13:36:38,784 - dbm-agent.dbma.mysql - MainThread - INFO - create datadir /database/mysql/data/3309
+   2019-09-15 13:36:38,784 - dbm-agent.dbma.mysql - MainThread - INFO - unarchive mysql pkg to /usr/local/
+   2019-09-15 13:36:38,784 - dbm-agent.dbma.mysql - MainThread - WARNING - /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64 exists mysql may has been installed. skip untar mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz to /usr/local/
+   2019-09-15 13:36:38,784 - dbm-agent.dbma.configrender - MainThread - INFO - load template from /usr/local/dbm-agent/etc/templates/
+   2019-09-15 13:36:38,784 - dbm-agent.dbma.configrender - MainThread - INFO - template file name mysql-8.0.17.cnf.jinja
+   2019-09-15 13:36:38,787 - dbm-agent.dbma.configrender - MainThread - INFO - mysql pkg mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz max memory 1024
+   2019-09-15 13:36:38,787 - dbm-agent.dbma.configrender - MainThread - INFO - config cpu options
+   2019-09-15 13:36:38,787 - dbm-agent.dbma.configrender - MainThread - INFO - config memory options
+   2019-09-15 13:36:38,787 - dbm-agent.dbma.configrender - MainThread - INFO - config disk options
+   2019-09-15 13:36:38,787 - dbm-agent.dbma.configrender - MainThread - INFO - going to render config file
+   2019-09-15 13:36:38,788 - dbm-agent.dbma.mysql - MainThread - INFO - init database with --initialize-insecure
+   2019-09-15 13:36:38,788 - dbm-agent.dbma.mysql - MainThread - WARNING - ['/usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld', '--defaults-file=/etc/my-3309.cnf', '--initialize-insecure', '--user=mysql3309']
+   2019-09-15 13:36:43,518 - dbm-agent.dbma.mysql - MainThread - INFO - config systemd
+   2019-09-15 13:36:43,518 - dbm-agent.dbma.configrender - MainThread - INFO - load template from /usr/local/dbm-agent/etc/templates/
+   2019-09-15 13:36:43,518 - dbm-agent.dbma.configrender - MainThread - INFO - template file name mysqld.service.jinja
+   2019-09-15 13:36:43,631 - dbm-agent.dbma.mysql - MainThread - INFO - config path env variable /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/
+   2019-09-15 13:36:43,632 - dbm-agent.dbma.mysql - MainThread - INFO - start mysqld-3309 by systemcl start mysqld-3309
+
+   ps -ef | grep mysql
+
+   mysql33+  10880      1  5 14:02 ?        00:00:01 /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3306.cnf                                                  
+   mysql33+  11000      1 19 14:02 ?        00:00:01 /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3309.cnf 
+   ```
+   **4、卸载 MySQL**
+   这个操作会删除实例对应的用户、配置文件、数据目录
+   ```bash
+   dbma-cli-install-single uninstall --port=3309
+   # dbm-agent 有对卸载做安全检查、如果实例还在运行中这个时候卸载会失败
+
+   2019-09-15 14:09:30,265 - dbm-agent - MainThread - INFO - enter uninstall mysql instance logic port=3309
+   2019-09-15 14:09:30,266 - dbm-agent.dbma.mysql - MainThread - ERROR - mysql-3309 is runing cant uninstall 'systemctl stop mysqld-3309'
+
+   # 先关闭数据库服务
+   systemctl stop mysqld-3309
+
+   dbma-cli-install-single uninstall --port=3309 
+   2019-09-15 14:12:20,720 - dbm-agent - MainThread - INFO - enter uninstall mysql instance logic port=3309
+   2019-09-15 14:12:20,721 - dbm-agent.dbma.mysql - MainThread - INFO - delete user mysql3309
+   2019-09-15 14:12:20,739 - dbm-agent.dbma.mysql - MainThread - INFO - remove mysql config file /etc/my-3309.cnf
+   2019-09-15 14:12:20,739 - dbm-agent.dbma.mysql - MainThread - INFO - remove systemctl config file /usr/lib/systemd/system/mysqld-3309.service
+   2019-09-15 14:12:20,739 - dbm-agent.dbma.mysql - MainThread - INFO - remove datadir /database/mysql/data/3309
+
+   ps -ef | grep mysql                                                        
+   mysql33+  10880      1  0 14:02 ?        00:00:05 /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3306.cnf
+   
+   ```
+
+

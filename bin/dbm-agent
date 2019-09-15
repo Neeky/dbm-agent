@@ -1,5 +1,9 @@
 #!/usr/bin/evn python3
 
+# (c) 2019, LeXing Jinag <neeky@live.com 1721900707@qq.com https://www.sqlpy.com/> 
+# Copyright: (c) 2019, dbm Project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
 import os
 import sys
 import argparse
@@ -20,7 +24,7 @@ def parser_cmd_args():
     parser.add_argument('--net-if',type=str,default="ens33",help="if es eth0,eth1,ens33")
     parser.add_argument('--heartbeat-api',type=str,default="hosts/heatheat",help="heartbeat http interface")
     parser.add_argument('--heartbeat-interval',type=int,default=5,help="the interval between heartbeat")
-    parser.add_argument('action',type=str,default='start',choices=('init','start','stop','version'),help='')
+    parser.add_argument('action',type=str,default='start',choices=('init','uninit','start','stop','version'),help='')
     args = parser.parse_args()
     return args
 
@@ -36,6 +40,8 @@ def main():
         print(f'dbma-agent {__dbma_version}')
     elif args.action == 'stop':
         stop_daemon(args.pid)
+    elif args.action == 'uninit':
+        initialization.uninit(args)
     
     
 
