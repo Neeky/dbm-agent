@@ -79,6 +79,19 @@ class MysqlRender(BaseRender):
         self.skip_name_resolve = 1
         self.super_read_only = 'OFF'
         self.sql_require_primary_key = 'OFF'
+        self.lower_case_table_names = 1
+        self.auto_increment_increment = 1
+        self.auto_increment_offset = 1
+        self.event_scheduler = 'OFF'
+        self.auto_generate_certs = 'ON'
+        self.big_tables = 'OFF'
+        self.join_buffer_size = '256K'
+        self.activate_all_roles_on_login = 'ON'
+        self.end_markers_in_json = 'OFF'
+        self.tmpdir = '/tmp/'
+        self.max_connections = 128
+        self.autocommit = 'ON'
+        self.sort_buffer_size = '256K'
 
         # logs
         self.log_error = "err.log"
@@ -100,7 +113,19 @@ class MysqlRender(BaseRender):
             'log_error': self.log_error,
             'sql_require_primary_key': self.sql_require_primary_key,
             'log_timestamps': self.log_timestamps,
-
+            'lower_case_table_names': self.lower_case_table_names,
+            'auto_increment_increment': self.auto_increment_increment,
+            'auto_increment_offset': self.auto_increment_offset,
+            'event_scheduler': self.event_scheduler,
+            'auto_generate_certs': self.auto_generate_certs,
+            'big_tables': self.big_tables,
+            'join_buffer_size': self.join_buffer_size,
+            'activate_all_roles_on_login': self.activate_all_roles_on_login,
+            'end_markers_in_json': self.end_markers_in_json,
+            'tmpdir': self.tmpdir,
+            'max_connections': self.max_connections,
+            'autocommit': self.autocommit,
+            'sort_buffer_size': self.sort_buffer_size,
         })
 
 
