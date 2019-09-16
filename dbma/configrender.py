@@ -7,6 +7,7 @@
 
 import os
 import copy
+import random
 import logging
 from jinja2 import Environment,FileSystemLoader
 from . import errors
@@ -70,8 +71,18 @@ class MysqlRender(BaseRender):
         self.basedir = os.path.join('/usr/local/',pkg.replace('.tar.gz','').replace('.tar.xz',''))
         self.datadir = os.path.join(f'/database/mysql/data/{port}')
         self.socket = f"/tmp/mysql-{port}.sock"
-        self.mysqlx_socket = f"tmp/mysqlx-{port}.sock"
+        self.mysqlx_socket = f"/tmp/mysqlx-{port}.sock"
         self.pid_file = f"/tmp/mysql-{port}.pid"
+        self.server_id = random.randint(1,4097)
+        self.open_files_limit = 102000
+        self.max_prepared_stmt_count = 1048576
+        self.skip_name_resolve = 1
+        self.super_read_only = 'OFF'
+        self.sql_require_primary_key = 'OFF'
+
+        # logs
+        self.log_error = "err.log"
+        self.log_timestamps = 'system'
 
         self.defaults.update({
             'user': self.user,
@@ -81,6 +92,15 @@ class MysqlRender(BaseRender):
             'socket': self.socket,
             'mysqlx_socket': self.mysqlx_socket,
             'pid_file': self.pid_file,
+            'server_id': self.server_id,
+            'open_files_limit': self.open_files_limit,
+            'max_prepared_stmt_count': self.max_prepared_stmt_count,
+            'skip_name_resolve': self.skip_name_resolve,
+            'super_read_only': self.super_read_only,
+            'log_error': self.log_error,
+            'sql_require_primary_key': self.sql_require_primary_key,
+            'log_timestamps': self.log_timestamps,
+
         })
 
 

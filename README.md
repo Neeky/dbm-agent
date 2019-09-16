@@ -200,7 +200,7 @@
    -- max_mem 指定实例使用的内存大小
    -- port 指定实例监控的端口端口
 
-   dbma-cli-install-single install --port=3306
+   dbma-cli-single-instance install --port=3306
 
 
    2019-09-16 16:10:30,951 - dbm-agent - MainThread - INFO - enter install mysql instance logic port=3306
@@ -235,7 +235,7 @@
    mysql33+  10284      1  1 16:10 ?        00:00:02 /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3306.cnf  
 
    # 如果要实现单机多实例只要把端口改一下就行了
-   dbma-cli-install-single install --port=3309   
+   dbma-cli-single-instance install --port=3309   
 
    2019-09-16 16:13:04,319 - dbm-agent - MainThread - INFO - enter install mysql instance logic port=3309
    2019-09-16 16:13:04,319 - dbm-agent.dbma.mysql - MainThread - INFO - install mysql instance with this mysql version mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz port 3309 max_mem 1024 MB
@@ -273,7 +273,7 @@
    **4、卸载 MySQL**
    这个操作会删除实例对应的用户、配置文件、数据目录
    ```bash
-   dbma-cli-install-single uninstall --port=3309
+   dbma-cli-single-instance uninstall --port=3309
    # dbm-agent 有对卸载做安全检查、如果实例还在运行中这个时候卸载会失败
 
   2019-09-16 16:14:46,533 - dbm-agent - MainThread - INFO - enter uninstall mysql instance logic port=3309
@@ -282,7 +282,7 @@
    # 先关闭数据库服务
    systemctl stop mysqld-3309
 
-   dbma-cli-install-single uninstall --port=3309
+   dbma-cli-single-instance uninstall --port=3309
    
    2019-09-16 16:15:39,812 - dbm-agent - MainThread - INFO - enter uninstall mysql instance logic port=3309
    2019-09-16 16:15:39,813 - dbm-agent.dbma.mysql - MainThread - INFO - delete user mysql3309

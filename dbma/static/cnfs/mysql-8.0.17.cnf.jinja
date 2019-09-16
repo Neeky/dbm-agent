@@ -3,11 +3,18 @@
 user                                     = {{user}}
 basedir                                  = {{basedir}}
 datadir                                  = {{datadir}}
+server_id                                = {{server_id}}
 port                                     = {{port}}
-log-error                                = err.log
+log_error                                = {{log_error}}
 socket                                   = {{socket}}
 mysqlx_socket                            = {{mysqlx_socket}}
-pid_file                                 = {{pid_file}}             
+pid_file                                 = {{pid_file}}  
+open_files_limit                         = {{open_files_limit}}
+max_prepared_stmt_count                  = {{max_prepared_stmt_count}}  
+skip_name_resolve                        = {{skip_name_resolve}}     
+super_read_only                          = {{super_read_only}}
+sql_require_primary_key                  = {{sql_require_primary_key}}
+log_timestamps                           = {{log_timestamps}}
 
 # -- ~ _ ~    ~ _ ~     ~ _ ~ -- 
 # base on mysql-8.0.17 
