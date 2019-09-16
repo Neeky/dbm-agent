@@ -5,6 +5,7 @@
 
 import os
 import pwd
+import shutil
 import logging
 import pathlib
 import subprocess
@@ -122,10 +123,30 @@ def config_path(path="/usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/",user_
 
 def enable_service(service_name:str="mysqld-3306"):
     """
+    配置 服务开机启动
     """
     with sudo(f"systemctl enable {service_name}"):
         subprocess.run([f'systemctl enable {service_name}'],shell=True)
 
+def config_mysql_include(version:str="mysql-8.0.17-linux-glibc2.12-x86_64"):
+    """
+    导出头文件
+    """
+    with sudo("export header file"):
+        link = f"/usr/include/{version}"
+        src = f"/usr/local/{version}/lib"
+        if not os.path.islink(link):
+            os.symlink(src,link)
+        subprocess.run('ldconfig')
+
+def config_mysql_so(version:str="mysql-8.0.17-linux-glibc2.12-x86_64"):
+    """
+    导出共享库
+    """
+    soconf = os.path.join(f"/etc/ld.so.conf.d",version) 
+    if not checkings.is_file_exists(soconf):
+        with open(soconf,'w') as soobj:
+            soobj.write(f"/usr/local/{version}/lib/")
 
 
 

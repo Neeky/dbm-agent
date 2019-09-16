@@ -26,6 +26,7 @@ logger = logging.getLogger('dbm-agent').getChild(__name__)
 
 class MySQLInstaller(object):
     """
+    完成单实例架构下 MySQL 实例的自动化安装
     """
     def pre_checkings(self):
         """
@@ -36,7 +37,7 @@ class MySQLInstaller(object):
         """
         port = self.port
         pkg = self.pkg
-        dbma_basedir = self.dbma_basedir
+        #dbma_basedir = self.dbma_basedir
         logger.info(f"check port {port} is in use or not")
         # 检查用户是否存在
         if checkings.is_user_exists(f"mysql{port}"):
@@ -57,6 +58,9 @@ class MySQLInstaller(object):
         if not checkings.is_an_supported_mysql_version(pkg=pkg):
             raise errors.NotSupportedMySQLVersionError(pkg)
 
+        if not checkings.is_file_exists(self.init_file):
+            raise errors.FileNotExistsError(self.init_file)
+
     def __init__(self,port:int=3306,pkg:str="mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz",
                  dbma_basedir='/usr/local/dbm-agent/',
                  max_mem:int=1024):
@@ -65,6 +69,7 @@ class MySQLInstaller(object):
         self.pkg = pkg
         self.max_mem = max_mem
         self.version = pkg.replace('.tar.gz','').replace('.tar.xz','')
+        self.init_file = '/usr/local/dbm-agent/etc/templates/init-users.sql'
         logger.info(f"install mysql instance with this mysql version {self.pkg} port {self.port} max_mem {self.max_mem} MB")
 
     def create_datadir(self):
@@ -103,18 +108,19 @@ class MySQLInstaller(object):
 
     def init_database(self):
         """
+        完成数据库 init
         """
         logger.info("init database with --initialize-insecure")
         with common.sudo("init database"):
             args = [f'/usr/local/{self.version}/bin/mysqld',f'--defaults-file=/etc/my-{self.port}.cnf',
-                            '--initialize-insecure',f'--user=mysql{self.port}']
+                            '--initialize-insecure',f'--user=mysql{self.port}',f'--init-file={self.init_file}']
             logger.warning(args)
             subprocess.run(args,capture_output=True)
 
     def config_systemd(self):
         """
         """
-        logger.info(f"config systemd")
+        logger.info(f"config service(systemd) and daemon-reload")
         systemd = configrender.MySQLSystemdRender(pkg=self.pkg,port=self.port)
         systemd.render()
         with common.sudo(f"systemctl daemon reload"):
@@ -128,11 +134,32 @@ class MySQLInstaller(object):
             subprocess.run(f"systemctl start mysqld-{self.port}",shell=True)
 
     def config_path(self):
+        """
+        配置 PATH 环境变量
+        """
         logger.info(f"config path env variable /usr/local/{self.version}/bin/")
         common.config_path(path=f"/usr/local/{self.version}/bin/",user_name=f"mysql{self.port}")
 
     def enable_service(self):
+        """
+        配置 数据库开机启动
+        """
+        logger.info(f"config mysql auto start on boot")
         common.enable_service(f"mysqld-{self.port}")
+    
+    def config_so(self):
+        """
+        配置 so
+        """
+        logger.info(f"export so file")
+        common.config_mysql_so(self.version)
+
+    def config_include(self):
+        """
+        配置 头文件
+        """
+        logger.info(f"export header file")
+        common.config_mysql_include(self.version)
 
     def install(self):
         try:
@@ -161,11 +188,20 @@ class MySQLInstaller(object):
         # 配置 systemd
         self.config_systemd()
 
+        # 配置自动启动
+        self.enable_service()
+
         # 配置环境变量
         self.config_path()
 
         # 启动
         self.start_mysql()
+
+        # 导出共享库
+        self.config_so()
+
+        # 导出头文件
+        self.config_include()
 
             
 class MySQLSingleInstaller(MySQLInstaller):
