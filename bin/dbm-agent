@@ -24,7 +24,7 @@ def parser_cmd_args():
     parser.add_argument('--net-if',type=str,default="ens33",help="if es eth0,eth1,ens33")
     parser.add_argument('--heartbeat-api',type=str,default="hosts/heatheat",help="heartbeat http interface")
     parser.add_argument('--heartbeat-interval',type=int,default=5,help="the interval between heartbeat")
-    parser.add_argument('action',type=str,default='start',choices=('init','uninit','start','stop','version'),help='')
+    parser.add_argument('action',type=str,default='start',choices=('init','uninit','start','stop','version','upgrade'),help='')
     args = parser.parse_args()
     return args
 
@@ -42,6 +42,8 @@ def main():
         stop_daemon(args.pid)
     elif args.action == 'uninit':
         initialization.uninit(args)
+    elif args.action == 'upgrade':
+        initialization.upgrade(args)
     
     
 

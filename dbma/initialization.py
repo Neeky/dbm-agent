@@ -24,6 +24,7 @@ import subprocess
 import contextlib
 import configparser
 import logging.handlers
+from datetime import datetime
 
 from . import errors
 # exit 1
@@ -164,6 +165,23 @@ def init(args):
     # 修改 /usr/local/dbm-agent 目录的权限
     if is_user_exists(args.user_name):
         subprocess.run(["chown","-R",f"{args.user_name}:{args.user_name}",args.base_dir ])
+
+def upgrade(args):
+    """
+    升级 dbm-agent 
+    """
+    logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s",level=logging.DEBUG)
+    logging.info("going to upgrade dbm-agent")
+    pkg_dir = os.path.join(os.path.dirname(dbma.__file__),'static/cnfs')
+    # 备份旧目录
+    logging.info("backup etc/templates")
+    now = datetime.now()
+    shutil.move(os.path.join(args.base_dir,'etc/templates'),os.path.join(args.base_dir,f'etc/templates-backup-{now.isoformat()}'))
+    logging.info(f"create new etc/templates")
+    shutil.copytree(pkg_dir,os.path.join(args.base_dir,'etc/templates'))
+    if is_user_exists(args.user_name):
+        subprocess.run(["chown","-R",f"{args.user_name}:{args.user_name}",args.base_dir ])
+    logging.info("upgrade complete")
 
 def uninit(args):
     """
