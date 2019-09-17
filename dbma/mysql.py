@@ -37,7 +37,14 @@ class MySQLInstaller(object):
         """
         port = self.port
         pkg = self.pkg
-        #dbma_basedir = self.dbma_basedir
+        pkg_full_path = os.path.join('/usr/local/dbm-agent/pkg/',pkg)
+        basedir_full_path = os.path.join('/usr/local/',self.version)
+
+        # 检查安装包是不是存在并且之前也从来没有安装过
+        logger.info(f"check package '{pkg_full_path}' is exists")
+        if not checkings.is_file_exists(pkg_full_path)   and   not checkings.is_directory_exists(basedir_full_path):
+            raise errors.FileNotExistsError(pkg_full_path)
+
         logger.info(f"check port {port} is in use or not")
         # 检查用户是否存在
         if checkings.is_user_exists(f"mysql{port}"):
@@ -105,6 +112,7 @@ class MySQLInstaller(object):
 
         with common.sudo("unarchive mysql install pkg"):
             shutil.unpack_archive(pkg_full_path,'/usr/local/')
+            common.recursive_change_owner(os.path.join('/usr/local/',self.version),user="root",group="mysql")
 
     def init_database(self):
         """
