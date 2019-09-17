@@ -148,7 +148,17 @@ def config_mysql_so(version:str="mysql-8.0.17-linux-glibc2.12-x86_64"):
         with open(soconf,'w') as soobj:
             soobj.write(f"/usr/local/{version}/lib/")
 
-
+def recursive_change_owner(path:str="/usr/local/mysql/",user:str="root",group:str="mysql"):
+    """
+    递归的设置 user 和 group
+    """
+    with sudo(f"change owner path={path} user={user} group={group}"):
+        if os.path.isdir(path):
+            shutil.chown(path,user,group)
+            for item in os.listdir(path):
+                recursive_change_owner(os.path.join(path,item),user,group)
+        else:
+            shutil.chown(path,user,group)
 
 
         
