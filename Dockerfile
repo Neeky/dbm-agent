@@ -1,6 +1,5 @@
-FROM 1721900707/dbma:0.0.0.8
+FROM 1721900707/dbma:0.0.0.9
 #FROM centos:7.6.1810
-
 
 MAINTAINER neeky@live.com
 #QQ:1721900707
@@ -14,7 +13,7 @@ MAINTAINER neeky@live.com
 #WORKDIR /tmp/
 #
 #RUN set -ex \
-#    && yum -y install gcc gcc-c++ libffi libyaml-devel libffi-devel zlib zlib-devel openssl \
+#    && yum -y install gcc gcc-c++ libffi libyaml-devel libffi-devel zlib zlib-devel openssl shadow-utils \
 #    openssl-devel libyaml sqlite-devel libxml2 libxslt-devel libxml2-devel wget vim mysql-devel \
 #    && yum clean all 
 #
