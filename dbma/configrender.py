@@ -95,6 +95,9 @@ class MysqlRender(BaseRender):
         self.max_connections = 128
         self.autocommit = 'ON'
         self.sort_buffer_size = '256K'
+        self.eq_range_index_dive_limit = 200
+        self.character_set_server = 'utf8mb4'
+        self.performance_schema = 'ON'
 
         # table cache
         self.table_open_cache = 4000
@@ -253,7 +256,31 @@ class MysqlRender(BaseRender):
         self.innodb_sync_array_size = 1
         self.innodb_sync_spin_loops = 30
         self.innodb_print_ddl_logs = 'OFF'
-
+        self.innodb_replication_delay = 0
+        self.innodb_cmp_per_index_enabled = 'OFF'
+        self.innodb_disable_sort_file_cache = 'OFF'
+        self.innodb_numa_interleave = 'OFF'
+        self.innodb_strict_mode = 'ON'
+        self.innodb_sort_buffer_size = '1M'
+        self.innodb_fast_shutdown = 1
+        self.innodb_force_load_corrupted = 'OFF'
+        self.innodb_force_recovery = 0
+        self.innodb_temp_tablespaces_dir = './#innodb_temp/'
+        self.innodb_tmpdir = './'
+        self.innodb_temp_data_file_path = 'ibtmp1:64M:autoextend'
+        self.innodb_page_cleaners = 4
+        self.innodb_adaptive_hash_index = 'ON'
+        self.innodb_adaptive_hash_index_parts = 8
+        self.innodb_flush_log_at_timeout =1
+        self.innodb_flush_log_at_trx_commit = 1
+        self.innodb_flush_method = 'O_DIRECT'
+        self.innodb_fsync_threshold = 0
+        self.innodb_change_buffer_max_size = 25
+        self.innodb_change_buffering  = 'all'
+        self.innodb_fill_factor = 90
+        self.innodb_file_per_table = 'ON'
+        self.innodb_autoextend_increment = 64
+        self.innodb_open_files = 100000
 
 
         self.defaults.update({
@@ -288,6 +315,8 @@ class MysqlRender(BaseRender):
             'max_connections': self.max_connections,
             'autocommit': self.autocommit,
             'sort_buffer_size': self.sort_buffer_size,
+            'eq_range_index_dive_limit': self.eq_range_index_dive_limit,
+            #
             'table_open_cache': self.table_open_cache,
             'table_definition_cache': self.table_definition_cache,
             'table_open_cache_instances': self.table_open_cache_instances,
@@ -430,6 +459,33 @@ class MysqlRender(BaseRender):
             'innodb_sync_array_size': self.innodb_sync_array_size,
             'innodb_sync_spin_loops': self.innodb_sync_spin_loops,
             'innodb_print_ddl_logs': self.innodb_print_ddl_logs,
+            'innodb_replication_delay': self.innodb_replication_delay,
+            'innodb_cmp_per_index_enabled': self.innodb_cmp_per_index_enabled,
+            'innodb_disable_sort_file_cache': self.innodb_disable_sort_file_cache,
+            'innodb_numa_interleave': self.innodb_numa_interleave,
+            'innodb_strict_mode': self.innodb_strict_mode,
+            'innodb_sort_buffer_size': self.innodb_sort_buffer_size,
+            'innodb_fast_shutdown': self.innodb_fast_shutdown,
+            'innodb_force_load_corrupted': self.innodb_force_load_corrupted,
+            'innodb_force_recovery': self.innodb_force_recovery,
+            'innodb_temp_tablespaces_dir': self.innodb_temp_tablespaces_dir,
+            'innodb_tmpdir': self.innodb_tmpdir,
+            'innodb_temp_data_file_path': self.innodb_temp_data_file_path,
+            'innodb_page_cleaners': self.innodb_page_cleaners,
+            'innodb_adaptive_hash_index': self.innodb_adaptive_hash_index,
+            'innodb_adaptive_hash_index_parts': self.innodb_adaptive_hash_index_parts,
+            'innodb_flush_log_at_timeout': self.innodb_flush_log_at_timeout,
+            'innodb_flush_log_at_trx_commit': self.innodb_flush_log_at_trx_commit,
+            'innodb_flush_method': self.innodb_flush_method,
+            'innodb_fsync_threshold': self.innodb_fsync_threshold,
+            'innodb_change_buffer_max_size': self.innodb_change_buffer_max_size,
+            'innodb_change_buffering': self.innodb_change_buffering,
+            'innodb_fill_factor': self.innodb_fill_factor,
+            'innodb_file_per_table': self.innodb_file_per_table,
+            'innodb_autoextend_increment': self.innodb_autoextend_increment,
+            'innodb_open_files':self.innodb_open_files,
+            'character_set_server': self.character_set_server,
+            'performance_schema': self.performance_schema,
         })
 
 
@@ -449,7 +505,72 @@ class MysqlRender(BaseRender):
         """
         """
         logger.info("config memory options")
-        pass
+        chunk = 1
+        if self.max_mem <= 512:
+            chunk = 1
+        elif self.max_mem <= 1024:
+            chunk = 2
+        elif self.max_mem <= 4096:
+            # 50%
+            chunk = int( (self.max_mem // 128) * 0.5 )
+        elif self.max_mem <= 1024 * 8:
+            # 55%
+            chunk = int( (self.max_mem // 128) * 0.55 )
+        elif self.max_mem <= 1024 * 16:
+            # 60%
+            chunk = int( (self.max_mem // 128) * 0.55 )
+        elif self.max_mem <= 1024 * 32:
+            # 65%
+            chunk = int( (self.max_mem // 128) * 0.65 )
+        elif self.max_mem <= 1024 * 64:
+            # 70%
+            chunk = int( (self.max_mem // 128) * 0.70 )
+        elif self.max_mem <= 1024 * 128:
+            # 75%
+            chunk = int( (self.max_mem // 128) * 0.75 )
+        elif self.max_mem <= 1024 * 256:
+            chunk = int( (self.max_mem // 128) * 0.80 )
+        else:
+            chunk = int( (self.max_mem // 128) * 0.85 )
+
+        # 1 innodb_buffer_pool_size
+        if chunk % 4 == 0:
+            # use GB
+            self.innodb_buffer_pool_size = f"{int(chunk / 8)}G"
+        else:
+            # use MB
+            self.innodb_buffer_pool_size = f"{int(chunk * 128)}M"
+        logger.debug(f"change innodb_buffer_pool_size to {self.innodb_buffer_pool_size}")
+        
+        # 2 innodb_buffer_pool_instances
+        instances = chunk // 8 if chunk >=8 else 1 # 至少每两 G 一个 instance
+        if instances >= 32:
+            instances = 32
+        self.innodb_buffer_pool_instances = instances
+        logger.debug(f"change innodb_buffer_pool_instances to {self.innodb_buffer_pool_instances}")
+
+        # 3 performance_schema 
+        self.performance_schema  = 'ON' if chunk >=8 else 'OFF'
+        logger.debug(f"change performance_schema to {self.performance_schema}")
+
+        # innodb_log_buffer_size
+        # innodb_log_file_size
+        if chunk >= 32:
+            self.innodb_log_file_size = '256M'
+            self.innodb_log_buffer_size = '256M'
+        elif chunk >= 64:
+            self.innodb_log_file_size = '256M'
+            self.innodb_log_buffer_size = '1G'
+        logger.debug(f"change innodb_log_file_size to {self.innodb_log_file_size}")
+        logger.debug(f"change innodb_log_buffer_size to {self.innodb_log_buffer_size}")
+
+        self.defaults.update({
+            'innodb_buffer_pool_size': self.innodb_buffer_pool_size,
+            'innodb_buffer_pool_instances': self.innodb_buffer_pool_instances,
+            'performance_schema': self.performance_schema,
+            'innodb_log_file_size': self.innodb_log_file_size,
+            'innodb_log_buffer_size': self.innodb_log_buffer_size,
+        })
 
     def config_all(self):
         """

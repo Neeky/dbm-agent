@@ -30,6 +30,7 @@ tmpdir                                   = {{tmpdir}}
 max_connections                          = {{max_connections}}
 autocommit                               = {{autocommit}}
 sort_buffer_size                         = {{sort_buffer_size}}
+eq_range_index_dive_limit                = {{eq_range_index_dive_limit}}
 
 ## table cache
 table_open_cache                         = {{table_open_cache}}
@@ -188,9 +189,47 @@ innodb_table_locks                       = {{innodb_table_locks}}
 innodb_sync_array_size                   = {{innodb_sync_array_size}}
 innodb_sync_spin_loops                   = {{innodb_sync_spin_loops}}
 innodb_print_ddl_logs                    = {{innodb_print_ddl_logs}}
+innodb_replication_delay                 = {{innodb_replication_delay}}
+innodb_cmp_per_index_enabled             = {{innodb_cmp_per_index_enabled}}
+innodb_disable_sort_file_cache           = {{innodb_disable_sort_file_cache}}
+innodb_numa_interleave                   = {{innodb_numa_interleave}}
+innodb_strict_mode                       = {{innodb_strict_mode}}
+innodb_sort_buffer_size                  = {{innodb_sort_buffer_size}}
+innodb_fast_shutdown                     = {{innodb_fast_shutdown}}
+innodb_force_load_corrupted              = {{innodb_force_load_corrupted}}
+innodb_force_recovery                    = {{innodb_force_recovery}}
+innodb_temp_tablespaces_dir              = {{innodb_temp_tablespaces_dir}}
+innodb_tmpdir                            = {{innodb_tmpdir}}
+innodb_temp_data_file_path               = {{innodb_temp_data_file_path}}
+innodb_page_cleaners                     = {{innodb_page_cleaners}}
+innodb_adaptive_hash_index               = {{innodb_adaptive_hash_index}}
+innodb_adaptive_hash_index_parts         = {{innodb_adaptive_hash_index_parts}}
+innodb_flush_log_at_timeout              = {{innodb_flush_log_at_timeout}}
+innodb_flush_log_at_trx_commit           = {{innodb_flush_log_at_trx_commit}}
+innodb_flush_method                      = {{innodb_flush_method}}
+innodb_fsync_threshold                   = {{innodb_fsync_threshold}}
+innodb_change_buffer_max_size            = {{innodb_change_buffer_max_size}}
+innodb_fill_factor                       = {{innodb_fill_factor}}
+innodb_file_per_table                    = {{innodb_file_per_table}}
+innodb_autoextend_increment              = {{innodb_autoextend_increment}}
+innodb_open_files                        = {{innodb_open_files}}
+character_set_server                     =  {{character_set_server}}
 
-
-
+####  for performance_schema
+performance_schema                                                      ={{performance_schema}}  
+performance_schema_consumer_global_instrumentation                      =ON  
+performance_schema_consumer_thread_instrumentation                      =ON  
+performance_schema_consumer_events_stages_current                       =ON  
+performance_schema_consumer_events_stages_history                       =ON  
+performance_schema_consumer_events_stages_history_long                  =OFF 
+performance_schema_consumer_statements_digest                           =ON  
+performance_schema_consumer_events_statements_current                   =ON  
+performance_schema_consumer_events_statements_history                   =ON  
+performance_schema_consumer_events_statements_history_long              =OFF 
+performance_schema_consumer_events_waits_current                        =ON  
+performance_schema_consumer_events_waits_history                        =ON  
+performance_schema_consumer_events_waits_history_long                   =OFF 
+performance-schema-instrument                                           ='memory/%=COUNTED'
 
 
 
@@ -205,3 +244,4 @@ innodb_print_ddl_logs                    = {{innodb_print_ddl_logs}}
 # wechat: jianglegege
 # email: 1721900707@qq.com
 # -- ~ _ ~ --
+
