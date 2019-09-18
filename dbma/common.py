@@ -161,24 +161,3 @@ def recursive_change_owner(path:str="/usr/local/mysql/",user:str="root",group:st
             shutil.chown(path,user,group)
 
 
-        
-
-
-
-
-            
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
