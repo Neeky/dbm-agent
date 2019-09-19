@@ -32,8 +32,6 @@ from dbma.initialization import is_user_exists,get_uid_gid,is_root
 
 # exit 1
 
-__dbma_version = "0.1.1"
-
 # 临时日志、再没有能读取配置文件前
 #logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s",level=logging.DEBUG)
 
