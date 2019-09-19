@@ -63,6 +63,18 @@
    #Writing /usr/local/python/lib/python3.7/site-packages/dbmc_agent-0.0.0.0-py3.7.egg-info   
    ```
    >目前 dbm-agent 的开发测试环境为 centos-7.6 + python-3.7.3 ；并且以后也不会兼容 centos-7.0 以下的版本，但是 python 会支持到 python3.6.0
+
+   **安装方法二）：pip3 安装**
+   ```bash
+   pip3 install dbm-agent==0.1.2
+
+   Installing collected packages: dbm-agent
+     Running setup.py install for dbm-agent ... done
+   Successfully installed dbm-agent-0.1.2
+   ```
+
+   > pip3 是 python3 的一个包管理工具，类似于 centos 中的 yum ，版本号的最后一位是奇数表示它是一个开发版本，偶数表示它是一个稳定版本
+
    ---
 
 ## 初始化
