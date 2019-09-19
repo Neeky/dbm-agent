@@ -1,6 +1,7 @@
 ## 目录
 ---
 - [dbm-agent](#dbm-agent)
+- [依赖](#依赖)
 - [安装](#安装)
 - [初始化](#初始化)
 - [启动](#启动)
@@ -35,6 +36,21 @@
 
 
   ---
+
+## 依赖
+   **1、python-3.6.x 级以上版本** dbm-agent 是用 python-3 语法编写的程序
+
+   **2、centos-7 级以上版本** dbm-agent 在操作系统层面只支持到 centos-7 以上版本的系统(centos8也支持)
+
+   **3、mysql-8.0.17 级以上版本** 个人的精力有限，决定不支持 mysql-8.0.17 以下版本的 MYSQL
+
+   **4、其它依赖** 如果你打算编译安装 python-3 环境，建议在此之前先安装上如下依赖包
+   ```bash
+   yum -y install gcc gcc-c++ libffi libyaml-devel libffi-devel zlib zlib-devel openssl shadow-utils \
+   openssl-devel libyaml sqlite-devel libxml2 libxslt-devel libxml2-devel wget vim mysql-devel 
+   ```
+
+   ---
 
 ## 安装
    **安装方法一）：源码安装**

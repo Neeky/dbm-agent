@@ -8,6 +8,7 @@ dbma/common.py
 dbma/configrender.py
 dbma/daemon.py
 dbma/errors.py
+dbma/gather.py
 dbma/initialization.py
 dbma/mysql.py
 dbma/server.py
