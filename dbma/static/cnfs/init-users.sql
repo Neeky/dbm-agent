@@ -8,6 +8,10 @@ alter user root@'localhost' identified by 'dbma@0352';
 create user root@'127.0.0.1' identified by 'dbma@0352';
 grant all on *.* to root@'127.0.0.1' ;
 
+create user 'clone_user'@'127.0.0.1' identified by 'dbma@0352';
+grant backup_admin on *.* to 'clone_user'@'127.0.0.1';
+
+
 set @@sql_log_bin=1;
 
 

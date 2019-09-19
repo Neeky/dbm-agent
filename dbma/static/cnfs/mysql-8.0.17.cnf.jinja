@@ -108,6 +108,10 @@ binlog_gtid_simple_recovery              = {{binlog_gtid_simple_recovery}}
 enforce_gtid_consistency                 = {{enforce_gtid_consistency}}
 gtid_executed_compression_period         = {{gtid_executed_compression_period}}
 
+## clone 
+plugin-load-add                          = mysql_clone.so
+clone                                    = FORCE_PLUS_PERMANEN
+
 # engines 
 default_storage_engine                   = {{default_storage_engine}}
 default_tmp_storage_engine               = {{default_tmp_storage_engine}}
