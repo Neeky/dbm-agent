@@ -9,8 +9,9 @@
 - [升级](#升级)
 - [卸载](#卸载)
 - [参数说明](#参数说明)
-- [当前可用的功能列表](#当前可用的功能列表)
-- [自动化安装卸载MySQL](#自动化安装卸载MySQL)
+- [dbm-agent集成的命令行工具](#dbm-agent集成的命令行工具)
+   - [自动化安装卸载MySQL](#自动化安装卸载MySQL)
+   - [备份](#备份)
 
 ---
 
@@ -33,6 +34,14 @@
   |8        | 删库资源回收                    |
 
   我们希望只要用电可以解决的事绝对不动用人力，要只 dbm-agent 能够自动恢复的故障就绝对不要告警，通过监控就能提前预防的问题就绝对不能让它搞出事故。
+
+  ---
+
+  **dbm-agent 可以工作在两种状态**
+
+  **1、守护进程模式** 这个要求与 dbm-center 配合使用，这样 DBA 就可以通过浏览器点点点完成 MySQL 的管理工作了
+
+  **2、命令行脚本模式** 这个是一个比较轻量的使用方法，也就是说用户可以直接通过 dbm-agent 提供的命令完成 MySQL 的管理工作 
 
 
   ---
@@ -203,14 +212,13 @@
 
    ---
 
-## 当前可用的功能列表
-   **1、自动化安装与卸载MySQL**
+## dbm-agent集成的命令行工具
+   实现生活中，用户对一套完整的数据库管理平台并不强烈，主要是因为他那里的数据库实例个数一个手都数的过来；然后告诉他部署一套管理平台要用的机器
+   比现在的数据库都多，他还要个锤子。
 
-   最初的设想是 dbm-agent 安装在客户机上，通过 https 协议与 dbm-center (web后台) 进行通信；以此得到它要执行的任务，dbm-agent 把任务执行完成之后再把信息回传
-   到 dbm-center。 dba 通过浏览器向 dbm-center 提任务这样 dba 就从琐事中抽身了。但是整个完成起来过于宏大，所以目前的想法是先把 dbm-agent 的各个功能作成一个个
-   单独的模板并为它配上适当的入口脚本，这个就是“当前可用功能的由来”
+   好消息是 dbm-agent 自带了许多开箱即用的命令行工具，做到 0 成本升级生产工具
 
-   ---
+   --- 
 
 ## 自动化安装卸载MySQL
    **1、安装 dbm-agent 并 初始化**
@@ -321,6 +329,20 @@
    ps -ef | grep mysql                                                        
    mysql33+  10284      1  1 16:10 ?        00:00:03 /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3306.cnf 
    
+   ```
+
+## 备份
+   **现在 dbm-agent 在备份操作上支持 clone-plugin 之后会支持到 mysqlbackup extrabackup mysqldump 等工具**
+   ```bash
+   dbma-cli-backup-instance --host=127.0.0.1 --port=3306 --user=root --password=dbma@0352 clone
+   
+   2019-09-19 19:31:04,649 - dbm-agent.dbma.backups - MainThread - INFO - start backup mysql-3306 useing clone-plugin
+   2019-09-19 19:31:05,031 - dbm-agent.dbma.backups - MainThread - INFO - backup mysql-3306 complete.
+
+   # 备份文件保存到了 /backup/mysql/{port} 目录下
+   ll /backup/mysql/3306
+   总用量 0
+   drwxr-x--- 5 mysql3306 mysql 168 9月  19 19:31 2019-09-19T19:31:04.649136
    ```
 
 

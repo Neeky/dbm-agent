@@ -32,9 +32,10 @@ class LocalClone(object):
             cnx = connector.connect(host=self.host,port=self.port,user=self.user,password=self.password)
             cursor = cnx.cursor()
             cursor.execute(f"CLONE LOCAL DATA DIRECTORY = '/backup/mysql/{self.port}/{self.now}' ")
+
         except Exception as err:
             logger.error(f"backup fail inner exception: {str(err)}")
-        logging.info(f"backup mysql-{self.port} complete.")
+        logger.info(f"backup mysql-{self.port} complete.")
     
     backup = local_clone
 
