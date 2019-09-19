@@ -7,14 +7,26 @@
 import logging
 import argparse
 from dbma.mysql import MySQLInstaller,MySQLUninstaller
+from dbma.gather import cpu_cores
 
 def parser_cmd_args():
     """
+    实现命令行参数的处理
     """
+    def _cores(c:int=0)->int:
+        if c == 0:
+            return cpu_cores().counts
+        try:
+            return int(c)
+        except TypeError:
+            logging.error(f"{c} convert to int fail !!! reset cores to {pu_cores().counts}")
+        return cpu_cores().counts
+
     parser = argparse.ArgumentParser(__name__)
     parser.add_argument('--port',type=int,default=3306,help="instance port")
     parser.add_argument('--pkg',type=str,default="mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz",help="mysql install package")
     parser.add_argument('--max-mem',type=int,default=1024,help="the max memory mysql instances can use")
+    parser.add_argument('--cores',type=_cores,default=0,help='cpu logic cores')
     parser.add_argument('--log',type=str,default='info',choices=['debug','info','warning','error'])
     parser.add_argument('action',type=str,choices=['install','uninstall'])
     args = parser.parse_args()
@@ -37,10 +49,11 @@ def main():
     max_mem = args.max_mem
     port = args.port
     action = args.action
+    cores = args.cores
 
     if action == 'install':
         logger.info(f'enter install mysql instance logic port={port}')
-        m = MySQLInstaller(port=port,pkg=pkg,max_mem=max_mem)
+        m = MySQLInstaller(port=port,pkg=pkg,max_mem=max_mem,cores=cores)
         m.install()
     elif action == 'uninstall':
         logger.info(f'enter uninstall mysql instance logic port={port}')

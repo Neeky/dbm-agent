@@ -13,7 +13,7 @@ from . import errors
 from . import common
 from . import checkings
 from . import configrender
-
+from . import gather
 logger = logging.getLogger('dbm-agent').getChild(__name__)
 
 # 读取配置文件
@@ -23,6 +23,8 @@ logger = logging.getLogger('dbm-agent').getChild(__name__)
 #template_dir = os.path.join(dbma_basedir,'etc/templates/') # /usr/local/dbm-agent/etc/templates/
 #pkg_dir = os.path.join(dbma_basedir,'pkg') # /usr/local/dbm-agent/pkg/
 #default_pkg = "mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz" # mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz
+
+_cores = gather.cpu_cores().counts
 
 class MySQLInstaller(object):
     """
@@ -70,14 +72,16 @@ class MySQLInstaller(object):
 
     def __init__(self,port:int=3306,pkg:str="mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz",
                  dbma_basedir='/usr/local/dbm-agent/',
-                 max_mem:int=1024):
+                 max_mem:int=1024,cores=_cores):
         self.port = port
         self.dbma_basedir = dbma_basedir
         self.pkg = pkg
         self.max_mem = max_mem
+        self.cores = cores
         self.version = pkg.replace('.tar.gz','').replace('.tar.xz','')
         self.init_file = '/usr/local/dbm-agent/etc/templates/init-users.sql'
-        logger.info(f"install mysql instance with this mysql version {self.pkg} port {self.port} max_mem {self.max_mem} MB")
+        logger.info(f"install mysql instance with this mysql version {self.pkg} port {self.port} max_mem {self.max_mem} MB cores = {cores}")
+
 
     def create_datadir(self):
         """
@@ -137,7 +141,7 @@ class MySQLInstaller(object):
     def start_mysql(self):
         """
         """
-        logger.info(f"start mysqld-{self.port} by systemcl start mysqld-{self.port}")
+        logger.info(f"start mysqld-{self.port} by systemctl start mysqld-{self.port}")
         with common.sudo(f"start mysql server {self.port}"):
             subprocess.run(f"systemctl start mysqld-{self.port}",shell=True)
 
@@ -187,7 +191,7 @@ class MySQLInstaller(object):
         self.unarchive_pkg()
 
         # 渲染配置文件
-        render = configrender.MysqlRender(pkg=self.pkg,port=self.port,max_mem=self.max_mem)
+        render = configrender.MysqlRender(pkg=self.pkg,port=self.port,max_mem=self.max_mem,cores=self.cores)
         render.render()
         
         # 初始化数据目录

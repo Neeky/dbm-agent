@@ -13,6 +13,7 @@ from jinja2 import Environment,FileSystemLoader
 from . import errors
 from . import checkings
 from . import common
+from . import gather
 
 logger = logging.getLogger('dbm-agent').getChild(__name__)
 
@@ -56,7 +57,7 @@ class MysqlRender(BaseRender):
     }
 
     def __init__(self,pkg:str="mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz",port:int=3306,max_mem:int=1024,
-                 tmpl_dir:str="/usr/local/dbm-agent/etc/templates/",tmpl_file="mysql-8.0.17.cnf.jinja"):
+                 tmpl_dir:str="/usr/local/dbm-agent/etc/templates/",tmpl_file="mysql-8.0.17.cnf.jinja",cores=1):
         super().__init__(tmpl_dir=tmpl_dir,tmpl_file=tmpl_file)
 
         #
@@ -64,6 +65,7 @@ class MysqlRender(BaseRender):
         self.defaults = copy.deepcopy(MysqlRender.defaults)
         self.pkg = pkg
         self.max_mem = max_mem
+        self.cores = cores
 
         # basic
         self.user = f"mysql{port}"
@@ -491,18 +493,47 @@ class MysqlRender(BaseRender):
 
     def _config_cpu(self):
         """
+        配置 cpu 相关的参数
         """
         logger.info("config cpu options")
-        pass
+        cores = self.cores
+        if cores <= 8:
+            pass
+        if cores <= 16:
+            self.innodb_read_io_threads = 6
+        elif cores <= 24:
+            self.innodb_write_io_threads = 6
+        elif cores <= 40:
+            self.innodb_read_io_threads = 8
+            self.innodb_purge_threads = 6
+        elif cores <= 80:
+            self.innodb_read_io_threads = 8
+            self.innodb_write_io_threads = 8
+            self.innodb_page_cleaners = 6
+        else:
+            self.innodb_read_io_threads = 8
+            self.innodb_write_io_threads = 8
+            self.innodb_purge_threads = 8
+            self.innodb_page_cleaners = 8
+        self.defaults.update({
+            'innodb_read_io_threads': self.innodb_read_io_threads,
+            'innodb_write_io_threads': self.innodb_write_io_threads,
+            'innodb_purge_threads': self.innodb_purge_threads,
+            'innodb_page_cleaners': self.innodb_page_cleaners,
+        })
+        logger.debug(f"change innodb_read_io_threads to {self.innodb_read_io_threads}")
+        logger.debug(f"change innodb_write_io_threads to {self.innodb_write_io_threads}")
+        logger.debug(f"change innodb_purge_threads to {self.innodb_purge_threads}")
+        logger.debug(f"chage innodb_page_cleaners to {self.innodb_page_cleaners}")
 
     def _config_disk(self):
         """
         """
         logger.info("config disk options")
-        pass
 
     def _config_mem(self):
         """
+        配置 memory 相关的参数
         """
         logger.info("config memory options")
         chunk = 1
