@@ -35,6 +35,16 @@
 
   我们希望只要用电可以解决的事绝对不动用人力，要只 dbm-agent 能够自动恢复的故障就绝对不要告警，通过监控就能提前预防的问题就绝对不能让它搞出事故。
 
+  **dbm-agent 在实现上遵守的规范**
+  |**规范ID**|规范内容|
+  |----------|--------|
+  |dbm-agent 工作目录位置 | /usr/local/dbm-agent |
+  |mysql 配置文件保存的位置 | /etc/my-{port}.cnf |
+  |systemd 配置文件保存的位置 | /usr/lib/systemd/system/mysqld-{port}.service |
+  |数据目录   | /database/mysql/data/{port} |
+  |备份目录   | /backup/mysql/{port} |
+  |默认密码   | dbma@0352 |
+
   ---
 
   **dbm-agent 可以工作在两种状态**
@@ -330,6 +340,8 @@
    mysql33+  10284      1  1 16:10 ?        00:00:03 /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3306.cnf 
    
    ```
+
+   ---
 
 ## 备份
    **现在 dbm-agent 在备份操作上支持 clone-plugin 之后会支持到 mysqlbackup extrabackup mysqldump 等工具**
