@@ -499,7 +499,7 @@ class MysqlRender(BaseRender):
         cores = self.cores
         if cores <= 8:
             pass
-        if cores <= 16:
+        elif cores <= 16:
             self.innodb_read_io_threads = 6
         elif cores <= 24:
             self.innodb_write_io_threads = 6
@@ -515,6 +515,7 @@ class MysqlRender(BaseRender):
             self.innodb_write_io_threads = 8
             self.innodb_purge_threads = 8
             self.innodb_page_cleaners = 8
+        
         self.defaults.update({
             'innodb_read_io_threads': self.innodb_read_io_threads,
             'innodb_write_io_threads': self.innodb_write_io_threads,
