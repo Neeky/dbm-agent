@@ -9,9 +9,9 @@ grant all on *.* to dbma@'127.0.0.1' with grant option;
 
 -- clone
 create user 'cloneuser'@'127.0.0.1' identified by 'dbma@0352';
-grant clone_admin on *.* to 'cloneuser'@'127.0.0.1';
+grant clone_admin,system_variables_admin on *.* to 'cloneuser'@'127.0.0.1';
 create user 'cloneuser'@'localhost' identified by 'dbma@0352';
-grant clone_admin on *.* to 'cloneuser'@'localhost';
+grant clone_admin,system_variables_admin on *.* to 'cloneuser'@'localhost';
 create user 'cloneuser'@'%' identified by 'dbma@0352';
 grant backup_admin on *.* to 'cloneuser'@'%';
 

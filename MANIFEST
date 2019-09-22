@@ -2,6 +2,7 @@
 setup.py
 bin/dbm-agent
 bin/dbma-cli-backup-instance
+bin/dbma-cli-build-slave
 bin/dbma-cli-single-instance
 dbma/__init__.py
 dbma/backups.py

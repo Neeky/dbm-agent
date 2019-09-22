@@ -72,6 +72,12 @@ class DBMANotInitedError(Error):
     pass
 
 
+class MySQLRestartTimeOut(Error):
+    """
+    MySQL restart 超时
+    """
+    pass
+
 
 
 

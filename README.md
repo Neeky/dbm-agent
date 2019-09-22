@@ -11,7 +11,8 @@
 - [参数说明](#参数说明)
 - [dbm-agent集成的命令行工具](#dbm-agent集成的命令行工具)
    - [自动化安装卸载MySQL](#自动化安装卸载MySQL)
-   - [备份](#备份)
+   - [自动备份](#自动备份)
+   - [自动增加Slave](#自动增加Slave)
 
 ---
 
@@ -110,6 +111,10 @@
    Installing collected packages: dbm-agent
      Running setup.py install for dbm-agent ... done
    Successfully installed dbm-agent-0.1.2
+   ```
+   如果你是在国内，推荐使用腾讯云的源对 pip 安装进行加速，配置也非常简单一行命令搞定
+   ```bash
+   pip3 config set global.index-url  https://mirrors.aliyun.com/pypi/simple
    ```
 
    > pip3 是 python3 的一个包管理工具，类似于 centos 中的 yum ，版本号的最后一位是奇数表示它是一个开发版本，偶数表示它是一个稳定版本
@@ -347,7 +352,7 @@
 
    ---
 
-## 备份
+## 自动备份
    **现在 dbm-agent 在备份操作上支持 clone-plugin 之后会支持到 mysqlbackup extrabackup mysqldump 等工具**
    ```bash
    dbma-cli-backup-instance --host=127.0.0.1 --port=3306 --user=root --password=dbma@0352 clone
@@ -359,6 +364,58 @@
    ll /backup/mysql/3306
    总用量 0
    drwxr-x--- 5 mysql3306 mysql 168 9月  19 19:31 2019-09-19T19:31:04.649136
+   ```
+   ---
+
+## 自动增加Slave
+   **总的来说这个是一个相对较大的任务、人工完成会非常的繁琐、但是用 dbm-agent 只要两个命令，下面用为实例 172.16.192.100:3306 增加一个新的 slave 172.16.192.110:3306为例**
+
+   **第一步：在 172.16.192.110 主机上安装新实例**
+   ```bash
+   # 在 172.16.192.110 机器上操作
+   dbma-cli-single-instance install --port=3306
+   ```
+   **第二步：从 172.16.192.100:3306 克隆数据并建立复制关系**
+   ```bash
+   # 在 172.16.192.110 机器上操作
+   dbma-cli-build-slave --host=127.0.0.1 --port=3306 --user=root --password=dbma@0352 --dhost=172.16.192.100 --dport=3306 --cuser=cloneuser --cpassword=dbma@0352  --ruser=repluser --rpassword=dbma@0352 build-slave
+
+   2019-09-22 12:55:08,103 - dbm-agent.dbma.backups - MainThread - INFO - set @@global.clone_valid_donor_list='172.16.192.100:3306';
+   2019-09-22 12:55:08,104 - dbm-agent.dbma.backups - MainThread - INFO - clone instance from cloneuser@'172.16.192.100':3306 identified by 'dbma@0352';
+   2019-09-22 12:55:10,033 - dbm-agent.dbma.backups - MainThread - INFO - remonte clone complete.
+   2019-09-22 12:55:10,034 - dbm-agent.dbma.backups - MainThread - INFO - mysqld-3306 restart complete.
+   2019-09-22 12:55:10,034 - dbm-agent.dbma.backups - MainThread - INFO - wait 11 seconds
+   2019-09-22 12:55:21,063 - dbm-agent.dbma.backups - MainThread - INFO - change master to master_host='172.16.192.100',master_port=3306,master_user='repluser',master_password='dbma@0352',master_ssl = 1,master_auto_position=1;
+   2019-09-22 12:55:21,074 - dbm-agent.dbma.backups - MainThread - INFO - change master complete.
+   2019-09-22 12:55:21,080 - dbm-agent.dbma.backups - MainThread - INFO - start slave complete.
+   ```
+   **第三步：检查**
+   ```sql
+   mysql -uroot -pdbma@0352 -h127.0.0.1 -P3306
+   mysql> show slave status \G
+   *************************** 1. row ***************************
+                  Slave_IO_State: Waiting for master to send event
+                     Master_Host: 172.16.192.100
+                     Master_User: repluser
+                     Master_Port: 3306
+                   Connect_Retry: 60
+                 Master_Log_File: mysql-bin.000002
+             Read_Master_Log_Pos: 1124
+                  Relay_Log_File: sqlstudio002-relay-bin.000002
+                   Relay_Log_Pos: 400
+           Relay_Master_Log_File: mysql-bin.000002
+                Slave_IO_Running: Yes
+               Slave_SQL_Running: Yes
+    -- 主从正常
+   mysql> select * from tempdb.t;                                                                   
+   +------+
+   | x    |
+   +------+
+   |  100 |
+   |  200 |
+   +------+
+   2 rows in set (0.00 sec)
+   -- 为了测试我专门在 172.16.192.100 上建立了库表，说明一切正常
    ```
 
 
