@@ -6,7 +6,7 @@
 
 import logging
 import argparse
-from dbma.mysql import MySQLInstaller,MySQLUninstaller
+from dbma.mysql import MySQLInstaller,MySQLUninstaller,MySQLSingleInstaller
 from dbma.gather import cpu_cores
 
 def parser_cmd_args():
@@ -53,7 +53,7 @@ def main():
 
     if action == 'install':
         logger.info(f'enter install mysql instance logic port={port}')
-        m = MySQLInstaller(port=port,pkg=pkg,max_mem=max_mem,cores=cores)
+        m = MySQLSingleInstaller(port=port,pkg=pkg,max_mem=max_mem,cores=cores)
         m.install()
     elif action == 'uninstall':
         logger.info(f'enter uninstall mysql instance logic port={port}')

@@ -48,7 +48,7 @@ class DirectoryNotExistsError(Error):
     """
     pass
 
-class DirecotryAlreadyExistsErrror(Error):
+class DirecotryAlreadyExistsError(Error):
     """
     """
     pass
@@ -78,6 +78,18 @@ class MySQLRestartTimeOut(Error):
     """
     pass
 
+
+class MgrLocalAddressError(Error):
+    pass
+
+class MgrGroupSeedsError(Error):
+    pass
+
+class PortIsInUseError(Error):
+    pass
+
+class NotALocalIPError(Error):
+    pass
 
 
 

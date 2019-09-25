@@ -99,8 +99,10 @@ slave_parallel_workers                   = {{slave_parallel_workers}}
 slave_max_allowed_packet                 = {{slave_max_allowed_packet}}
 slave_load_tmpdir                        = {{slave_load_tmpdir}}
 sync_relay_log                           = {{sync_relay_log}}
+relay_log                                = {{relay_log}}
 sync_relay_log_info                      = {{sync_relay_log_info}}
 rpl_semi_sync_slave_enabled              = {{rpl_semi_sync_slave_enabled}}
+slave_preserve_commit_order              = {{slave_preserve_commit_order}}
 
 ## gtid
 gtid_mode                                = {{gtid_mode}}
@@ -217,7 +219,22 @@ innodb_fill_factor                       = {{innodb_fill_factor}}
 innodb_file_per_table                    = {{innodb_file_per_table}}
 innodb_autoextend_increment              = {{innodb_autoextend_increment}}
 innodb_open_files                        = {{innodb_open_files}}
-character_set_server                     =  {{character_set_server}}
+character_set_server                     = {{character_set_server}}
+
+{% if is_mgr %}
+## group replication
+plugin_load_add                          = group_replication.so
+group_replication_recovery_use_ssl       = ON
+group_replication_ssl_mode               = REQUIRED
+group_replication_recovery_use_ssl       = ON
+group_replication_single_primary_mode    = {{group_replication_single_primary_mode}}
+group_replication_group_name             = {{group_replication_group_name}}
+group_replication_start_on_boot          = {{group_replication_start_on_boot}}
+group_replication_bootstrap_group        = {{group_replication_bootstrap_group}}
+group_replication_local_address          = {{group_replication_local_address}}
+group_replication_group_seeds            = {{group_replication_group_seeds}}
+{% endif %}
+
 
 ####  for performance_schema
 performance_schema                                                      ={{performance_schema}}  

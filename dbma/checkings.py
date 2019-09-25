@@ -13,6 +13,7 @@ import pwd
 import socket
 import logging
 from . import errors
+from . import common
 
 logger = logging.getLogger('dbm-agent').getChild(__name__)
 
@@ -83,6 +84,12 @@ def is_an_supported_mysql_version(pkg:str="mysql-8.0.17-linux-glibc2.12-x86_64.t
         return False
     # 8.0 的最小支持版本为 8.0.17 
     return re.search(r"([\d]\.[\d].[\d]{1,2})-linux-glibc2.12-x86_64",pkg).group(1) >= '8.0.17'
+
+def is_local_ip(ip:str="127.0.0.1"):
+    """
+    检查给定的 IP 是否是本机的 IP 地址
+    """
+    return ip in common.get_all_local_ip()
     
 
 

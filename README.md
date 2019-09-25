@@ -13,6 +13,7 @@
    - [自动化安装卸载MySQL](#自动化安装卸载MySQL)
    - [自动备份](#自动备份)
    - [自动增加Slave](#自动增加Slave)
+   - [自动搭建MGR高可用集群](#自动搭建MGR高可用集群)
 
 ---
 
@@ -417,5 +418,119 @@
    2 rows in set (0.00 sec)
    -- 为了测试我专门在 172.16.192.100 上建立了库表，说明一切正常
    ```
+   ---
+
+
+## 自动搭建MGR高可用集群
+   **以下面三台机器上搭建 MGR 集群为例**
+
+   |**IP**|**角色**|
+   |------|--------|
+   |192.168.100.101| primary |
+   |192.168.100.102| seconder |
+   |192.168.100.103| seconder |
+
+   **搭建 primary 结点**
+
+   dbm-agent 在搭建 MGR 时把会 --members 选项中给定的第一个 IP 设置为 primary 其它的都设置为 seconder，所以 IP 地址出现的次序对结果尤为重要
+   ```bash
+   # 在 192.168.100.101 上执行
+dbma-cli-build-mgr --port=3306 --max-mem=256 --members=192.168.100.101,192.168.100.102,192.168.100.103
+
+2019-09-25 19:29:22,830 - dbm-agent.dbma.mysql - MainThread - INFO - build mgr with members 192.168.100.101,192.168.100.102,192.168.100.103
+2019-09-25 19:29:22,830 - dbm-agent.dbma.mysql - MainThread - INFO - check members option is right or not
+2019-09-25 19:29:22,830 - dbm-agent.dbma.mysql - MainThread - INFO - mysql group replication use 33061 for communicate
+2019-09-25 19:29:22,830 - dbm-agent.dbma.mysql - MainThread - INFO - mgr ip {'192.168.100.101'}
+2019-09-25 19:29:22,830 - dbm-agent.dbma.mysql - MainThread - INFO - mysql group replication  local_address use 192.168.100.101:33061
+2019-09-25 19:29:22,830 - dbm-agent.dbma.mysql - MainThread - INFO - mysql group replication  group_seeds use  192.168.100.101:33061,192.168.100.102:33061,192.168.100.103:33061
+2019-09-25 19:29:22,830 - dbm-agent.dbma.configrender - MainThread - INFO - load template from /usr/local/dbm-agent/etc/templates/
+2019-09-25 19:29:22,830 - dbm-agent.dbma.configrender - MainThread - INFO - template file name mysql-8.0.17.cnf.jinja
+2019-09-25 19:29:22,852 - dbm-agent.dbma.configrender - MainThread - INFO - mysql pkg mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz max memory 256
+2019-09-25 19:29:22,852 - dbm-agent.dbma.mysql - MainThread - INFO - install mysql instance with mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz port 3306 max_mem 256 MB cores = 0
+2019-09-25 19:29:22,852 - dbm-agent.dbma.mysql - MainThread - INFO - entry mysql group replication install logic
+2019-09-25 19:29:22,852 - dbm-agent.dbma.mysql - MainThread - INFO - check package '/usr/local/dbm-agent/pkg/mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz' is exists
+2019-09-25 19:29:22,853 - dbm-agent.dbma.mysql - MainThread - INFO - check port 3306 is in use or not
+2019-09-25 19:29:22,853 - dbm-agent.dbma.mysql - MainThread - INFO - check config file  /etc/my-3306.cnf 
+2019-09-25 19:29:22,853 - dbm-agent.dbma.mysql - MainThread - INFO - check datadir /database/mysql/data/3306
+2019-09-25 19:29:22,853 - dbm-agent.dbma.mysql - MainThread - INFO - check mysql version mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz
+2019-09-25 19:29:22,854 - dbm-agent.dbma.mysql - MainThread - INFO - check group_replication_local_address = 192.168.100.101:33061 option is right or not
+2019-09-25 19:29:22,855 - dbm-agent.dbma.mysql - MainThread - INFO - check group_replication_group_seeds = 192.168.100.101:33061,192.168.100.102:33061,192.168.100.103:33061 option is right or not
+2019-09-25 19:29:22,855 - dbm-agent.dbma.mysql - MainThread - INFO - change hostname to mgr192_168_100_101
+2019-09-25 19:29:22,900 - dbm-agent.dbma.mysql - MainThread - INFO - config dns
+2019-09-25 19:29:22,902 - dbm-agent.dbma.common - MainThread - INFO - 192.168.100.101 is a local ip force an record
+2019-09-25 19:29:22,920 - dbm-agent.dbma.mysql - MainThread - INFO - create datadir /database/mysql/data/3306
+2019-09-25 19:29:22,920 - dbm-agent.dbma.mysql - MainThread - INFO - unarchive mysql pkg to /usr/local/
+2019-09-25 19:29:22,920 - dbm-agent.dbma.mysql - MainThread - WARNING - /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64 exists mysql may has been installed. skip untar mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz to /usr/local/
+2019-09-25 19:29:22,920 - dbm-agent.dbma.configrender - MainThread - INFO - config cpu options
+2019-09-25 19:29:22,921 - dbm-agent.dbma.configrender - MainThread - INFO - config memory options
+2019-09-25 19:29:22,921 - dbm-agent.dbma.configrender - MainThread - INFO - config disk options
+2019-09-25 19:29:22,921 - dbm-agent.dbma.configrender - MainThread - INFO - going to render config file
+2019-09-25 19:29:22,921 - dbm-agent.dbma.mysql - MainThread - INFO - init database with --initialize-insecure
+2019-09-25 19:29:22,921 - dbm-agent.dbma.mysql - MainThread - WARNING - ['/usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld', '--defaults-file=/etc/my-3306.cnf', '--initialize-insecure', '--user=mysql3306', '--init-file=/usr/local/dbm-agent/etc/init-users.sql']
+2019-09-25 19:29:27,414 - dbm-agent.dbma.mysql - MainThread - INFO - config service(systemd) and daemon-reload
+2019-09-25 19:29:27,414 - dbm-agent.dbma.configrender - MainThread - INFO - load template from /usr/local/dbm-agent/etc/templates/
+2019-09-25 19:29:27,414 - dbm-agent.dbma.configrender - MainThread - INFO - template file name mysqld.service.jinja
+2019-09-25 19:29:27,480 - dbm-agent.dbma.mysql - MainThread - INFO - config mysql auto start on boot
+2019-09-25 19:29:27,533 - dbm-agent.dbma.mysql - MainThread - INFO - config path env variable /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/
+2019-09-25 19:29:27,534 - dbm-agent.dbma.mysql - MainThread - INFO - start mysqld-3306 by systemctl start mysqld-3306
+2019-09-25 19:29:27,576 - dbm-agent.dbma.mysql - MainThread - INFO - export so file
+2019-09-25 19:29:27,576 - dbm-agent.dbma.mysql - MainThread - INFO - export header file
+2019-09-25 19:29:27,584 - dbm-agent.dbma.common - MainThread - INFO - wait for 127.0.0.1:3306 avaiable
+2019-09-25 19:29:28,586 - dbm-agent.dbma.mysql - MainThread - INFO - sleep 7 secondes wait for mysql protoco avaiable
+2019-09-25 19:29:35,590 - dbm-agent.dbma.mysql - MainThread - INFO - this is a primary node prepare bootstrap a group
+2019-09-25 19:29:35,608 - dbm-agent.dbma.mysql - MainThread - INFO - change master to master_user='repluser',master_password='dbma@0352' for channel 'group_replication_recovery';
+2019-09-25 19:29:35,616 - dbm-agent.dbma.mysql - MainThread - INFO - set @@global.group_replication_bootstrap_group=ON;start group_replication;set @@global.group_replication_bootstrap_group=OFF;
+2019-09-25 19:29:35,616 - dbm-agent.dbma.mysql - MainThread - INFO - mysql group replication primary node config complete
+
+mysql -h127.0.0.1 -P3306 -uroot -pdbma@0352 -e"select * from performance_schema.replication_group_members;"
++---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+| CHANNEL_NAME              | MEMBER_ID                            | MEMBER_HOST        | MEMBER_PORT | MEMBER_STATE | MEMBER_ROLE | MEMBER_VERSION |
++---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+| group_replication_applier | ba505d15-df87-11e9-9432-000c29f3e728 | mgr192_168_100_101 |        3306 | ONLINE       | PRIMARY     | 8.0.17         |
++---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+
+```
+添加第二个结点
+```bash
+# 在 192.168.100.102 上执行
+dbma-cli-build-mgr --port=3306 --max-mem=256 --members=192.168.100.101,192.168.100.102,192.168.100.103
+... ...
+... ...
+
+mysql -h127.0.0.1 -P3306 -uroot -pdbma@0352 -e"select * from performance_schema.replication_group_members;"
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+| CHANNEL_NAME              | MEMBER_ID                            | MEMBER_HOST        | MEMBER_PORT | MEMBER_STATE | MEMBER_ROLE | MEMBER_VERSION |
++---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+| group_replication_applier | ba505d15-df87-11e9-9432-000c29f3e728 | mgr192_168_100_101 |        3306 | ONLINE       | PRIMARY     | 8.0.17         |
+| group_replication_applier | c47e73dd-df87-11e9-894e-000c290844eb | mgr192_168_100_102 |        3306 | ONLINE       | SECONDARY   | 8.0.17         |
++---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+
+```
+添加第三个结点
+```bash
+# 在 192.168.100.103 上执行
+dbma-cli-build-mgr --port=3306 --max-mem=256 --members=192.168.100.101,192.168.100.102,192.168.100.103
+... ...
+... ...
+
+mysql -h127.0.0.1 -P3306 -uroot -pdbma@0352 -e"select * from performance_schema.replication_group_members;"
++---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+| CHANNEL_NAME              | MEMBER_ID                            | MEMBER_HOST        | MEMBER_PORT | MEMBER_STATE | MEMBER_ROLE | MEMBER_VERSION |
++---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+| group_replication_applier | ba505d15-df87-11e9-9432-000c29f3e728 | mgr192_168_100_101 |        3306 | ONLINE       | PRIMARY     | 8.0.17         |
+| group_replication_applier | c47e73dd-df87-11e9-894e-000c290844eb | mgr192_168_100_102 |        3306 | ONLINE       | SECONDARY   | 8.0.17         |
+| group_replication_applier | e3eba066-df87-11e9-a9d6-000c29d535bc | mgr192_168_100_103 |        3306 | ONLINE       | SECONDARY   | 8.0.17         |
++---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+   ```
+
+**注意事项：**
+
+1、你应该也看出来了，我们在三台主机上执行的命令是相同的，对这个就是为了方便 DBA 无脑操作
+
+2、对于自动搭建 MGR 高可用集群来说，你只要保证防火墙是开放的就行，其它的事 dbm-agent 包圆了
+
+---
+
 
 

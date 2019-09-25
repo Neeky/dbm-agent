@@ -23,7 +23,8 @@ class BaseRender(object):
     所有配置文件渲染功能的基类
     """
     def __init__(self,tmpl_dir:str="/usr/local/dbm-agent/etc/templates/",
-                      tmpl_file:str="mysql-8.0.17.cnf.jinja"):
+                tmpl_file:str="mysql-8.0.17.cnf.jinja"):
+        
         logger.info(f"load template from {tmpl_dir}")
         logger.info(f"template file name {tmpl_file}")
         if not checkings.is_directory_exists(tmpl_dir):
@@ -56,8 +57,14 @@ class MysqlRender(BaseRender):
         'pid': None,
     }
 
-    def __init__(self,pkg:str="mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz",port:int=3306,max_mem:int=1024,
-                 tmpl_dir:str="/usr/local/dbm-agent/etc/templates/",tmpl_file="mysql-8.0.17.cnf.jinja",cores=1):
+    def __init__(self,
+                 pkg:str="mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz",
+                 port:int=3306,
+                 max_mem:int=1024,
+                 cores=1,
+                 tmpl_dir:str="/usr/local/dbm-agent/etc/templates/",
+                 tmpl_file="mysql-8.0.17.cnf.jinja"
+                 ):
         super().__init__(tmpl_dir=tmpl_dir,tmpl_file=tmpl_file)
 
         #
@@ -167,9 +174,11 @@ class MysqlRender(BaseRender):
         self.slave_parallel_workers = 2
         self.slave_max_allowed_packet = '1G'
         self.slave_load_tmpdir = '/tmp/'
+        self.relay_log = 'relay'
         self.sync_relay_log = 10000
         self.sync_relay_log_info = 10000
         self.rpl_semi_sync_slave_enabled = 1
+        self.slave_preserve_commit_order = 'ON'
 
         # gtid
         self.binlog_gtid_simple_recovery = 'ON'
@@ -371,7 +380,9 @@ class MysqlRender(BaseRender):
             'slave_parallel_type': self.slave_parallel_type,
             'slave_parallel_workers': self.slave_parallel_workers,
             'slave_max_allowed_packet': self.slave_max_allowed_packet,
+            'slave_preserve_commit_order': self.slave_preserve_commit_order,
             'slave_load_tmpdir': self.slave_load_tmpdir,
+            'relay_log': self.relay_log,
             'sync_relay_log': self.sync_relay_log,
             'sync_relay_log_info': self.sync_relay_log_info,
             'rpl_semi_sync_slave_enabled': self.rpl_semi_sync_slave_enabled,
@@ -488,6 +499,27 @@ class MysqlRender(BaseRender):
             'innodb_open_files':self.innodb_open_files,
             'character_set_server': self.character_set_server,
             'performance_schema': self.performance_schema,
+        })
+
+    def enable_mgr(self,local_address:str="127.0.0.1:33061",group_seeds:str="127.0.0.1:33061,127.0.0.1:33062,127.0.0.1:33063"):
+        """
+        """
+        self.is_mgr = True
+        self.group_replication_single_primary_mode = "ON"
+        self.group_replication_group_name = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        self.group_replication_start_on_boot = "OFF"
+        self.group_replication_bootstrap_group = "OFF"
+        self.group_replication_local_address = local_address
+        self.group_replication_group_seeds = group_seeds
+
+        self.defaults.update({
+            'is_mgr': self.is_mgr,
+            'group_replication_single_primary_mode': self.group_replication_single_primary_mode,
+            'group_replication_group_name': self.group_replication_group_name,
+            'group_replication_start_on_boot': self.group_replication_start_on_boot,
+            'group_replication_bootstrap_group': self.group_replication_bootstrap_group,
+            'group_replication_local_address': self.group_replication_local_address,
+            'group_replication_group_seeds': self.group_replication_group_seeds,
         })
 
 

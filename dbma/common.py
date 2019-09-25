@@ -5,11 +5,15 @@
 
 import os
 import pwd
+import time
+import psutil
 import shutil
+import socket
 import logging
 import pathlib
 import subprocess
 import contextlib
+import configparser
 from . import errors
 from . import checkings
 
@@ -159,5 +163,72 @@ def recursive_change_owner(path:str="/usr/local/mysql/",user:str="root",group:st
                 recursive_change_owner(os.path.join(path,item),user,group)
         else:
             shutil.chown(path,user,group)
+
+def get_all_local_ip()->set:
+    """
+    返回当前主机上的 IP 集合
+    """
+    eths = psutil.net_if_addrs()
+    ips = set()
+    for k,v in eths.items():
+        for i in v:
+            ips.add(i.address)
+    return ips
+
+def resolve_dns(ip:str="127.0.0.1",prefix:str=""):
+    """
+    在 /etc/hosts 中为 ip 添加一个记录
+    """
+    has_been_resolved = True
+    try:
+        socket.gethostbyaddr(ip)
+    except socket.herror as err:
+        has_been_resolved = False
+        logger.warning(f"dns resolve {ip} fail prepare config /etc/hosts inner error {str(err)}")
+    # 如果是本机也强制加一条
+    if ip in get_all_local_ip():
+        has_been_resolved = False
+        logger.info(f"{ip} is a local ip force an record")
+        # 防止重复加
+        with open('/etc/hosts','r') as hosts:
+            for line in hosts:
+                if line.startswith(ip):
+                    has_been_resolved = True
+
+    with sudo('config /etc/hosts for dns'):
+        if has_been_resolved == False:
+            with open('/etc/hosts','a') as hosts:
+                name = ip.replace('.','_')
+                hosts.write(f"\n{ip}    {prefix}{name}")
+
+
+def get_init_pwd(cnf_file:str="/usr/local/dbm-agent/etc/dbma.cnf"):
+    """
+    查询 dbma 配置文件中的 init_pwd 信息
+    """
+    parser = configparser.ConfigParser()
+    parser.read(cnf_file)
+    return parser['dbma']['init_pwd']
+
+def wait_until_tcp_ready(ip:str="127.0.0.1",port:int=3306,timeout=3600):
+    """
+    检查 TCP 端口直到端口处理可用状态或超时
+    """
+    wait_seconds = 0
+    while True:
+        if checkings.is_port_in_use(ip,port) or wait_seconds >= timeout:
+            break
+        logger.info(f"wait for {ip}:{port} avaiable")
+        time.sleep(1)
+        wait_seconds = wait_seconds + 1
+
+def config_hostname(name):
+    with sudo('config host name'):
+        subprocess.run(f"hostnamectl set-hostname {name} ",shell=True)
+
+
+
+
+
 
 

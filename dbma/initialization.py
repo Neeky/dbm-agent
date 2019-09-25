@@ -25,6 +25,7 @@ import contextlib
 import configparser
 import logging.handlers
 from datetime import datetime
+from jinja2 import Environment,FileSystemLoader
 
 from . import errors
 # exit 1
@@ -88,8 +89,8 @@ def create_user(user_name:str):
         with sudo(f"create user {user_name} and user group {user_name}"):
             if not is_group_exists(user_name):
                 logging.info(f"groupadd {user_name}")
-                subprocess.run(f"groupadd {user_name}",shell=True)
-            subprocess.run(f"useradd {user_name} -g {user_name} ",shell=True)
+                subprocess.run(f"groupadd {user_name}",shell=True,capture_output=True)
+            subprocess.run(f"useradd {user_name} -g {user_name} ",shell=True,capture_output=True)
     except Exception as err:
         logging.error(f"an exception been tiggered in create usere stage. {str(err)}")
         logging.error(f"{type(err)}")
@@ -123,6 +124,25 @@ def get_uid_gid(user_name):
         # 当给定的用户不存在的话会报 KeyError
         # 把 KeyError 异常转化为 errors.UserNotExistsError
         raise errors.UserNotExistsError()
+
+
+def render_init_sql(args):
+    """
+    """
+    #tmpl_dir = f"/usr/local/dbm-agent/etc/templates/"
+    #tmpl_file = f"init-users.sql.jinja"
+    tmpl_dir = os.path.join(args.base_dir,'etc/templates')
+    tmpl_file = f"init-users.sql.jinja"
+    env = Environment(loader=FileSystemLoader(searchpath=tmpl_dir))
+    tmpl = env.get_template(tmpl_file)
+    tmpl.globals = {'initpwd':args.init_pwd}
+    init_file = os.path.join(args.base_dir,'etc/init-users.sql')
+    logging.info(f"prepare rende init-sql-file {init_file}")
+    with open(init_file,'w') as cnf:
+        sqls = tmpl.render()
+        cnf.write(sqls)
+    logging.info(f"init-sql-file render complete")
+
 
 def init(args):
     """
@@ -162,9 +182,16 @@ def init(args):
     pkg_dir = os.path.join(os.path.dirname(dbma.__file__),'static/cnfs')
     shutil.copytree(pkg_dir,os.path.join(args.base_dir,'etc/templates'))
 
+    #
+    render_init_sql(args)
+
     # 修改 /usr/local/dbm-agent 目录的权限
     if is_user_exists(args.user_name):
         subprocess.run(["chown","-R",f"{args.user_name}:{args.user_name}",args.base_dir ])
+        #subprocess.run(["chmod","-R",f"600",os.path.join(args.base_dir,'etc') ])
+
+    logging.info("init complete")
+
 
 def upgrade(args):
     """
