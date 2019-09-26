@@ -512,7 +512,7 @@ class MysqlRender(BaseRender):
         self.group_replication_local_address = local_address
         self.group_replication_group_seeds = group_seeds
         self.group_replication_recovery_use_ssl = 'ON'
-        self.group_replication_ssl_mode = 'ON'
+        self.group_replication_ssl_mode = 'REQUIRED'
         self.group_replication_consistency = 'EVENTUAL'
         self.group_replication_poll_spin_loops = 0
         self.group_replication_compression_threshold = 1000000
