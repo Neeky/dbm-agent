@@ -511,6 +511,22 @@ class MysqlRender(BaseRender):
         self.group_replication_bootstrap_group = "OFF"
         self.group_replication_local_address = local_address
         self.group_replication_group_seeds = group_seeds
+        self.group_replication_recovery_use_ssl = 'ON'
+        self.group_replication_ssl_mode = 'ON'
+        self.group_replication_consistency = 'EVENTUAL'
+        self.group_replication_poll_spin_loops = 0
+        self.group_replication_compression_threshold = 1000000
+        self.group_replication_communication_max_message_size = '128M'
+        self.group_replication_message_cache_size = '1G'
+        self.group_replication_flow_control_applier_threshold = 25000
+        self.group_replication_flow_control_certifier_threshold = 25000
+        self.group_replication_flow_control_hold_percent = 10
+        self.group_replication_flow_control_mode = 'QUOTA'
+        self.group_replication_flow_control_period = 1
+        self.group_replication_flow_control_release_percent = 50
+
+
+
 
         self.defaults.update({
             'is_mgr': self.is_mgr,
@@ -520,6 +536,19 @@ class MysqlRender(BaseRender):
             'group_replication_bootstrap_group': self.group_replication_bootstrap_group,
             'group_replication_local_address': self.group_replication_local_address,
             'group_replication_group_seeds': self.group_replication_group_seeds,
+            'group_replication_recovery_use_ssl': self.group_replication_recovery_use_ssl,
+            'group_replication_ssl_mode': self.group_replication_ssl_mode,
+            'group_replication_consistency': self.group_replication_consistency,
+            'group_replication_poll_spin_loops': self.group_replication_poll_spin_loops,
+            'group_replication_compression_threshold': self.group_replication_compression_threshold,
+            'group_replication_communication_max_message_size': self.group_replication_communication_max_message_size,
+            'group_replication_message_cache_size': self.group_replication_message_cache_size,
+            'group_replication_flow_control_applier_threshold': self.group_replication_flow_control_applier_threshold,
+            'group_replication_flow_control_certifier_threshold': self.group_replication_flow_control_certifier_threshold,
+            'group_replication_flow_control_hold_percent': self.group_replication_flow_control_hold_percent,
+            'group_replication_flow_control_mode': self.group_replication_flow_control_mode,
+            'group_replication_flow_control_period': self.group_replication_flow_control_period,
+            'group_replication_flow_control_release_percent': self.group_replication_flow_control_release_percent,
         })
 
 

@@ -223,16 +223,26 @@ character_set_server                     = {{character_set_server}}
 
 {% if is_mgr %}
 ## group replication
-plugin_load_add                          = group_replication.so
-group_replication_recovery_use_ssl       = ON
-group_replication_ssl_mode               = REQUIRED
-group_replication_recovery_use_ssl       = ON
-group_replication_single_primary_mode    = {{group_replication_single_primary_mode}}
-group_replication_group_name             = {{group_replication_group_name}}
-group_replication_start_on_boot          = {{group_replication_start_on_boot}}
-group_replication_bootstrap_group        = {{group_replication_bootstrap_group}}
-group_replication_local_address          = {{group_replication_local_address}}
-group_replication_group_seeds            = {{group_replication_group_seeds}}
+plugin_load_add                                    = group_replication.so
+group_replication_recovery_use_ssl                 = ON
+group_replication_ssl_mode                         = REQUIRED
+group_replication_consistency                      = EVENTUAL
+group_replication_poll_spin_loops                  = 0
+group_replication_compression_threshold            = 1000000
+group_replication_communication_max_message_size   = 128M
+group_replication_message_cache_size               = 1G
+group_replication_flow_control_applier_threshold   = 25000
+group_replication_flow_control_certifier_threshold = 25000
+group_replication_flow_control_hold_percent        = 10
+group_replication_flow_control_mode                = QUOTA
+group_replication_flow_control_period              = 1
+group_replication_flow_control_release_percent     = 50
+group_replication_single_primary_mode              = {{group_replication_single_primary_mode}}
+group_replication_group_name                       = {{group_replication_group_name}}
+group_replication_start_on_boot                    = {{group_replication_start_on_boot}}
+group_replication_bootstrap_group                  = {{group_replication_bootstrap_group}}
+group_replication_local_address                    = {{group_replication_local_address}}
+group_replication_group_seeds                      = {{group_replication_group_seeds}}
 {% endif %}
 
 
@@ -265,4 +275,5 @@ performance-schema-instrument                                           ='memory
 # wechat: jianglegege
 # email: 1721900707@qq.com
 # -- ~ _ ~ --
+
 
