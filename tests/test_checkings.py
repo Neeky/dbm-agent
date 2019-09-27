@@ -58,6 +58,12 @@ class CheckingsTeestCase(unittest.TestCase):
         self.assertTrue(checkings.is_an_supported_mysql_version('mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz'))
         self.assertFalse(checkings.is_an_supported_mysql_version('mysql-8.0.16-linux-glibc2.12-x86_64.tar.xz'))
         self.assertFalse(checkings.is_an_supported_mysql_version('mysql-5.7.26-linux-glibc2.12-x86_64.tar.gz'))
+
+    def test_07_is_local_ip(self):
+        """
+        """
+        self.assertTrue(checkings.is_local_ip('127.0.0.1'))
+        self.assertFalse(checkings.is_local_ip('127.0.0.1111'))
     
 
     
