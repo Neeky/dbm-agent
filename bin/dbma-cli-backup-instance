@@ -7,6 +7,7 @@
 import sys
 import logging
 import argparse
+import shutil
 import dbma.checkings as checkings
 import dbma.backups as backups
 import dbma.common as common
@@ -48,6 +49,8 @@ def main():
         logger.warning(f"direcotry '{backupdir}' not exists dbm-agent going to create it")
         common.create_directory(backupdir)
         common.recursive_change_owner(backupdir,user=f"mysql{args.port}",group="mysql")
+    else:
+        shutil.chown(backupdir,user=f"mysql{args.port}",group="mysql")
 
     if not checkings.is_port_in_use(args.host,args.port):
         logger.error(f"can't connect to {args.host}:{args.port} backup fail.")
