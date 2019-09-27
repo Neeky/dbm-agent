@@ -71,13 +71,11 @@ class DBMANotInitedError(Error):
     """
     pass
 
-
 class MySQLRestartTimeOut(Error):
     """
     MySQL restart 超时
     """
     pass
-
 
 class MgrLocalAddressError(Error):
     pass
@@ -89,6 +87,12 @@ class PortIsInUseError(Error):
     pass
 
 class NotALocalIPError(Error):
+    pass
+
+class MySQLIsNotRunningError(Error):
+    """
+    当通过 127.0.0.1:${port} 连接不上 MySQL 时就可以报这个错
+    """
     pass
 
 
