@@ -5,7 +5,6 @@
 import time
 import logging
 from datetime import datetime
-from datetime import datetime
 from mysql import connector
 from . import checkings
 from . import errors
@@ -132,9 +131,41 @@ class RemoteClone(object):
     backup = remonte_clone
     clone = remonte_clone
 
+class SchemaDump(object):
+    """
+    完成 Schema 的 dump 操作
+    """
+    def __init__(self,
+                db_name:str="tempdb",
+                user:str="dbma",
+                password:str="dbma@0352",
+                host:str="127.0.0.1",
+                port:int=3306):
+        self.db_name = db_name
+        self.user = user
+        self.password = password
+        self.host = host
+        self.port = port
+    
+    def pre_checkings(self):
+        """
+        检查数据库是不是可以正常连接
+        """
+        if not checkings.is_port_in_use(self.host,self.port):
+            raise errors.MySQLIsNotRunningError(f"{self.host}:{self.port}")
+    
+    def pre_dump(self):
+        """
+        在 dump 之前要执行的操作
+        """
+        #try:
+        #    self.pre_checkings()
+        #except Exception as err:
+        #    logger.error(str(err))
+        #
+        self.pre_checkings()
 
 
-        
 
 
 
