@@ -508,6 +508,9 @@ class MySQLUninstaller(object):
             logger.error(f"during uninstall mysql a error occur inner error : {str(err)}")
 
 
-
+class UserManager(object):
+    """
+    """
+    
 
 
