@@ -93,6 +93,17 @@ def delete_user(user_name):
             subprocess.run(f'userdel -r {user_name}',shell=True,capture_output=True)
     logger.debug(f"exit 'delete_user' function ")
 
+def delete_group(group_name):
+    """
+    实现删除用户组的逻辑
+    """
+    logger.debug(f"enter 'delete_group' function group_name={group_name}")
+    if checkings.is_group_exists(group_name):
+        with sudo(f"delete group {group_name}"):
+            subprocess.run(f"groupdel {group_name}",shell=True,capture_output=True)
+    logger.debug(f"exit 'delete_group' function ")
+
+
 def config_path(path="/usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/",user_name="mysql3306"):
     """
     配置环境变量
@@ -200,7 +211,6 @@ def resolve_dns(ip:str="127.0.0.1",prefix:str=""):
             with open('/etc/hosts','a') as hosts:
                 name = ip.replace('.','_')
                 hosts.write(f"\n{ip}    {prefix}{name}")
-
 
 def get_init_pwd(cnf_file:str="/usr/local/dbm-agent/etc/dbma.cnf"):
     """
