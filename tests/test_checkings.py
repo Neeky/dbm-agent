@@ -10,34 +10,35 @@ from datetime import datetime
 class CheckingsTeestCase(unittest.TestCase):
     """
     """
-    def setUp(self):
-        super().setUp()
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
         # create a socket server
-        self.ip = '127.0.0.1'
-        self.port = 65321
-        self.user = 'unittest'
-        self.now = datetime.now().isoformat()
-        self.t_file = f"/tmp/unittest-{self.now}"
+        cls.ip = '127.0.0.1'
+        cls.port = 65321
+        cls.user = 'unittest'
+        cls.now = datetime.now().isoformat()
+        cls.t_file = f"/tmp/unittest-{cls.now}"
         try:
-            self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-            self.sock.bind((self.ip,self.port))
-            self.sock.listen(2)
-        except Exception as err:
+            cls.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+            cls.sock.bind((cls.ip,cls.port))
+            cls.sock.listen(2)
+        except Exception :
             pass
         # create a user
-        subprocess.run(f"groupadd {self.user}",shell=True)
-        subprocess.run(f"useradd -g {self.user} {self.user}",shell=True)
+        subprocess.run(f"groupadd {cls.user}",shell=True)
+        subprocess.run(f"useradd -g {cls.user} {cls.user}",shell=True)
 
-        with open(self.t_file,'w') as fd:
+        with open(cls.t_file,'w') as fd:
             fd.write('unittest.')
 
-
-    def tearDown(self):
-        super().tearDown()
-        if self.sock and hasattr(self.sock,'close'):
-            self.sock.close()
-        subprocess.run(f"userdel {self.user}",shell=True)
-        os.remove(self.t_file)
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        if cls.sock and hasattr(cls.sock,'close'):
+            cls.sock.close()
+        subprocess.run(f"userdel {cls.user}",shell=True)
+        os.remove(cls.t_file)
 
     def test_01_is_port_in_use(self):
         self.assertTrue(checkings.is_port_in_use(self.ip,self.port))
