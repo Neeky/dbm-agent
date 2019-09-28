@@ -19,6 +19,34 @@ def cpu_cores()->CpuCores:
     cores = psutil.cpu_count()
     return CpuCores(counts = cores)
 
+def cpu_times()->CpuTimes:
+    """
+    采集 CPU 时间片分布
+    """
+    c = psutil.cpu_times()
+    if len(c) == 10:
+        # linux platform
+        # 解包
+        user,nice,system,idle,iowait,irq,softirq = c
+        return CpuTimes(user=user,
+                        nice=nice,
+                        system=system,
+                        idle=idle,
+                        iowait=iowait,
+                        irq=irq,
+                        softirq=softirq)
+    else:
+        # mac platform
+        user,nice,system,idle = c
+        return CpuTimes(user=user,
+                        nice=nice,
+                        system=system,
+                        idle=idle,
+                        iowait=0,
+                        irq=0,
+                        softirq=0)
+
+
 
 
 
