@@ -277,6 +277,8 @@ class MySQLSingleInstaller(MySQLInstaller):
 
         self.post_install()
 
+        logger.info("install single mysql instance complete")
+
 
 class MySQLMGRInstaller(MySQLInstaller):
 
@@ -446,6 +448,7 @@ class MySQLMGRInstaller(MySQLInstaller):
         # 4
         self.post_install()
 
+        logger.info("install mgr node complete")
 
 class MySQLUninstaller(object):
     """

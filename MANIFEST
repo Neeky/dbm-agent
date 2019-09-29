@@ -14,7 +14,7 @@ dbma/daemon.py
 dbma/errors.py
 dbma/gather.py
 dbma/initialization.py
-dbma/mysql.py
+dbma/mysqlops.py
 dbma/server.py
 dbma/static/cnfs/5_7.cnf.jinja
 dbma/static/cnfs/8_0.cnf.jinja

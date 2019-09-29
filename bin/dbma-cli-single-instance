@@ -6,7 +6,7 @@
 
 import logging
 import argparse
-from dbma.mysql import MySQLInstaller,MySQLUninstaller,MySQLSingleInstaller
+from dbma.mysqlops import MySQLInstaller,MySQLUninstaller,MySQLSingleInstaller
 from dbma.gather import cpu_cores
 
 def parser_cmd_args():

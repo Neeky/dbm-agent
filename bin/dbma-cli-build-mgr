@@ -8,7 +8,7 @@ import sys
 import logging
 import argparse
 from dbma.gather import cpu_cores
-from dbma.mysql import MySQLMGRInstaller
+from dbma.mysqlops import MySQLMGRInstaller
 import dbma.common as common
 import dbma.checkings as checkings
 
