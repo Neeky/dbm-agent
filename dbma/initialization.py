@@ -15,6 +15,7 @@ import os
 import sys
 import pwd
 import grp
+import uuid
 import time
 import dbma
 import shutil
@@ -175,6 +176,7 @@ def init(args):
     logging.info(f"create config file '{cnf}' ")
     parser = configparser.ConfigParser(allow_no_value=True,inline_comment_prefixes='#')
     parser['dbma'] = {k:v for k,v in args.__dict__.items() if k != 'action'}
+    parser['dbma'].update({'host_uuid': str(uuid.uuid4())})
     with open(cnf,'w') as cnf:
         parser.write(cnf)
 
