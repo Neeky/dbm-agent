@@ -13,7 +13,7 @@ from dbma import __dbma_version
 
 
 cnf = dbmacnf.cnf
-logger = logging.getLogger('dbm-agent').getChild(__name__)
+_logger = logging.getLogger('dbm-agent').getChild(__name__)
 
 
 def push_host():
@@ -23,6 +23,7 @@ def push_host():
     第二步：收集数据
     第三步：post 数据到 dbmc
     """
+    logger = _logger.getChild("push_host")
     logger.debug("prepare push host info")
     try:
         # 第一步
@@ -80,6 +81,7 @@ def push_cpu_times():
     """
     try:
         # 第一步
+        logger = _logger.getChild("push_cpu_times")
         logger.info("push cpu times info to dbmc")
         session = requests.Session()
         session.headers.update({'Referer':cnf.dbmc_site})
@@ -112,6 +114,7 @@ def push_cpu_frequence():
     上传当前 cpu 的运行频率
     """
     try:
+        logger = _logger.getChild("push_cpu_frequence")
         logger.info("prepare push cpu frequence to dbmc")
         session = requests.Session()
         session.headers.update({'Referer':cnf.dbmc_site})
@@ -139,6 +142,7 @@ def push_net_interfaces():
     上传主机上的网卡信息
     """
     try:
+        logger = _logger.getChild("push_net_interfaces")
         logger.info("prepase push net interface info")
         session = requests.Session()
         session.headers.update({'Referer':cnf.dbmc_site})
@@ -176,6 +180,7 @@ def push_net_io_counter():
     上传网络接口 IO 计数器信息到服务端
     """
     try:
+        logger = _logger.getChild("push_net_io_counter")
         logger.info("prepare push net io counter info")
         session = requests.Session()
         session.headers.update({'Referer':cnf.dbmc_site})
@@ -206,6 +211,7 @@ def push_memory_distribution():
     实现主机内存使用情况上的报
     """
     try:
+        logger = _logger.getChild("push_memory_distribution")
         logger.info("prepare push memory distribution info to dbmc")
         session = requests.Session()
         session.headers.update({'Referer':cnf.dbmc_site})
@@ -236,6 +242,7 @@ def push_disk_usage():
     实现磁盘使用率信息率的上报
     """
     try:
+        logger = _logger.getChild("push_disk_usage")
         logger.info("prepare push disk uasge info to dbmc")
         session = requests.Session()
         session.headers.update({'Referer':cnf.dbmc_site})
@@ -265,6 +272,7 @@ def push_disk_io_counter():
     实现磁盘IO计数器的上报
     """
     try:
+        logger = _logger.getChild("push_disk_io_counter")
         logger.info("prepare push disk io counter to dbmc")
         session = requests.Session()
         session.headers.update({'Referer':cnf.dbmc_site})
