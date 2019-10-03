@@ -564,50 +564,54 @@ mysql -h127.0.0.1 -P3306 -uroot -pdbma@0352 -e"select * from performance_schema.
 
 
 ## 自动采集主机监控并上传到服务端
-```bash
-dbma-cli-pusher all 
+   **dbm-agent 守护进程在后台运行的时候就会周期性的上报主机的监控信息，如果你想手工体验的话 dbm-agent 也有给出命令行接口**
+   ```bash
+   dbma-cli-pusher all 
 
-2019-10-03 18:17:03,498 - dbm-agent.dbma.pusher.push_host - MainThread - INFO - using http://172.16.192.1:8080/dbmc/hosts/?pk=-1 Got csrfmiddlewaretoken = RUNN9CL9UzZwUQbfkchmIv8qXQvuHlE5x1bhE8knz4HPMTQni2UVyZUB6oqfZaZr
-2019-10-03 18:17:03,505 - dbm-agent.dbma.pusher.push_host - MainThread - INFO - gather host info = {'host_uuid': 'dde1f082-67fc-436f-a149-90a1fa4612c2', 'agent_version': '0.2.0', 'cpu_cores': 1, 'mem_total_size': 1535696896, 'manger_net_ip': '172.16.192.100', 'csrfmiddlewaretoken': 'RUNN9CL9UzZwUQbfkchmIv8qXQvuHlE5x1bhE8knz4HPMTQni2UVyZUB6oqfZaZr', 'os_version': 'CentOS Linux-7-Core'}
-2019-10-03 18:17:03,506 - dbm-agent.dbma.pusher.push_host - MainThread - INFO - post host info to http://172.16.192.1:8080/dbmc/hosts/
-2019-10-03 18:17:03,584 - dbm-agent.dbma.pusher.push_host - MainThread - INFO - {'code': 201, 'message': '数据库中已经存在 host_uuid = dde1f082-67fc-436f-a149-90a1fa4612c2 ,服务端已经完成了对这条记录的更新'}
-2019-10-03 18:17:03,584 - dbm-agent.dbma.pusher.push_host - MainThread - INFO - push host info complete
-2019-10-03 18:17:03,585 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - push cpu times info to dbmc
-2019-10-03 18:17:03,585 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - query http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/cpu-times/?pk=-1 for get csrftoken
-2019-10-03 18:17:03,618 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - csrftoken = lf89MkihOZDGf2FKo8iYHkDmDhD6ZUn1pj8xIQO40K71OOfz7GMTyBqNfTtk6nCS
-2019-10-03 18:17:03,618 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - cpu times = {'user': 0.007474045184000431, 'system': 0.005311213926884194, 'idle': 0.9870196488006041, 'nice': 8.409141746175102e-06, 'iowait': 9.92278726048662e-05, 'irq': 0.0, 'softirq': 8.745507416022106e-05, 'host_uuid': 'dde1f082-67fc-436f-a149-90a1fa4612c2', 'csrfmiddlewaretoken': 'lf89MkihOZDGf2FKo8iYHkDmDhD6ZUn1pj8xIQO40K71OOfz7GMTyBqNfTtk6nCS'}
-2019-10-03 18:17:03,696 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - {'code': 200, 'message': '保存成功', 'data': []}
-2019-10-03 18:17:03,696 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - push cpu times info completed.
-2019-10-03 18:17:03,697 - dbm-agent.dbma.pusher.push_cpu_frequence - MainThread - INFO - prepare push cpu frequence to dbmc
-2019-10-03 18:17:03,730 - dbm-agent.dbma.pusher.push_cpu_frequence - MainThread - INFO - OrderedDict([('current', 2899.721), ('csrfmiddlewaretoken', '6JN7WBm6Z5aSsim3vrb4kx2fP5qnNT03tT8sJrTaretnj8w4HFPKj9gPLluH2Q8w')])
-2019-10-03 18:17:03,809 - dbm-agent.dbma.pusher.push_cpu_frequence - MainThread - INFO - {'code': 200, 'message': '保存成功', 'data': []}
-2019-10-03 18:17:03,809 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - prepase push net interface info
-2019-10-03 18:17:03,841 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - using http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/net-interfaces/?pk=-1 for go token
-2019-10-03 18:17:03,841 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - csrftoken = gcGwN4bJkXqRD4Jnfh5e91oymaJ2GIk3d690LTBRCSf5KIdjIcv7w8KaoSDg3K1Q
-2019-10-03 18:17:03,842 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - nifs = [NetInterface(name='ens33', speed=1000, isup=True, address='172.16.192.100')]
-2019-10-03 18:17:03,920 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - {'code': 200, 'message': '数据库中存在对应的网卡信息，更新成功', 'data': []}
-2019-10-03 18:17:03,920 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - net-interface push complete
-2019-10-03 18:17:03,921 - dbm-agent.dbma.pusher.push_net_io_counter - MainThread - INFO - prepare push net io counter info
-2019-10-03 18:17:03,921 - dbm-agent.dbma.pusher.push_net_io_counter - MainThread - INFO - query http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/net-io-counters/?pk=-1 for get csrftoken
-2019-10-03 18:17:03,954 - dbm-agent.dbma.pusher.push_net_io_counter - MainThread - INFO - csrftoken = aj0KsWYk7ifp4EG2I0SZrKqy5PgRyRYZDHObjZXeI5n2AiIXjyzXm13I4WP89rmC
-2019-10-03 18:17:03,954 - dbm-agent.dbma.pusher.push_net_io_counter - MainThread - INFO - net io counter = OrderedDict([('bytes_sent', 656208), ('bytes_recv', 1946535), ('csrfmiddlewaretoken', 'aj0KsWYk7ifp4EG2I0SZrKqy5PgRyRYZDHObjZXeI5n2AiIXjyzXm13I4WP89rmC')])
-2019-10-03 18:17:04,035 - dbm-agent.dbma.pusher.push_net_io_counter - MainThread - INFO - {'code': 201, 'message': '新的网络监控数据插入成功', 'data': []}
-2019-10-03 18:17:04,036 - dbm-agent.dbma.pusher.push_memory_distribution - MainThread - INFO - prepare push memory distribution info to dbmc
-2019-10-03 18:17:04,036 - dbm-agent.dbma.pusher.push_memory_distribution - MainThread - INFO - query http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/memory-distributions/?pk=-1 for csrftoken
-2019-10-03 18:17:04,070 - dbm-agent.dbma.pusher.push_memory_distribution - MainThread - INFO - csrftoken  = {csrfmiddlewaretoken}
-2019-10-03 18:17:04,070 - dbm-agent.dbma.pusher.push_memory_distribution - MainThread - INFO - data = {'csrfmiddlewaretoken': 'kL3EL09bXG8IaUgWsNlWp2qgDuJ2mZ2v7HQF7TJcgZPo0JLdjmKUvA5NDAekclBx', 'total': 1535696896, 'available': 1209077760, 'used': 169832448, 'free': 1201819648}
-2019-10-03 18:17:04,151 - dbm-agent.dbma.pusher.push_memory_distribution - MainThread - INFO - {'code': 200, 'message': '数据录入成功', 'data': []}
-2019-10-03 18:17:04,152 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - prepare push disk uasge info to dbmc
-2019-10-03 18:17:04,152 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - query http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/disk-usages/?pk=-1 for csrftoken
-2019-10-03 18:17:04,190 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - csrftoken  = pmJM3v4itTxYdUX6vw7JzkCSEH9tOj5cIfamJuMJlzG8mVK7OWjlinKN45a8ya7f
-2019-10-03 18:17:04,191 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - data = {'csrfmiddlewaretoken': 'pmJM3v4itTxYdUX6vw7JzkCSEH9tOj5cIfamJuMJlzG8mVK7OWjlinKN45a8ya7f', 'mountpoint': '/', 'total': 53660876800, 'used': 5087141888, 'free': 48573734912}
-2019-10-03 18:17:04,270 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - data = {'csrfmiddlewaretoken': 'pmJM3v4itTxYdUX6vw7JzkCSEH9tOj5cIfamJuMJlzG8mVK7OWjlinKN45a8ya7f', 'mountpoint': '/database', 'total': 53660876800, 'used': 5087141888, 'free': 48573734912}
-2019-10-03 18:17:04,346 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - data = {'csrfmiddlewaretoken': 'pmJM3v4itTxYdUX6vw7JzkCSEH9tOj5cIfamJuMJlzG8mVK7OWjlinKN45a8ya7f', 'mountpoint': '/backup', 'total': 53660876800, 'used': 5087141888, 'free': 48573734912}
-2019-10-03 18:17:04,421 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - push disk usage info complete
-2019-10-03 18:17:04,422 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - prepare push disk io counter to dbmc
-2019-10-03 18:17:04,422 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - query http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/disk-io-counters/?pk=-1 for csrftoken
-2019-10-03 18:17:04,455 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - csrftoken  = 619fGisKvlKQWeh4s23ZT7sl55xbCsedNtEuILTSsHlheeP8QUo7562HXOJBMUuN
-2019-10-03 18:17:04,456 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - data = {'csrfmiddlewaretoken': '619fGisKvlKQWeh4s23ZT7sl55xbCsedNtEuILTSsHlheeP8QUo7562HXOJBMUuN', 'read_count': 10898, 'write_count': 9636, 'read_bytes': 308108288, 'write_bytes': 74499072}
-2019-10-03 18:17:04,534 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - {'code': 200, 'message': '录入成功', 'data': []}
-2019-10-03 18:17:04,534 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - push disk usage info complete
-```
+   2019-10-03 18:17:03,498 - dbm-agent.dbma.pusher.push_host - MainThread - INFO - using http://172.16.192.1:8080/dbmc/hosts/?pk=-1 Got csrfmiddlewaretoken = RUNN9CL9UzZwUQbfkchmIv8qXQvuHlE5x1bhE8knz4HPMTQni2UVyZUB6oqfZaZr
+   2019-10-03 18:17:03,505 - dbm-agent.dbma.pusher.push_host - MainThread - INFO - gather host info = {'host_uuid': 'dde1f082-67fc-436f-a149-90a1fa4612c2', 'agent_version': '0.2.0', 'cpu_cores': 1, 'mem_total_size': 1535696896, 'manger_net_ip': '172.16.192.100', 'csrfmiddlewaretoken': 'RUNN9CL9UzZwUQbfkchmIv8qXQvuHlE5x1bhE8knz4HPMTQni2UVyZUB6oqfZaZr', 'os_version': 'CentOS Linux-7-Core'}
+   2019-10-03 18:17:03,506 - dbm-agent.dbma.pusher.push_host - MainThread - INFO - post host info to http://172.16.192.1:8080/dbmc/hosts/
+   2019-10-03 18:17:03,584 - dbm-agent.dbma.pusher.push_host - MainThread - INFO - {'code': 201, 'message': '数据库中已经存在 host_uuid = dde1f082-67fc-436f-a149-90a1fa4612c2 ,服务端已经完成了对这条记录的更新'}
+   2019-10-03 18:17:03,584 - dbm-agent.dbma.pusher.push_host - MainThread - INFO - push host info complete
+   2019-10-03 18:17:03,585 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - push cpu times info to dbmc
+   2019-10-03 18:17:03,585 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - query http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/cpu-times/?pk=-1 for get csrftoken
+   2019-10-03 18:17:03,618 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - csrftoken = lf89MkihOZDGf2FKo8iYHkDmDhD6ZUn1pj8xIQO40K71OOfz7GMTyBqNfTtk6nCS
+   2019-10-03 18:17:03,618 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - cpu times = {'user': 0.007474045184000431, 'system': 0.005311213926884194, 'idle': 0.9870196488006041, 'nice': 8.409141746175102e-06, 'iowait': 9.92278726048662e-05, 'irq': 0.0, 'softirq': 8.745507416022106e-05, 'host_uuid': 'dde1f082-67fc-436f-a149-90a1fa4612c2', 'csrfmiddlewaretoken': 'lf89MkihOZDGf2FKo8iYHkDmDhD6ZUn1pj8xIQO40K71OOfz7GMTyBqNfTtk6nCS'}
+   2019-10-03 18:17:03,696 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - {'code': 200, 'message': '保存成功', 'data': []}
+   2019-10-03 18:17:03,696 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - push cpu times info completed.
+   2019-10-03 18:17:03,697 - dbm-agent.dbma.pusher.push_cpu_frequence - MainThread - INFO - prepare push cpu frequence to dbmc
+   2019-10-03 18:17:03,730 - dbm-agent.dbma.pusher.push_cpu_frequence - MainThread - INFO - OrderedDict([('current', 2899.721), ('csrfmiddlewaretoken', '6JN7WBm6Z5aSsim3vrb4kx2fP5qnNT03tT8sJrTaretnj8w4HFPKj9gPLluH2Q8w')])
+   2019-10-03 18:17:03,809 - dbm-agent.dbma.pusher.push_cpu_frequence - MainThread - INFO - {'code': 200, 'message': '保存成功', 'data': []}
+   2019-10-03 18:17:03,809 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - prepase push net interface info
+   2019-10-03 18:17:03,841 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - using http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/net-interfaces/?pk=-1 for go token
+   2019-10-03 18:17:03,841 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - csrftoken = gcGwN4bJkXqRD4Jnfh5e91oymaJ2GIk3d690LTBRCSf5KIdjIcv7w8KaoSDg3K1Q
+   2019-10-03 18:17:03,842 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - nifs = [NetInterface(name='ens33', speed=1000, isup=True, address='172.16.192.100')]
+   2019-10-03 18:17:03,920 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - {'code': 200, 'message': '数据库中存在对应的网卡信息，更新成功', 'data': []}
+   2019-10-03 18:17:03,920 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - net-interface push complete
+   2019-10-03 18:17:03,921 - dbm-agent.dbma.pusher.push_net_io_counter - MainThread - INFO - prepare push net io counter info
+   2019-10-03 18:17:03,921 - dbm-agent.dbma.pusher.push_net_io_counter - MainThread - INFO - query http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/net-io-counters/?pk=-1 for get csrftoken
+   2019-10-03 18:17:03,954 - dbm-agent.dbma.pusher.push_net_io_counter - MainThread - INFO - csrftoken = aj0KsWYk7ifp4EG2I0SZrKqy5PgRyRYZDHObjZXeI5n2AiIXjyzXm13I4WP89rmC
+   2019-10-03 18:17:03,954 - dbm-agent.dbma.pusher.push_net_io_counter - MainThread - INFO - net io counter = OrderedDict([('bytes_sent', 656208), ('bytes_recv', 1946535), ('csrfmiddlewaretoken', 'aj0KsWYk7ifp4EG2I0SZrKqy5PgRyRYZDHObjZXeI5n2AiIXjyzXm13I4WP89rmC')])
+   2019-10-03 18:17:04,035 - dbm-agent.dbma.pusher.push_net_io_counter - MainThread - INFO - {'code': 201, 'message': '新的网络监控数据插入成功', 'data': []}
+   2019-10-03 18:17:04,036 - dbm-agent.dbma.pusher.push_memory_distribution - MainThread - INFO - prepare push memory distribution info to dbmc
+   2019-10-03 18:17:04,036 - dbm-agent.dbma.pusher.push_memory_distribution - MainThread - INFO - query http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/memory-distributions/?pk=-1 for csrftoken
+   2019-10-03 18:17:04,070 - dbm-agent.dbma.pusher.push_memory_distribution - MainThread - INFO - csrftoken  = {csrfmiddlewaretoken}
+   2019-10-03 18:17:04,070 - dbm-agent.dbma.pusher.push_memory_distribution - MainThread - INFO - data = {'csrfmiddlewaretoken': 'kL3EL09bXG8IaUgWsNlWp2qgDuJ2mZ2v7HQF7TJcgZPo0JLdjmKUvA5NDAekclBx', 'total': 1535696896, 'available': 1209077760, 'used': 169832448, 'free': 1201819648}
+   2019-10-03 18:17:04,151 - dbm-agent.dbma.pusher.push_memory_distribution - MainThread - INFO - {'code': 200, 'message': '数据录入成功', 'data': []}
+   2019-10-03 18:17:04,152 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - prepare push disk uasge info to dbmc
+   2019-10-03 18:17:04,152 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - query http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/disk-usages/?pk=-1 for csrftoken
+   2019-10-03 18:17:04,190 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - csrftoken  = pmJM3v4itTxYdUX6vw7JzkCSEH9tOj5cIfamJuMJlzG8mVK7OWjlinKN45a8ya7f
+   2019-10-03 18:17:04,191 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - data = {'csrfmiddlewaretoken': 'pmJM3v4itTxYdUX6vw7JzkCSEH9tOj5cIfamJuMJlzG8mVK7OWjlinKN45a8ya7f', 'mountpoint': '/', 'total': 53660876800, 'used': 5087141888, 'free': 48573734912}
+   2019-10-03 18:17:04,270 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - data = {'csrfmiddlewaretoken': 'pmJM3v4itTxYdUX6vw7JzkCSEH9tOj5cIfamJuMJlzG8mVK7OWjlinKN45a8ya7f', 'mountpoint': '/database', 'total': 53660876800, 'used': 5087141888, 'free': 48573734912}
+   2019-10-03 18:17:04,346 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - data = {'csrfmiddlewaretoken': 'pmJM3v4itTxYdUX6vw7JzkCSEH9tOj5cIfamJuMJlzG8mVK7OWjlinKN45a8ya7f', 'mountpoint': '/backup', 'total': 53660876800, 'used': 5087141888, 'free': 48573734912}
+   2019-10-03 18:17:04,421 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - push disk usage info complete
+   2019-10-03 18:17:04,422 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - prepare push disk io counter to dbmc
+   2019-10-03 18:17:04,422 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - query http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/disk-io-counters/?pk=-1 for csrftoken
+   2019-10-03 18:17:04,455 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - csrftoken  = 619fGisKvlKQWeh4s23ZT7sl55xbCsedNtEuILTSsHlheeP8QUo7562HXOJBMUuN
+   2019-10-03 18:17:04,456 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - data = {'csrfmiddlewaretoken': '619fGisKvlKQWeh4s23ZT7sl55xbCsedNtEuILTSsHlheeP8QUo7562HXOJBMUuN', 'read_count': 10898, 'write_count': 9636, 'read_bytes': 308108288, 'write_bytes': 74499072}
+   2019-10-03 18:17:04,534 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - {'code': 200, 'message': '录入成功', 'data': []}
+   2019-10-03 18:17:04,534 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - push disk usage info complete
+   ```
+   ---
+
+
