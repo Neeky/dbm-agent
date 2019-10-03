@@ -170,7 +170,7 @@
    Successful start and log file save to '/usr/local/dbm-agent/logs/dbma.log'
 
    ```
-   启动完成之后 dbm-agent 会以守护进程的方式在后台运行，周期性的上报主机的性能指标到服务端(dbm-center)，并从 dbm-center 检查要执行的任务(任务是一个抽象的概念，任何之前需要 DBA 手工执行的操作都可以一个任务)
+   启动完成之后 dbm-agent 会以守护进程的方式在后台运行，周期性的上报主机的性能指标到服务端(dbm-center)，并从 dbm-center 检查要执行的任务(任务是一个抽象的概念，任何之前需要 DBA 手工执行的操作都可以看成一个任务)
    ```sql
    -- 更多其它方面的监控请查看 dbm-center 这个项目
    mysql> select * from hosts_cputimesmodel order by id  limit 23,17;
