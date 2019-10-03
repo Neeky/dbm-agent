@@ -1,4 +1,4 @@
-
+import distro
 import psutil
 import logging
 from collections import namedtuple
@@ -31,6 +31,8 @@ GlobalNetIOCounter = namedtuple('GlobalNetIOCounter',['bytes_sent','bytes_recv']
 # mysql
 DMLStat = namedtuple('DMLStat',['comselect','comupdate','cominsert','comdelete','slowquery'])
 
+def os_version():
+    return '-'.join( distro.linux_distribution() )
 
 def cpu_cores()->CpuCores:
     """
@@ -44,27 +46,28 @@ def cpu_times()->CpuTimes:
     采集 CPU 时间片分布
     """
     c = psutil.cpu_times()
+    total = sum(c)
     if len(c) == 10:
         # linux platform
         # 解包
-        user,nice,system,idle,iowait,irq,softirq = c
-        return CpuTimes(user=user,
-                        nice=nice,
-                        system=system,
-                        idle=idle,
-                        iowait=iowait,
-                        irq=irq,
-                        softirq=softirq)
+        user,nice,system,idle,iowait,irq,softirq,*_= c
+        return CpuTimes(user=user/total,
+                        nice=nice/total,
+                        system=system/total,
+                        idle=idle/total,
+                        iowait=iowait/total,
+                        irq=irq/total,
+                        softirq=softirq/total)
     else:
         # mac platform
-        user,nice,system,idle = c
-        return CpuTimes(user=user,
-                        nice=nice,
-                        system=system,
-                        idle=idle,
-                        iowait=0,
-                        irq=0,
-                        softirq=0)
+        user,nice,system,idle,*_ = c
+        return CpuTimes(user=user/total,
+                        nice=nice/total,
+                        system=system/total,
+                        idle=idle/total,
+                        iowait=0/total,
+                        irq=0/total,
+                        softirq=0/total)
 
 def cpu_frequence()->CpuFrequency:
     """
@@ -107,13 +110,13 @@ def global_disk_io_counter():
     dio = psutil.disk_io_counters()
     read_count,write_count,read_bytes,write_bytes,*_ = dio
 
-    return GlobalIOCounter(read_count=read_count,
+    return GlobalDiskIOCounter(read_count=read_count,
                             write_count=write_count,
                             read_bytes=read_bytes,
                             write_bytes=write_bytes)
     
 
-def net_interface():
+def net_interfaces():
     """
     返回网卡信息的列表：
     [NetInterface(name='eth0', speed=10000, isup=True, address='172.17.0.2'),... ]
@@ -140,6 +143,7 @@ def net_interface():
             isup = i.isup
             interfaces.append(NetInterface(name=inf,speed=speed,isup=isup,address=addr))
     return interfaces
+
 
 def global_net_io_counter():
     """
