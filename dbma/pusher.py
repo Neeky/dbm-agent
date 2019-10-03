@@ -1,10 +1,12 @@
 
 import os
+import time
 import requests
 import logging
 from . import dbmacnf
 from . import gather
-from dbma import __dbma_version
+
+__dbma_version = '0.2.1'
 
 
 """
@@ -300,5 +302,21 @@ def push_disk_io_counter():
 
 
 
-
+def push_system_monitor_item():
+    """
+    """
+    logger = _logger.getChild('push_system_monitor_item')
+    while True:
+        try:
+            push_host()
+            push_cpu_times()
+            push_cpu_frequence()
+            push_net_interfaces()
+            push_net_io_counter()
+            push_memory_distribution()
+            push_disk_usage()
+            push_disk_io_counter()
+        except Exception as err:
+            logger.error(str(err))
+        time.sleep(59)
 

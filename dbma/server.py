@@ -26,9 +26,9 @@ import logging.handlers
 
 # 
 #from . import __dbma_version
-from dbma.daemon import start_daemon,stop_daemon
-from dbma.initialization import is_user_exists,get_uid_gid,is_root
-
+from .daemon import start_daemon,stop_daemon
+from .initialization import is_user_exists,get_uid_gid,is_root
+from . import pusher
 
 # exit 1
 
@@ -176,18 +176,16 @@ def start(args):
     #
     # 
     ##### 1 、 主机信息上报
+    system_monitor_thread = threading.Thread(target=pusher.push_system_monitor_item,daemon=True)
+    system_monitor_thread.start()
     
 
     #
-    # 以下是主进程的逻辑、一个死循环不断的向 dbm-center 上报心跳信息
+    # 以下是主进程的逻辑、一个死循环
     # 这样守护进程就永远不会退出了
-    heartbeat(heartbeat_api,heartbeat_interval,net_if)
+    while True:
+        time.sleep(300)
 
-    #t_heartbeat = threading.Thread(target=heartbeat,name="heartbeat-worker",daemon=True,
-    #                               args=(heartbeat_api,heartbeat_interval,net_if))
-    #t_heartbeat.start()
-    #
-    #time.sleep(300)
 
     
 
