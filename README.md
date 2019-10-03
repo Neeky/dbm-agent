@@ -79,7 +79,7 @@
    ```bash
    sudo su
    # 安装依赖
-   pip3 install jinja2 psutil requests mysql-connector-python==8.0.17
+   pip3 install jinja2 psutil requests mysql-connector-python==8.0.17 distro==1.4.0
 
    # 先手工运行一下自动化测试用例，以确保你的平台有被支持
    cd dbm-agent
@@ -105,9 +105,9 @@
    **安装方法二）：pip3 安装**
    ```bash
    # 安装依赖
-   pip3 install jinja2 psutil requests mysql-connector-python==8.0.17
+   pip3 install jinja2 psutil requests mysql-connector-python==8.0.17 distro==1.4.0
    # 安装 dbm-agent
-   pip3 install dbm-agent==0.1.2
+   pip3 install dbm-agent
 
    Installing collected packages: dbm-agent
      Running setup.py install for dbm-agent ... done

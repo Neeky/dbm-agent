@@ -4,6 +4,7 @@ bin/dbm-agent
 bin/dbma-cli-backup-instance
 bin/dbma-cli-build-mgr
 bin/dbma-cli-build-slave
+bin/dbma-cli-pusher
 bin/dbma-cli-single-instance
 dbma/__init__.py
 dbma/backups.py
@@ -11,10 +12,12 @@ dbma/checkings.py
 dbma/common.py
 dbma/configrender.py
 dbma/daemon.py
+dbma/dbmacnf.py
 dbma/errors.py
 dbma/gather.py
 dbma/initialization.py
 dbma/mysqlops.py
+dbma/pusher.py
 dbma/server.py
 dbma/static/cnfs/5_7.cnf.jinja
 dbma/static/cnfs/8_0.cnf.jinja
