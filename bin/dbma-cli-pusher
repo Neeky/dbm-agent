@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+
+"""
+监控项上报的命令行接口
+"""
+
+import os
+import logging
+import requests
+import argparse
+
+from dbma import gather
+from dbma import pusher
+from dbma import dbmacnf
+from dbma import __dbma_version
+
+cnf = dbmacnf.cnf
+
+def parser_cmd_args():
+    """
+    实现命令行参数的处理
+    """
+    parser = argparse.ArgumentParser(__name__)
+    parser.add_argument('--log',type=str,default='info',choices=['debug','info','warning','error'])
+    parser.add_argument('dimension',type=str,choices=['host','cpu-times','net-if','net-io','cpu-fq','mem-distri','disk-usage','disk-io','all'])
+    args = parser.parse_args()
+    return args
+
+def main():
+    """
+
+    """
+    args = parser_cmd_args()
+
+    level = getattr(logging,args.log.upper())
+    logger = logging.getLogger('dbm-agent')
+    logger.setLevel(level)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(message)s')
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
+
+    if args.dimension == 'host':
+        pusher.push_host()
+    elif args.dimension == 'cpu-times':
+        pusher.push_cpu_times()
+    elif args.dimension == 'net-if':
+        pusher.push_net_interfaces()
+    elif args.dimension == 'net-io':
+        pusher.push_net_io_counter()
+    elif args.dimension == 'cpu-fq':
+        pusher.push_cpu_frequence()
+    elif args.dimension == 'mem-distri':
+        pusher.push_memory_distribution()
+    elif args.dimension == 'disk-usage':
+        pusher.push_disk_usage()
+    elif args.dimension == 'disk-io':
+        pusher.push_disk_io_counter()
+    elif args.dimension == 'all':
+        pusher.push_host()
+        pusher.push_cpu_times()
+        pusher.push_cpu_frequence()
+        pusher.push_net_interfaces()
+        pusher.push_net_io_counter()
+        pusher.push_memory_distribution()
+        pusher.push_disk_usage()
+        pusher.push_disk_io_counter()
+
+
+
+    
+    
+
+    """
+    try:
+        session = requests.Session()
+        session.headers.update({'Referer':cnf.dbmc_site})
+        host_url = os.path.join(cnf.dbmc_site,'dbmc/hosts/')
+        logger.info(f"using {host_url} to complete push host info")
+        # 获取 csrftoken
+        session.get(host_url  +  "?pk=-1" )
+        logger.info(f"csrftoken = {session.cookies['csrftoken']}")
+        logger.info(f"gather host info")
+        # post 数据
+        host = {'host_uuid': cnf.host_uuid,'agent_version': __dbma_version}
+        cup_cores = gather.cpu_cores().counts
+        mem_total_size = gather.mem_distri().total
+        ifs = gather.net_interfaces()
+        mif = None # 管理网、网卡
+        for i in ifs:
+            if i.name == cnf.net_if:
+                mif = i
+                break
+        manger_net_ip = mif.address
+        
+        host.update({
+            'cpu_cores': cup_cores,
+            'mem_total_size': mem_total_size,
+            'manger_net_ip': manger_net_ip,
+        })
+        host.update({'csrfmiddlewaretoken':session.cookies['csrftoken']})
+        logger.info(f"host = {host}")
+        logger.info(f"prepare post host info to dbmc")
+
+        response = session.post(host_url,data=host)
+        if response.status_code != 200:
+            logger.warn(response.text)
+        else:
+            logger.info(f"push host info to dbm-center complete.")
+
+    except Exception as err:
+        logger.error(str(err))
+    finally:
+        if hasattr(session,'close'):
+            session.close()
+    """
+
+if __name__ == "__main__":
+    main()
