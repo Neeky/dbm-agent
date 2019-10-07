@@ -179,6 +179,9 @@ class MysqlRender(BaseRender):
         self.sync_relay_log_info = 10000
         self.rpl_semi_sync_slave_enabled = 1
         self.slave_preserve_commit_order = 'ON'
+        self.rpl_semi_sync_master_wait_point = "AFTER_SYNC"
+        self.rpl_semi_sync_master_wait_no_slave = "ON"
+        self.rpl_semi_sync_master_wait_for_slave_count = 1
 
         # gtid
         self.binlog_gtid_simple_recovery = 'ON'
