@@ -5,8 +5,7 @@ import requests
 import logging
 from . import dbmacnf
 from . import gather
-
-__dbma_version = '0.2.1'
+from . import version
 
 
 """
@@ -38,7 +37,7 @@ def push_host():
         logger.info(f"using {api_url + '?pk=-1'} Got csrfmiddlewaretoken = {csrfmiddlewaretoken}")
 
         host = {'host_uuid': cnf.host_uuid,
-                'agent_version': __dbma_version}
+                'agent_version': version.agent_version}
         
         os_version = gather.os_version()
         cup_cores = gather.cpu_cores().counts

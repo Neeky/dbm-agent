@@ -1,9 +1,9 @@
 
 from distutils.core import setup
-from dbma import __dbma_version
+from dbma.version import agent_version
 
 setup(name='dbm-agent',
-      version=__dbma_version,
+      version=agent_version,
       description='dbm-agent 数据库管理中心客户端程序',
       author="Neeky",
       author_email="neeky@live.com",
