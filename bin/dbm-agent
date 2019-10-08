@@ -9,11 +9,11 @@ import sys
 import argparse
 from dbma.daemon import start_daemon,stop_daemon
 from dbma import server
-from dbma import __dbma_version
+from dbma.version import agent_version
 from dbma import initialization
 
 def parser_cmd_args():
-    parser = argparse.ArgumentParser(f'dbma-agent {__dbma_version}')
+    parser = argparse.ArgumentParser(f'dbma-agent {agent_version}')
     parser.add_argument('--dbmc-site',type=str,default="https://192.168.100.100",help='dbm-center url')
     parser.add_argument('--base-dir',type=str,default="/usr/local/dbm-agent/",help='dbm-agent work dir')
     parser.add_argument('--config-file',type=str,default="etc/dbma.cnf",help="dbm-agent config file")
@@ -38,7 +38,7 @@ def main():
     elif args.action == 'start':
         server.start(args)
     elif args.action == 'version':
-        print(f'dbma-agent {__dbma_version}')
+        print(f'dbma-agent {agent_version}')
     elif args.action == 'stop':
         stop_daemon(args.pid)
     elif args.action == 'uninit':

@@ -393,6 +393,9 @@ class MysqlRender(BaseRender):
             'enforce_gtid_consistency': self.enforce_gtid_consistency,
             'gtid_executed_compression_period': self.gtid_executed_compression_period,
             'gtid_mode': self.gtid_mode,
+            'rpl_semi_sync_master_wait_point': self.rpl_semi_sync_master_wait_point,
+            'rpl_semi_sync_master_wait_no_slave': self.rpl_semi_sync_master_wait_no_slave,
+            'rpl_semi_sync_master_wait_for_slave_count': self.rpl_semi_sync_master_wait_for_slave_count,
 
             # engiens
             'default_storage_engine': self.default_storage_engine,

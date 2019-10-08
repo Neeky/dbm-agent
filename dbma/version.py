@@ -1,1 +1,1 @@
-agent_version = '0.2.2'
+agent_version = '0.2.3'
