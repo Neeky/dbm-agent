@@ -34,14 +34,22 @@ class MySQLInstaller(object):
     """
     所有 MySQL 安装操作的基类
     """
+    logger = logger.getChild('MySQLInstaller')
+
     def pre_checkings(self):
         """
         完成安装 MySQL 之前的必要检查
         :errors.UserAlreadyExistsError
         :errors.FileAlreadyExistsError
         :errors.DirecotryAlreadyExistsError
+        :errors.NotSupportedMySQLVersionError
         """
+        # 获取日志对象
+        logger = self.logger.getChild('pre_checkings')
+
         pkg_full_path = os.path.join('/usr/local/dbm-agent/pkg/',self.pkg)
+
+        logger.info(f"using {pkg_full_path} install mysql")
 
         # 检查安装包是不是存在并且之前也从来没有安装过
         logger.info(f"check package '{pkg_full_path}' is exists")
@@ -77,6 +85,21 @@ class MySQLInstaller(object):
         if not checkings.is_file_exists(self.init_file):
             raise errors.FileNotExistsError(self.init_file)
 
+        # 检查配置文件模板是否存在，如果配置模板不存在那当前的版本也不被支持
+        m = re.search(r'(8.0.\d\d)',self.version)
+        if m :
+            v = m.group(1)
+            cnf_template_file_path = os.path.join(self.dbma_basedir,'etc/templates/',f"mysql-{v}.cnf.jinja")
+            if not checkings.is_file_exists(cnf_template_file_path):
+                logger.error(f"mysql cnf file template not exists")
+                raise errors.FileNotExistsError(f"{cnf_template_file_path} not exists.")
+            # 设置配置文件模板的名称
+            self.tmpl_file = f"mysql-{v}.cnf.jinja"
+        else:
+            logger.error(f"not supported mysql version {self.version}")
+            raise errors.NotSupportedMySQLVersionError(self.version)
+
+
     def __init__(self,port:int=3306,
                  pkg:str="mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz",
                  dbma_basedir='/usr/local/dbm-agent/',
@@ -85,6 +108,8 @@ class MySQLInstaller(object):
         """
         MSQL 安装器的构造函数
         """
+        logger = self.logger.getChild('__init__')
+
         self.port = port
         self.dbma_basedir = dbma_basedir
         self.pkg = pkg
@@ -97,7 +122,20 @@ class MySQLInstaller(object):
         self.mysql_datadir = os.path.join('/database/mysql/data/',str(self.port))
         self.mysql_cnf = f"/etc/my-{self.port}.cnf"
         self.mysql_user = f"mysql{self.port}"
-        self.mysql_cnf_render = configrender.MysqlRender(pkg=self.pkg,port=self.port,max_mem=self.max_mem,cores=self.cores)
+
+        #def get_version_number(version:str="mysql-8.0.17-linux-glibc2.12-x86_64"):
+        #    """
+        #    返回 MySQL 的版本号
+        #    """
+        #    m = re.search(r'-(8.0.\d\d)-',version)
+        #    if m:
+        #        return m.group(1)
+        #    else:
+        #        return None
+        # 取得数值版本号 8.0.18 vesion 的格式不
+        # version_number = get_version_number(version)
+
+        #self.mysql_cnf_render = configrender.MysqlRender(pkg=self.pkg,port=self.port,max_mem=self.max_mem,cores=self.cores)
 
         logger.info(f"install mysql instance with {self.pkg} port {self.port} max_mem {self.max_mem} MB cores = {cores}")
 
@@ -106,6 +144,7 @@ class MySQLInstaller(object):
         创建数据目录
         :errors.DirecotryAlreadyExistsError
         """
+        logger = self.logger.getChild('create_datadir')
         # 双重检测
         logger.info(f"create datadir /database/mysql/data/{self.port}")
         if checkings.is_directory_exists(f"/database/mysql/data/{self.port}"):
@@ -120,6 +159,8 @@ class MySQLInstaller(object):
         """
         解压安装包
         """
+        logger = self.logger.getChild('unarchive_pkg')
+
         logger.info("unarchive mysql pkg to /usr/local/")
         if checkings.is_directory_exists(os.path.join('/usr/local/',self.version)):
             logger.warning(f"{os.path.join('/usr/local/',self.version)} exists mysql may has been installed. skip untar {self.pkg} to /usr/local/")
@@ -141,17 +182,29 @@ class MySQLInstaller(object):
         """
         完成数据库 init
         """
+        logger = self.logger.getChild('init_database')
+        # mysql-8.0.18 版本及以上版本在 --initialize 时已经不再加载非必要插件
+        # 如果配置文件中包含非必要插件和参数会使得 --initialize 过程出错并退出
+        # 解决办法是 --initialize 阶段使用的配置文件和运行时的配置分离
+        # 渲染配置文件到 /tmp/my.cnf
+        render = configrender.MysqlRender(pkg=self.pkg,port=self.port,max_mem=self.max_mem,cores=self.cores,tmpl_file='mysql-8.0-init-only.jinja')
+        render.render_init_only()
+
         logger.info("init database with --initialize-insecure")
         with common.sudo("init database"):
-            args = [f'/usr/local/{self.version}/bin/mysqld',f'--defaults-file=/etc/my-{self.port}.cnf',
+            args = [f'/usr/local/{self.version}/bin/mysqld',f'--defaults-file=/tmp/my.cnf',
                             '--initialize-insecure',f'--user=mysql{self.port}',f'--init-file={self.init_file}']
             logger.warning(args)
             subprocess.run(args,capture_output=True)
+            os.remove('/tmp/my.cnf')
+
 
     def config_systemd(self):
         """
         配置 systemd
         """
+        logger = self.logger.getChild('config_systemd')
+
         logger.info(f"config service(systemd) and daemon-reload")
         systemd = configrender.MySQLSystemdRender(pkg=self.pkg,port=self.port)
         systemd.render()
@@ -162,6 +215,8 @@ class MySQLInstaller(object):
         """
         启动 MySQL
         """
+        logger = self.logger.getChild('start_mysql')
+
         logger.info(f"start mysqld-{self.port} by systemctl start mysqld-{self.port}")
         with common.sudo(f"start mysql server {self.port}"):
             subprocess.run(f"systemctl start mysqld-{self.port}",shell=True)
@@ -170,6 +225,8 @@ class MySQLInstaller(object):
         """
         配置 PATH 环境变量
         """
+        logger = self.logger.getChild('config_path')
+
         logger.info(f"config path env variable /usr/local/{self.version}/bin/")
         common.config_path(path=f"/usr/local/{self.version}/bin/",user_name=f"mysql{self.port}")
 
@@ -177,6 +234,8 @@ class MySQLInstaller(object):
         """
         配置 数据库开机启动
         """
+        logger = self.logger.getChild('enable_service')
+
         logger.info(f"config mysql auto start on boot")
         common.enable_service(f"mysqld-{self.port}")
     
@@ -184,6 +243,8 @@ class MySQLInstaller(object):
         """
         配置 so
         """
+        logger = self.logger.getChild('config_so')
+
         logger.info(f"export so file")
         common.config_mysql_so(self.version)
 
@@ -191,6 +252,8 @@ class MySQLInstaller(object):
         """
         配置 头文件
         """
+        logger = self.logger.getChild('config_include')
+
         logger.info(f"export header file")
         common.config_mysql_include(self.version)
 
@@ -202,7 +265,9 @@ class MySQLInstaller(object):
         3、数据目录创建
         4、安装包解压
         """
-        # 安装前的检测
+        logger = self.logger.getChild('pre_install')
+
+        # 安装前的检测，通过之后会给实例增加 tmpl_file 属性
         self.pre_checkings()
         
         # 如果前置的检查都通过了那么开始创建用户
@@ -214,6 +279,9 @@ class MySQLInstaller(object):
         # 解压安装包
         self.unarchive_pkg()
 
+        # 创建配置文件渲染器
+        self.mysql_cnf_render = configrender.MysqlRender(pkg=self.pkg,port=self.port,max_mem=self.max_mem,cores=self.cores,tmpl_file=self.tmpl_file)
+
     def post_install(self):
         """
         实现
@@ -224,6 +292,7 @@ class MySQLInstaller(object):
         4、导出 共享库
         5、导出 头文件
         """
+        logger = self.logger.getChild('post_install')
         # 配置 systemd
         self.config_systemd()
 
@@ -257,6 +326,8 @@ class MySQLSingleInstaller(MySQLInstaller):
     """
     实现单机的自动安装与配置
     """
+    logger = logger.getChild('MySQLSingleInstaller')
+
     def install(self):
         """
         实现：
@@ -265,14 +336,21 @@ class MySQLSingleInstaller(MySQLInstaller):
         3、init database
         4、执行安装后置操作
         """
+        logger = self.logger.getChild('install')
+
         try:
             self.pre_install()
         except Exception as err:
             # 如果检测中通过错误就停止
             logger.error(str(err))
             return
-
+        self.mysql_cnf_render = configrender.MysqlRender(pkg=self.pkg,
+                                    port=self.port,
+                                    max_mem=self.max_mem,
+                                    cores=self.cores,
+                                    tmpl_file=self.tmpl_file)
         self.mysql_cnf_render.render()
+
         self.init_database()
 
         self.post_install()
@@ -281,12 +359,18 @@ class MySQLSingleInstaller(MySQLInstaller):
 
 
 class MySQLMGRInstaller(MySQLInstaller):
+    """
+    MGR 集群的安装
+    """
+    logger = logger.getChild('MySQLMGRInstaller')
 
     def __init__(self,port:int=3306,pkg:str="mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz",
                  dbma_basedir='/usr/local/dbm-agent/',
                  max_mem:int=1024,cores=_cores,
                  local_address:str="127.0.0.1:33061",
                  group_seeds="127.0.0.1:33601,127.0.0.1:33062,127.0.0.1:33063"):
+        logger = self.logger.getChild('__init__')
+
         super().__init__(port=port,pkg=pkg,dbma_basedir=dbma_basedir,max_mem=max_mem,cores=cores)
 
         self.local_address = local_address
@@ -297,6 +381,8 @@ class MySQLMGRInstaller(MySQLInstaller):
         """
         在基本检测项之上添加 MGR 专用的检测项
         """
+        logger = self.logger.getChild('pre_checkings')
+
         super().pre_checkings()
 
         # MGR 专用的检查项
@@ -333,6 +419,8 @@ class MySQLMGRInstaller(MySQLInstaller):
         """
         添加 MGR 特有的安装后的操作
         """
+        logger = self.logger.getChild('post_install')
+
         super().post_install()
         common.wait_until_tcp_ready('127.0.0.1',self.port)
         logger.info("sleep 7 secondes wait for mysql protoco avaiable")
@@ -434,6 +522,8 @@ class MySQLMGRInstaller(MySQLInstaller):
         3、init database
         4、执行安装后置操作
         """
+        logger = self.logger.getChild('install')
+
         # 1
         try:
             self.pre_install()
@@ -450,6 +540,7 @@ class MySQLMGRInstaller(MySQLInstaller):
 
         logger.info("install mgr node complete")
 
+
 class MySQLUninstaller(object):
     """
     uninstall mysql
@@ -457,6 +548,7 @@ class MySQLUninstaller(object):
     2: remove config files
     3: delete datadir
     """
+    logger = logger.getChild('MySQLUninstaller')
 
     def __init__(self,port:int=3306):
         """
@@ -473,6 +565,8 @@ class MySQLUninstaller(object):
         return False
 
     def uninstall(self):
+        logger = self.logger.getChild('uninstall')
+
         if self.is_mysql_in_runing_state():
             logger.error(f"mysql-{self.port} is runing can't uninstall 'systemctl stop mysqld-{self.port}' ")
             return 
@@ -514,6 +608,7 @@ class MySQLUninstaller(object):
 class UserManager(object):
     """
     """
+    pass
     
 
 

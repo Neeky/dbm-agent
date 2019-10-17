@@ -686,7 +686,14 @@ class MysqlRender(BaseRender):
         with common.sudo(f"render config file /etc/my-{self.port}.cnf"):
             with open(f"/etc/my-{self.port}.cnf",'w') as cnf:
                 cnf.write(self.tmpl.render())
-
+    
+    def render_init_only(self):
+        self.config_all()
+        self.tmpl.globals = self.defaults
+        logger.info("going to render config file (init only)")
+        with common.sudo(f"render config file /tmp/my.cnf"):
+            with open(f"/tmp/my.cnf",'w') as cnf:
+                cnf.write(self.tmpl.render())  
 
 class ZabbixRender(BaseRender):
     """
