@@ -40,7 +40,7 @@ MAINTAINER neeky@live.com
 #    && python3 --version 
 #
 #RUN pip3 config set global.index-url  https://mirrors.aliyun.com/pypi/simple && pip3 config set global.trusted-host  mirrors.aliyun.com
-#RUN pip3 install jinja2 psutil mysql-connector-python==8.0.17 requests
+#RUN pip3 install jinja2 psutil mysql-connector-python==8.0.17 requests distro
 
 ADD . /tmp/
 
