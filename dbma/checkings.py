@@ -21,7 +21,6 @@ def is_port_in_use(ip:str="127.0.0.1",port:int=3306)->bool:
     """
     检查对应的 IP 和端口是否已经被占用
     """
-    global logger
     logger.debug(f"check {(ip,port)} is in use or not")
     try:
         sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -89,10 +88,31 @@ def is_local_ip(ip:str="127.0.0.1"):
     """
     检查给定的 IP 是否是本机的 IP 地址
     """
+
     return ip in common.get_all_local_ip()
     
+def is_template_file_exists(pkg:str="mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz",dbma_basedir:str="/usr/local/dbm-agent"):
+    """
+    检查与给定版本匹配的配置文件是否存在
+    """
+    logger.info("check config file template exists or not")
+    # 正规匹配提取出版本号
+    m = re.search(r'-(8.0.\d\d)-',pkg)
+    if m:
+        version_number = m.group(1)
+    else:
+        return None
 
-
+    # 能执行到这里说明 version_number 提取成功
+    template_file_path = os.path.join(dbma_basedir,'etc/templates',f"mysql-{version_number}.cnf.jinja")
+    
+    if os.path.isfile(template_file_path):
+        logger.info(f"template file exists {template_file_path}")
+        return True
+    else:
+        logger.info(f"template file not exists {template_file_path}")
+        return False
+    
 
 
 
