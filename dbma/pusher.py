@@ -301,6 +301,7 @@ def push_disk_io_counter():
 
 
 
+
 def push_system_monitor_item():
     """
     """
@@ -318,4 +319,27 @@ def push_system_monitor_item():
         except Exception as err:
             logger.error(str(err))
         time.sleep(59)
+
+
+
+
+
+class Pusher(object):
+    """
+    所有信息由 dbm-agent 上传到 dbm-center 的基类
+    """
+    logger = logging.getLogger('dbm-agent').getChild(__name__).getChild('Pusher')
+
+    def __init__(self):
+        """
+        """
+        logger = self.logger.getChild('__init__')
+
+
+class SystemMonitorPusher(Pusher):
+    """
+    上传操作系统级别的监控项到 dbm-center
+    """
+    pass
+
 
