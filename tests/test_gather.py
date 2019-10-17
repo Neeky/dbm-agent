@@ -36,7 +36,7 @@ class GatherTestCase(unittest.TestCase):
         """
         测试 cpu_frequence
         """
-        self.assertIsInstance(gather.cpu_frequence,gather.CpuFrequency)
+        self.assertIsInstance(gather.cpu_frequence(),gather.CpuFrequency)
     
 
 
