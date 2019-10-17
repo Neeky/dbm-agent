@@ -65,6 +65,27 @@ class CheckingsTeestCase(unittest.TestCase):
         """
         self.assertTrue(checkings.is_local_ip('127.0.0.1'))
         self.assertFalse(checkings.is_local_ip('127.0.0.1111'))
+
+    def test_08_is_template_file_exists(self):
+        """
+        检查安装包中是否包涵配置文件模板
+        """
+        project_dir = os.path.dirname(os.path.dirname(__file__))
+
+        # 查询 mysql-8.0.17 的配置文件版本要在
+        cnf_tmpl_file_17 = os.path.join(project_dir,'dbma/static/cnfs/','mysql-8.0.17.cnf.jinja')
+        self.assertTrue(os.path.isfile(cnf_tmpl_file_17))
+        # 查询 mysql-8.0.18 的配置文件版本要在
+        cnf_tmpl_file_18 = os.path.join(project_dir,'dbma/static/cnfs/','mysql-8.0.17.cnf.jinja')
+        self.assertTrue(os.path.isfile(cnf_tmpl_file_18))
+
+        # init 专用的配置文件模板存在
+        cnf_tmpl_init_only = os.path.join(project_dir,'dbma/static/cnfs/','mysql-8.0-init-only.jinja')
+        self.assertTrue(os.path.isfile(cnf_tmpl_init_only))
+
+
+
+        
     
 
     
