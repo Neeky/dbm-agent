@@ -1,5 +1,5 @@
 Jinja2==2.10.1
-mysql-connector-python==8.0.17
+mysql-connector-python==8.0.18
 psutil==5.6.1
 requests==2.22.0
 distro==1.4.0
