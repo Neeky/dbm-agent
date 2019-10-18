@@ -23,34 +23,15 @@ import subprocess
 import configparser
 import mysql.connector
 import logging.handlers
-
-# 
-#from . import __dbma_version
 from .daemon import start_daemon,stop_daemon
 from .initialization import is_user_exists,get_uid_gid,is_root
 from . import pusher
+from . dbmacnf import cnf
 
-# exit 1
-
-# 临时日志、再没有能读取配置文件前
-#logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s",level=logging.DEBUG)
-
-def get_cnf(cnf_file:str)->dict:
-    """
-    从 /usr/local/dbm-agent/etc/my.cnf 中读取配置信息
-    """
-    # 如果配置文件不存在就直接打印配置文件并退出
-    if not os.path.isfile(cnf_file):
-        print(f"config file '{cnf_file}' not exists.",file=sys.stderr)
-        sys.exit(1)
-    #打开配置文件读取配置内容
-    config = configparser.ConfigParser(allow_no_value=True,inline_comment_prefixes='#')
-    config.read(cnf_file)
-    return config['dbma']
-    
 
 def config_log(log_file:str,log_level='info'):
     """
+    配置日志
     """
     logger = logging.getLogger('dbm-agent')
     if log_level.upper() == 'INFO':
@@ -70,50 +51,6 @@ def config_log(log_file:str,log_level='info'):
     logger.addHandler(file_handler)
 
 
-def heartbeat(heartbeat_api="https://127.0.0.1:8080/hosts/heartbeat",heartbeat_interval=300,net_if="ens33"):
-    """
-    收集主机层面的信息并上报
-    """
-    logger = logging.getLogger('dbm-agent').getChild(__name__)
-    while True:
-        try:
-            # cpu 核心
-            cpu_cores = psutil.cpu_count()
-
-            # mem 大小
-            mem_total_size,*_ = psutil.virtual_memory()
-
-            # dbma 版本
-            dbma_version = __dbma_version
-
-            # 创建一个新的会话
-            logger.info(f"post heartbeat info to dbmc {heartbeat_api}")
-            session = requests.Session()
-            session.headers.update({'Referer':f'{heartbeat_api}'})
-            response = session.get(heartbeat_api,timeout=1)
-
-            data = {
-                'csrfmiddlewaretoken':session.cookies['csrftoken'],
-                'cpu_cores':cpu_cores,
-                'mem_total_size':mem_total_size,
-                'dbma_version': __dbma_version
-            }
-
-            session.post(heartbeat_api,data=data,timeout=1) 
-            logger.info(f"post data = {data}")        
-
-        except Exception as err:
-            logger.error(f"Exception ocurr will push heartbeat {str(err)}")
-        finally:
-            time.sleep(heartbeat_interval)
-        
-
-
-
-
-
-
-
 def start(args):
     """
     1、检查当前用户是不是 root
@@ -127,47 +64,26 @@ def start(args):
         print(f"must use root user to execute this program.",file=sys.stderr)
         sys.exit(1)
     
-    # 解析配置文件中的 dbma 节点
-    #[dbma]
-    #dbmc_site = https://192.168.100.100
-    #base_dir = /usr/local/dbm-agent/
-    #config_file = etc/dbma.cnf
-    #log_file = logs/dbma.log
-    #log_level = info
-    #user_name = dbma
-    
-    # 根据命令行参数中指定的 base-dir 和 config-file 打开日志文件
-    config_file = os.path.join(args.base_dir,args.config_file)
-    config = get_cnf(config_file)
-
-    dbmc_site = config['dbmc_site']
-    log_file = os.path.join(config['base_dir'],config['log_file'])
-    log_level = config['log_level']
-    user_name  = config['user_name']
-    pid = config['pid']
-    net_if = config['net_if']
-    heartbeat_api = os.path.join(dbmc_site,config['heartbeat_api'])
-    heartbeat_interval = int(config['heartbeat_interval'])
-    
     # 检查配置文件中的 user_name 在操作系统级别是否存在
-    if not is_user_exists(user_name):
-        print(f" '{user_name}' not exists in current os ")
+    if not is_user_exists(cnf.user_name):
+        print(f" '{cnf.user_name}' not exists in current os ")
         sys.exit(2)
     
     # 切换到普通用户
-    uid,gid = get_uid_gid(user_name)
+    uid,gid = get_uid_gid(cnf.user_name)
     os.setegid(gid)
     os.seteuid(uid)
 
     # 以守护进程的方式运行
-    start_daemon(pid)
+    start_daemon(cnf.pid)
 
     # ~~ v ~~ 以下代码都在守护进程状态下运行
 
     # 配置日志
-    config_log(log_file,log_level)
-    #
+    log_file = os.path.join(cnf.base_dir,cnf.log_file)
+    config_log(log_file,cnf.log_level)
     logger = logging.getLogger('dbm-agent').getChild(__name__)
+
     logger.info('dbm-agent start')
     print(f"Successful start and log file save to '{log_file}' ")
     #
