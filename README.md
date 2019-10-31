@@ -98,8 +98,6 @@
 
    **安装方法二）：pip3 安装**
    ```bash
-   # 安装依赖
-   pip3 install jinja2 psutil requests mysql-connector-python==8.0.17 distro==1.4.0
    # 安装 dbm-agent
    pip3 install dbm-agent
 
