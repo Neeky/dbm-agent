@@ -24,9 +24,15 @@
 ## dbm-agent
   **dbm(DataBase Management center)-agent：MySQL 数据库管理中心客户端程序**
 
-  **dbm-agent 的要解决什么问题**
+  我们希望 DBA 可以从日常的工作中解放出来，做到只要在 web 界面上点一下“同意”系统就能自动、高效、优质的完成所有的操作；同样对于那些我们认为不合理的需求只要点一个“驳回”系统除了向需求方回一个被驳回的响应之外什么都不会干，安静的像一个美男子；更有意思的事，对于所有能用自动化解决的问题，dbm 绝对不会大半夜打 dba 的电话，出现故障自我解决，完成之后记录一下日志就行。
 
-  dbm-agent 是一个守护进程、就像一个安装上你 linux 主机上的 DBA、目前希望它能做到 MySQL 数据库的全生命周期管理，主要的功能如下表：
+  **dbm-agent 的工作原理**
+
+  dbm-agent 是安装在你机器上的一个 python 程序，它可以工作在两个模式
+  
+  一：守护进程模式，这里它会从定时从数据库管理中心(dbm-center)查询要执行的任务，并定时上报一些监控信息到数据库管理中心，这样你只要通过 dbm-center 提供的 web 界面就能完成所有的操作。
+
+  二：命令行模式，这个模式下直接通过 dbm-agent 提供的命令完成操作，相较手工操作这个模式也能极大的提高效率，命令行模式下已经支持如下功能
   
   |**功能ID(按在生命周期中出现的时候排序)**|**功能明细**|
   |---------|-----------|
@@ -51,15 +57,8 @@
   |数据目录   | /database/mysql/data/{port} |
   |备份目录   | /backup/mysql/{port} |
   |默认密码   | dbma@0352 |
-
-  ---
-
-  **dbm-agent 可以工作在两种状态**
-
-  **1、守护进程模式** 这个要求与 dbm-center 配合使用，这样 DBA 就可以通过浏览器点点点完成 MySQL 的管理工作了
-
-  **2、命令行脚本模式** 这个是一个比较轻量的使用方法，也就是说用户可以直接通过 dbm-agent 提供的命令完成 MySQL 的管理工作 
-
+  |MySQL 安装目录| /usr/local/|
+  |MySQL-shell 安装目录| /usr/local/|
 
   ---
 
@@ -131,35 +130,34 @@
    ```bash
    # 由于要创建用户和目录，dbm-agent 需要 root 权限
    sudo su
-   # init ，通过--dbmc-site 选项指定管理端的访问路径
+   # init ，通过--dbmc-site 选项指定管理端的访问路径、如果你不与 dbm-center 一起使用也可以不加 --dbmc-site
    dbm-agent --dbmc-site=https://192.168.100.100 init
    #dbm-agent init compeleted .
 
    # 执行完成上面的步骤整个初始化就算完成了，实现上只是创建一些必要的用户，目录，文件 
-   # 创建 dbma 用户
+   # 初始化会创建 dbm 用户
    grep dbm /etc/passwd    
    dbma:x:2048:2048::/home/dbma:/bin/bash
    
-   # 创建如下目录结构
+   # 初始化会创建 /usr/local/dbm-agent/ 目录
    tree /usr/local/dbm-agent/
-   /usr/local/dbm-agent/
-   ├── etc
-   │   └── dbma.cnf
-   ├── logs
-   │   └── dbma.log
-   └── pkgs
 
-   # 创建配置文件，日志文件中会在直接运行的时候才长成
-   cat /usr/local/dbm-agent/etc/dbma.cnf 
-   
-   [dbma]
-   dbmc_site = https://192.168.100.100
-   base_dir = /usr/local/dbm-agent/
-   config_file = etc/dbma.cnf
-   log_file = logs/dbma.log
-   log_level = info
-   user_name = dbma
-   pid = /tmp/dbm-agent.pid
+   ├── etc
+   │   ├── dbma.cnf          # dbm-agent 的配置文件
+   │   ├── init-users.sql    # 在初始化数据库里将使用这个文件中的用户名和密码来创建用户
+   │   └── templates
+   │       ├── 5_7.cnf.jinja # 未启用
+   │       ├── 8_0.cnf.jinja # 未启用
+   │       ├── create-innodb-cluster.js
+   │       ├── init-users.sql.jinja
+   │       ├── mysql-8.0.17.cnf.jinja    # mysql-8.0.17 版本对应的配置文件模板
+   │       ├── mysql-8.0.18.cnf.jinja    # mysql-8.0.18 版本对应的配置文件模板
+   │       ├── mysql-8.0-init-only.jinja # 只有初始化时才用到的配置文件
+   │       └── mysqld.service.jinja      # mysql systemd 配置文件模板
+   ├── logs    # dbm-agent 的日志文件保存目录(只要有守护进程模式下才会向这时写日志)
+   └── pkg
+       ├── mysql-8.0.18-linux-glibc2.12-x86_64.tar.xz          # 各个软件的安装包(要自己下载并保存到这里，dbm-agent不会自动下载它)
+       └── mysql-shell-8.0.18-linux-glibc2.12-x86-64bit.tar.gz # 各个软件的安装包(要自己下载并保存到这里，dbm-agent不会自动下载它)
    ```
 
    ---
