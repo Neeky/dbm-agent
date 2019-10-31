@@ -23,6 +23,23 @@ grant replication slave,replication client,backup_admin on *.* to 'repluser'@'%'
 create user monitor@'127.0.0.1' identified by '{{initpwd}}';
 grant replication client,process on *.* to monitor@'127.0.0.1';
 
+-- innodb cluster admin user
+create user innodbclusteradmin@'%' identified by '{{initpwd}}';
+grant reload, shutdown, process, file, select, super, replication slave, replication client, create user on *.* to innodbclusteradmin@'%' with grant option;
+grant all on mysql_innodb_cluster_metadata.* to innodbclusteradmin@'%' with grant option;
+grant insert, update, delete on mysql.* to innodbclusteradmin@'%' with grant option;
+grant select on performance_schema.global_status to innodbclusteradmin@'%' with grant option;
+grant select on performance_schema.replication_applier_configuration to innodbclusteradmin@'%' with grant option;
+grant select on performance_schema.replication_applier_status to innodbclusteradmin@'%' with grant option;
+grant select on performance_schema.replication_applier_status_by_coordinator to innodbclusteradmin@'%' with grant option;
+grant select on performance_schema.replication_applier_status_by_worker to innodbclusteradmin@'%' with grant option;
+grant select on performance_schema.replication_connection_configuration to innodbclusteradmin@'%' with grant option;
+grant select on performance_schema.replication_connection_status to innodbclusteradmin@'%' with grant option;
+grant select on performance_schema.replication_group_member_stats to innodbclusteradmin@'%' with grant option;
+grant select on performance_schema.replication_group_members to innodbclusteradmin@'%' with grant option;
+grant select on performance_schema.threads to innodbclusteradmin@'%' with grant option;
+
+
 set @@sql_log_bin=1;
 
 

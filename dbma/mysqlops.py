@@ -605,10 +605,141 @@ class MySQLUninstaller(object):
             logger.error(f"during uninstall mysql a error occur inner error : {str(err)}")
 
 
-class UserManager(object):
+class MySQLShellInstaller(object):
     """
+    实现 mysql-shell 的安装
     """
-    pass
+    logger = logger.getChild('MySQLShellInstaller')
+
+    def __init__(self,pkg="mysql-shell-8.0.18-linux-glibc2.12-x86-64bit.tar.gz",dbma_basedir="/usr/local/dbm-agent/"):
+        """
+        """
+        self.pkg = pkg
+        self.dbma_basedir = dbma_basedir
+        self.mysql_shell_base_dir = os.path.join('/usr/local/', self.pkg.replace('.tar.gz', '').replace('.tar.xz', ''))
+        self.user = 'mysqlsh'
+        self.pkg_full_path = os.path.join(self.dbma_basedir,'pkg',self.pkg)
+
+    def pre_checkings(self):
+        """
+        完成安装前的检查工作
+        1、安装包的版本号要满足要求(mysql-shell-8.0.xx)
+        2、安装包要存在，或已经解压过
+        """
+        logger = self.logger.getChild('per_checkings')
+
+        # 从 pkg 中抽取 mysql-shell 中的版本号
+        logger.info("checking mysql-shell version")
+        m = re.search(r'mysql-shell-8\.\d.\d\d-',self.pkg)
+        if not m:
+            
+            # 给定的版本不满足正则的格式，不被支持
+            logger.error(f"an not supported mysql-shell version {self.pkg}")
+            raise errors.NotSupportedMySQLVersionError(self.pkg)
+
+        # 检查文件是否已经存在
+        logger.info(f"cheking file {self.pkg_full_path} exists or not")
+        if not checkings.is_file_exists(self.pkg_full_path) and not checkings.is_directory_exists(self.mysql_shell_base_dir):
+
+            # 安装安装包不存在，并且 /usr/local/ 下也不存在解压后的安装包的情况下，就报错
+            raise errors.FileNotExistsError(self.pkg_full_path)
+
+    def create_mysqlsh_user(self):
+        """
+        如果 mysqlsh 用户不存在就创建
+        """
+        logger = self.logger.getChild('create_mysqlsh_user')
+        if not checkings.is_user_exists(self.user):
+            logger.warning("prepare create mysqlsh user")
+            common.create_user(self.user)
+            return
+        logger.info("mysqlsh user exists skip create it")
+
+    def untar_pkg(self):
+        """
+        解压 mysql-shell.xxx..tar.gz 安装包到 /usr/local/
+        """
+        logger = self.logger.getChild('untar_pkg')
+
+        # 检查安装包是否已经解压完成，如果没有就解压，如果已经解压就跳过
+        mysql_shell_base_dir = os.path.join('/usr/local',self.pkg.replace('.tar.gz','').replace('.tar.xz',''))
+        if checkings.is_directory_exists(mysql_shell_base_dir):
+            logger.warning(f"directory {mysql_shell_base_dir} exists")
+            return
+        logger.info(f"prepare untar {self.pkg} to /usr/local/")
+        shutil.unpack_archive(self.pkg_full_path, '/usr/local/')
+
+    def change_owner(self):
+        """
+        调整目录的用户为 mysqlsh
+        """
+        logger = self.logger.getChild('change_owner')
+        logger.info(f"change owner to {self.user}")
+        common.recursive_change_owner(self.mysql_shell_base_dir, self.user)
+
+    def export_path(self):
+        """
+        导出 path 环境变量到 /etc/profile 
+        """
+        logger = self.logger.getChild('export_path')
+
+        #
+        path = f"export PATH={self.mysql_shell_base_dir}/bin/:$PATH\n"
+        with common.sudo('export path'):
+            is_exported = False
+            with open('/etc/profile', 'r') as f:
+                for line in f:
+                    if path in line:
+                        is_exported = True
+                        logger.info(f"{path} has been exported.")
+                        break
+                else:
+
+                    # 在 for 循环没有执行 break 的情况下会执行 else 块
+                    is_exported = False
+
+            if is_exported == False:
+
+                # 如果没有导出 path 变量就导出它
+                logger.info("prepare export path variable ")
+                with open('/etc/profile', 'a') as f:
+                    f.write('\n')
+                    f.write(path)
+
+    def install(self):
+        """
+        安装 mysql-shell
+        """
+        logger = self.logger.getChild('install')
+
+        try:
+            self.pre_checkings()
+        except errors.Error as err:
+            logger.error(str(err))
+            return
+
+        # 第一步：创建用户
+        self.create_mysqlsh_user()
+
+        # 第二步：解压
+        self.untar_pkg()
+
+        # 第三步：修改文件属性
+        self.change_owner()
+
+        # 第四小：导出 path 环境变量
+        self.export_path()
+
+        logger.info(f"{self.pkg} install compelete")
+
+
+
+
+
+        
+
+
+        
     
 
 
