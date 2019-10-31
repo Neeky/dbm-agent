@@ -16,15 +16,19 @@ from dbma import __dbma_version
 
 cnf = dbmacnf.cnf
 
+
 def parser_cmd_args():
     """
     实现命令行参数的处理
     """
     parser = argparse.ArgumentParser(__name__)
-    parser.add_argument('--log',type=str,default='info',choices=['debug','info','warning','error'])
-    parser.add_argument('dimension',type=str,choices=['host','cpu-times','net-if','net-io','cpu-fq','mem-distri','disk-usage','disk-io','all'])
+    parser.add_argument('--log', type=str, default='info',
+                        choices=['debug', 'info', 'warning', 'error'])
+    parser.add_argument('dimension', type=str, choices=[
+                        'host', 'cpu-times', 'net-if', 'net-io', 'cpu-fq', 'mem-distri', 'disk-usage', 'disk-io', 'all'])
     args = parser.parse_args()
     return args
+
 
 def main():
     """
@@ -32,12 +36,13 @@ def main():
     """
     args = parser_cmd_args()
 
-    level = getattr(logging,args.log.upper())
+    level = getattr(logging, args.log.upper())
     logger = logging.getLogger('dbm-agent')
     logger.setLevel(level)
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(message)s')
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
 
@@ -66,11 +71,6 @@ def main():
         pusher.push_memory_distribution()
         pusher.push_disk_usage()
         pusher.push_disk_io_counter()
-
-
-
-    
-    
 
     """
     try:
@@ -115,6 +115,7 @@ def main():
         if hasattr(session,'close'):
             session.close()
     """
+
 
 if __name__ == "__main__":
     main()

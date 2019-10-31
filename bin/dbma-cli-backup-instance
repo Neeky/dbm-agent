@@ -17,15 +17,20 @@ def parser_cmd_args():
     """
     实现命令行参数的处理
     """
-    parser = argparse.ArgumentParser(__name__)
-    parser.add_argument('--port',type=int,default=3306,help="instance port")
-    parser.add_argument('--host',type=str,default="127.0.0.1",help="host ip")
-    parser.add_argument('--user',type=str,default='root',help="backup user")
-    parser.add_argument('--password',type=str,default="dbma@0352",help="backup user")
-    parser.add_argument('--log',type=str,default='info',choices=['debug','info','warning','error'])
-    parser.add_argument('tool',type=str,choices=['clone'])
+    name, *_ = os.path.basename(__file__).split('.')
+    parser = argparse.ArgumentParser(name)
+    parser.add_argument('--port', type=int, default=3306, help="instance port")
+    parser.add_argument('--host', type=str,
+                        default="127.0.0.1", help="host ip")
+    parser.add_argument('--user', type=str, default='root', help="backup user")
+    parser.add_argument('--password', type=str,
+                        default="dbma@0352", help="backup user")
+    parser.add_argument('--log', type=str, default='info',
+                        choices=['debug', 'info', 'warning', 'error'])
+    parser.add_argument('tool', type=str, choices=['clone'])
     args = parser.parse_args()
     return args
+
 
 def main():
     """
@@ -33,12 +38,13 @@ def main():
     """
     # 配置日志
     args = parser_cmd_args()
-    level = getattr(logging,args.log.upper())
+    level = getattr(logging, args.log.upper())
     logger = logging.getLogger('dbm-agent')
     logger.setLevel(level)
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(message)s')
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
 
@@ -46,25 +52,25 @@ def main():
 
     backupdir = f"/backup/mysql/{args.port}"
     if not checkings.is_directory_exists(backupdir):
-        logger.warning(f"direcotry '{backupdir}' not exists dbm-agent going to create it")
+        logger.warning(
+            f"direcotry '{backupdir}' not exists dbm-agent going to create it")
         common.create_directory(backupdir)
-        common.recursive_change_owner(backupdir,user=f"mysql{args.port}",group="mysql")
+        common.recursive_change_owner(
+            backupdir, user=f"mysql{args.port}", group="mysql")
     else:
-        shutil.chown(backupdir,user=f"mysql{args.port}",group="mysql")
+        shutil.chown(backupdir, user=f"mysql{args.port}", group="mysql")
 
-    if not checkings.is_port_in_use(args.host,args.port):
+    if not checkings.is_port_in_use(args.host, args.port):
         logger.error(f"can't connect to {args.host}:{args.port} backup fail.")
         sys.exit(1)
-    
+
     if args.tool == 'clone':
-        backuper = backups.LocalClone(host=args.host,port=args.port,user=args.user,password=args.password)
+        backuper = backups.LocalClone(
+            host=args.host, port=args.port, user=args.user, password=args.password)
         backuper.backup()
     else:
         logger.error(f"not suported backup tool {args.tool}")
 
+
 if __name__ == "__main__":
     main()
-
-
-    
-

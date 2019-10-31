@@ -29,27 +29,28 @@ def push_host():
     try:
         # 第一步
         session = requests.Session()
-        session.headers.update({'Referer':cnf.dbmc_site})
-        api_url = os.path.join(cnf.dbmc_site,cnf.api_host)
-        session.get(api_url + '?pk=-1') # pk=-1 是一个没有意义的查询
+        session.headers.update({'Referer': cnf.dbmc_site})
+        api_url = os.path.join(cnf.dbmc_site, cnf.api_host)
+        session.get(api_url + '?pk=-1')  # pk=-1 是一个没有意义的查询
 
         csrfmiddlewaretoken = session.cookies['csrftoken']
-        logger.info(f"using {api_url + '?pk=-1'} Got csrfmiddlewaretoken = {csrfmiddlewaretoken}")
+        logger.info(
+            f"using {api_url + '?pk=-1'} Got csrfmiddlewaretoken = {csrfmiddlewaretoken}")
 
         host = {'host_uuid': cnf.host_uuid,
                 'agent_version': version.agent_version}
-        
+
         os_version = gather.os_version()
         cup_cores = gather.cpu_cores().counts
         mem_total_size = gather.mem_distri().total
         ifs = gather.net_interfaces()
-        mif = None # 管理网、网卡
+        mif = None  # 管理网、网卡
         for i in ifs:
             if i.name == cnf.net_if:
                 mif = i
                 break
         manger_net_ip = mif.address
-        
+
         host.update({
             'cpu_cores': cup_cores,
             'mem_total_size': mem_total_size,
@@ -61,7 +62,7 @@ def push_host():
         logger.info(f"gather host info = {host}")
 
         logger.info(f"post host info to {api_url}")
-        response = session.post(api_url,data=host)
+        response = session.post(api_url, data=host)
         logger.info(response.json())
         logger.info(f"push host info complete")
 
@@ -69,10 +70,10 @@ def push_host():
         logger.error(str(err))
 
     finally:
-        if hasattr(session,'close'):
+        if hasattr(session, 'close'):
             session.close()
-    
-    
+
+
 def push_cpu_times():
     """
     上传 CPU 时间片分布信息
@@ -85,7 +86,7 @@ def push_cpu_times():
         logger = _logger.getChild("push_cpu_times")
         logger.info("push cpu times info to dbmc")
         session = requests.Session()
-        session.headers.update({'Referer':cnf.dbmc_site})
+        session.headers.update({'Referer': cnf.dbmc_site})
         api_url = cnf.api_cpu_times
         logger.info(f"query {api_url}?pk=-1 for get csrftoken")
         response = session.get(api_url+'?pk=-1')
@@ -95,18 +96,18 @@ def push_cpu_times():
         # 第二步
         times = dict(gather.cpu_times()._asdict())
         times.update({'host_uuid': cnf.host_uuid,
-                     'csrfmiddlewaretoken': csrfmiddlewaretoken})
+                      'csrfmiddlewaretoken': csrfmiddlewaretoken})
         logger.info(f"cpu times = {times}")
 
         # 第三步
-        response = session.post(api_url,data=times)
+        response = session.post(api_url, data=times)
         logger.info(response.json())
         logger.info("push cpu times info completed.")
 
     except Exception as err:
         logger.error(str(err))
     finally:
-        if hasattr(session,'close'):
+        if hasattr(session, 'close'):
             session.close()
 
 
@@ -118,23 +119,23 @@ def push_cpu_frequence():
         logger = _logger.getChild("push_cpu_frequence")
         logger.info("prepare push cpu frequence to dbmc")
         session = requests.Session()
-        session.headers.update({'Referer':cnf.dbmc_site})
+        session.headers.update({'Referer': cnf.dbmc_site})
         api_url = cnf.api_cpu_frequences
         session.get(api_url+'?pk=-1')
 
         csrfmiddlewaretoken = session.cookies['csrftoken']
         data = gather.cpu_frequence()._asdict()
         data.update({
-            'csrfmiddlewaretoken':csrfmiddlewaretoken
+            'csrfmiddlewaretoken': csrfmiddlewaretoken
         })
         logger.info(data)
-        response = session.post(api_url,data=data)
+        response = session.post(api_url, data=data)
         logger.info(response.json())
 
     except Exception as err:
         logger.error(str(err))
     finally:
-        if hasattr(session,'close'):
+        if hasattr(session, 'close'):
             session.close()
 
 
@@ -146,7 +147,7 @@ def push_net_interfaces():
         logger = _logger.getChild("push_net_interfaces")
         logger.info("prepase push net interface info")
         session = requests.Session()
-        session.headers.update({'Referer':cnf.dbmc_site})
+        session.headers.update({'Referer': cnf.dbmc_site})
         api_url = cnf.api_net_interfaces
         session.get(api_url+'?pk=-1')
         logger.info(f"using {api_url}?pk=-1 for go token")
@@ -156,23 +157,22 @@ def push_net_interfaces():
 
         infs = gather.net_interfaces()
         logger.info(f"nifs = {infs}")
-        
+
         for inf in infs:
             data = inf._asdict()
-            data.update({'csrfmiddlewaretoken':csrfmiddlewaretoken})
+            data.update({'csrfmiddlewaretoken': csrfmiddlewaretoken})
 
-            response = session.post(api_url,data=data)
+            response = session.post(api_url, data=data)
 
             csrfmiddlewaretoken = session.cookies['csrftoken']
             logger.info(response.json())
 
         logger.info("net-interface push complete")
-        
 
     except Exception as err:
         logger.error(str(err))
     finally:
-        if hasattr(session,'close'):
+        if hasattr(session, 'close'):
             session.close()
 
 
@@ -184,7 +184,7 @@ def push_net_io_counter():
         logger = _logger.getChild("push_net_io_counter")
         logger.info("prepare push net io counter info")
         session = requests.Session()
-        session.headers.update({'Referer':cnf.dbmc_site})
+        session.headers.update({'Referer': cnf.dbmc_site})
         api_url = cnf.api_net_io_counters
         logger.info(f"query {api_url}?pk=-1 for get csrftoken")
         session.get(api_url + '?pk=-1')
@@ -197,16 +197,16 @@ def push_net_io_counter():
         data.update({'csrfmiddlewaretoken': csrfmiddlewaretoken})
         logger.info(f"net io counter = {data}")
 
-        response = session.post(api_url,data=data)
+        response = session.post(api_url, data=data)
         logger.info(response.json())
 
     except Exception as err:
         logger.error(str(err))
     finally:
-        if hasattr(session,'close'):
+        if hasattr(session, 'close'):
             session.close()
 
-    
+
 def push_memory_distribution():
     """
     实现主机内存使用情况上的报
@@ -215,7 +215,7 @@ def push_memory_distribution():
         logger = _logger.getChild("push_memory_distribution")
         logger.info("prepare push memory distribution info to dbmc")
         session = requests.Session()
-        session.headers.update({'Referer':cnf.dbmc_site})
+        session.headers.update({'Referer': cnf.dbmc_site})
         api_url = cnf.api_memory_distributions
         logger.info(f"query {api_url}?pk=-1 for csrftoken")
 
@@ -228,13 +228,13 @@ def push_memory_distribution():
         data.update(md._asdict())
         logger.info(f"data = {data}")
 
-        response = session.post(api_url,data=data)
+        response = session.post(api_url, data=data)
         logger.info(response.json())
 
     except Exception as err:
         logger.error(str(err))
     finally:
-        if hasattr(session,'close'):
+        if hasattr(session, 'close'):
             session.close()
 
 
@@ -246,9 +246,9 @@ def push_disk_usage():
         logger = _logger.getChild("push_disk_usage")
         logger.info("prepare push disk uasge info to dbmc")
         session = requests.Session()
-        session.headers.update({'Referer':cnf.dbmc_site})
+        session.headers.update({'Referer': cnf.dbmc_site})
         api_url = cnf.api_disk_usages
-        logger.info(f"query {api_url}?pk=-1 for csrftoken")   
+        logger.info(f"query {api_url}?pk=-1 for csrftoken")
 
         session.get(api_url+'?pk=-1')
         csrfmiddlewaretoken = session.cookies['csrftoken']
@@ -258,13 +258,13 @@ def push_disk_usage():
             data = {'csrfmiddlewaretoken': csrfmiddlewaretoken}
             data.update(du._asdict())
             logger.info(f"data = {data}")
-            session.post(api_url,data=data)
+            session.post(api_url, data=data)
             csrfmiddlewaretoken = session.cookies['csrftoken']
         logger.info("push disk usage info complete")
     except Exception as err:
         logger.error(str(err))
     finally:
-        if hasattr(session,'close'):
+        if hasattr(session, 'close'):
             session.close()
 
 
@@ -276,9 +276,9 @@ def push_disk_io_counter():
         logger = _logger.getChild("push_disk_io_counter")
         logger.info("prepare push disk io counter to dbmc")
         session = requests.Session()
-        session.headers.update({'Referer':cnf.dbmc_site})
+        session.headers.update({'Referer': cnf.dbmc_site})
         api_url = cnf.api_disk_io_counters
-        logger.info(f"query {api_url}?pk=-1 for csrftoken")   
+        logger.info(f"query {api_url}?pk=-1 for csrftoken")
 
         session.get(api_url+'?pk=-1')
         csrfmiddlewaretoken = session.cookies['csrftoken']
@@ -289,17 +289,15 @@ def push_disk_io_counter():
         data.update(dio._asdict())
         logger.info(f"data = {data}")
 
-        response = session.post(api_url,data=data)
+        response = session.post(api_url, data=data)
         logger.info(response.json())
         logger.info("push disk usage info complete")
-        
+
     except Exception as err:
         logger.error(str(err))
     finally:
-        if hasattr(session,'close'):
-            session.close() 
-
-
+        if hasattr(session, 'close'):
+            session.close()
 
 
 def push_system_monitor_item():
@@ -321,14 +319,12 @@ def push_system_monitor_item():
         time.sleep(59)
 
 
-
-
-
 class Pusher(object):
     """
     所有信息由 dbm-agent 上传到 dbm-center 的基类
     """
-    logger = logging.getLogger('dbm-agent').getChild(__name__).getChild('Pusher')
+    logger = logging.getLogger(
+        'dbm-agent').getChild(__name__).getChild('Pusher')
 
     def __init__(self):
         """
@@ -341,5 +337,3 @@ class SystemMonitorPusher(Pusher):
     上传操作系统级别的监控项到 dbm-center
     """
     pass
-
-

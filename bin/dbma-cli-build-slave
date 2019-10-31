@@ -20,43 +20,56 @@ def parser_cmd_args():
     """
 
     parser = argparse.ArgumentParser(__name__)
-    parser.add_argument('--user',type=str,default='root',help='mysql root user')
-    parser.add_argument('--password',type=str,default='dbma@0352',help='root password')
-    parser.add_argument('--host',type=str,default="127.0.0.1",help='recipient host(localhost)')
-    parser.add_argument('--port',type=int,default=3306,help='mysql port')
-    
-    parser.add_argument('--dhost',type=str,default="192.168.100.100",help="donor host ip")
-    parser.add_argument('--dport',type=int,default=3306,help='doner mysql port')
+    parser.add_argument('--user', type=str, default='root',
+                        help='mysql root user')
+    parser.add_argument('--password', type=str,
+                        default='dbma@0352', help='root password')
+    parser.add_argument('--host', type=str, default="127.0.0.1",
+                        help='recipient host(localhost)')
+    parser.add_argument('--port', type=int, default=3306, help='mysql port')
 
-    parser.add_argument('--cuser',type=str,default="cloneuser",help="clone user connect to dhost")
-    parser.add_argument('--cpassword',type=str,default="dbma@0352",help="the password of cuser")
+    parser.add_argument('--dhost', type=str,
+                        default="192.168.100.100", help="donor host ip")
+    parser.add_argument('--dport', type=int, default=3306,
+                        help='doner mysql port')
 
-    parser.add_argument('--ruser',type=str,default="repluser",help="replication user")
-    parser.add_argument('--rpassword',type=str,default="dbma@0352",help="the password of ruser")
-    parser.add_argument('--log',type=str,default='info',choices=['debug','info','warning','error'])
-    parser.add_argument('action',type=str,choices=['only-clone','build-slave'])
+    parser.add_argument('--cuser', type=str, default="cloneuser",
+                        help="clone user connect to dhost")
+    parser.add_argument('--cpassword', type=str,
+                        default="dbma@0352", help="the password of cuser")
+
+    parser.add_argument('--ruser', type=str,
+                        default="repluser", help="replication user")
+    parser.add_argument('--rpassword', type=str,
+                        default="dbma@0352", help="the password of ruser")
+    parser.add_argument('--log', type=str, default='info',
+                        choices=['debug', 'info', 'warning', 'error'])
+    parser.add_argument('action', type=str, choices=[
+                        'only-clone', 'build-slave'])
 
     args = parser.parse_args()
     return args
+
 
 def main():
     # config logger
     args = parser_cmd_args()
 
-    level = getattr(logging,args.log.upper())
+    level = getattr(logging, args.log.upper())
     logger = logging.getLogger('dbm-agent')
     logger.setLevel(level)
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(message)s')
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
 
     try:
-        backuper = backups.RemoteClone(host=args.host,port=args.port,user=args.user,password=args.password,
-                                       dhost=args.dhost,dport=args.dport,
-                                       cuser=args.cuser,cpassword=args.cpassword,
-                                       ruser=args.ruser,rpassword=args.rpassword)
+        backuper = backups.RemoteClone(host=args.host, port=args.port, user=args.user, password=args.password,
+                                       dhost=args.dhost, dport=args.dport,
+                                       cuser=args.cuser, cpassword=args.cpassword,
+                                       ruser=args.ruser, rpassword=args.rpassword)
         if args.action == 'only-clone':
             backuper.clone()
         elif args.action == 'build-slave':
@@ -68,7 +81,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
-
-    
-
