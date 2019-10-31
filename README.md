@@ -14,6 +14,9 @@
    - [自动备份](#自动备份)
    - [自动增加Slave](#自动增加Slave)
    - [自动搭建MGR高可用集群](#自动搭建MGR高可用集群)
+   - [自动安装mysql-shell](#自动安装mysql-shell)
+   - [自动化配置innodb-cluster](#自动化配置innodb-cluster)
+   - [自动化配置mysql-router](#自动化配置mysql-router)
    - [自动采集主机监控并上传到服务端(dbm-center)](#自动采集主机监控并上传到服务端)
 
 ---
@@ -561,6 +564,200 @@ mysql -h127.0.0.1 -P3306 -uroot -pdbma@0352 -e"select * from performance_schema.
 2、对于自动搭建 MGR 高可用集群来说，你只要保证防火墙是开放的就行，其它的事 dbm-agent 包圆了
 
 ---
+
+
+
+## 自动安装mysql-shell
+   **dbm-agent-0.2.9 及以上版本支持自动化安装 mysql-shell,并且会在初始化实现的时候就创建 innodbclusteradmin 这个 innodb-cluster 管理用户,也就是说已经完成了对 innodb-cluster 的相关准备**
+
+   **第一步：** 确保 mysql-shell 的安装包已经下载到本地
+   ```bash
+   ll /usr/local/dbm-agent/pkg/
+   总用量 526764
+   -rw-r--r--. 1 root root 503854832 10月 31 16:42 mysql-8.0.18-linux-glibc2.12-x86_64.tar.xz
+   -rw-r--r--. 1 root root  35547267 10月 31 16:44 mysql-shell-8.0.18-linux-glibc2.12-x86-64bit.tar.gz
+   ```
+
+   **第二步：自动化安装 mysql-shell**
+   ```bash
+   dbma-cli-mysqlsh --pkg=mysql-shell-8.0.18-linux-glibc2.12-x86-64bit.tar.gz install
+   2019-10-31 16:46:29,781 - dbm-agent.dbma.mysqlops.MySQLShellInstaller.per_checkings - MainThread - INFO - checking mysql-shell version
+   2019-10-31 16:46:29,782 - dbm-agent.dbma.mysqlops.MySQLShellInstaller.per_checkings - MainThread - INFO - cheking file /usr/local/dbm-agent/pkg/mysql-shell-8.0.18-linux-glibc2.12-x86-64bit.tar.gz exists or not
+   2019-10-31 16:46:29,782 - dbm-agent.dbma.mysqlops.MySQLShellInstaller.create_mysqlsh_user - MainThread - INFO - mysqlsh user exists skip create it
+   2019-10-31 16:46:29,782 - dbm-agent.dbma.mysqlops.MySQLShellInstaller.untar_pkg - MainThread - INFO - prepare untar mysql-shell-8.0.18-linux-glibc2.12-x86-64bit.tar.gz to /usr/local/
+   2019-10-31 16:46:30,710 - dbm-agent.dbma.mysqlops.MySQLShellInstaller.change_owner - MainThread - INFO - change owner to mysqlsh
+   2019-10-31 16:46:30,815 - dbm-agent.dbma.mysqlops.MySQLShellInstaller.export_path - MainThread - INFO - export PATH=/usr/local/mysql-shell-8.0.18-linux-glibc2.12-x86-64bit/bin/:$PATH has been exported.
+   2019-10-31 16:46:30,815 - dbm-agent.dbma.mysqlops.MySQLShellInstaller.install - MainThread - INFO - mysql-shell-8.0.18-linux-glibc2.12-x86-64bit.tar.gz install compelete
+   ```
+   
+   dbm-agent 会把 mysql-shell 也安装到 /usr/local/ 目录下，并且会自动导出 mysqlsh 这个命令
+   ```bash
+   which mysqlsh
+   /usr/local/mysql-shell-8.0.18-linux-glibc2.12-x86-64bit/bin/mysqlsh
+   ```
+
+   ---
+
+## 自动化配置innodb-cluster
+   **在完成 mysql-shell 的安装之后，就可以 MGR 的主结点(primary)上配置 innodb-cluster 了**
+
+   dbm-agent 在自动化安装 MGR 和 mysql-shell 的时候就已经为将来配置 innodb-cluster 打下了基础，所以到这一步就非常简单了一行命令解决问题，于是 dbm-agent 就没对这一行命令进行封装
+
+   **1、** 在初始化实例时已经完成了对 innodb-cluster 管理用户的创建于授权
+   ```sql
+   select user,host from mysql.user where user='innodbclusteradmin';
+   +--------------------+------+
+   | user               | host |
+   +--------------------+------+
+   | innodbclusteradmin | %    |
+   +--------------------+------+
+   1 row in set (0.02 sec)
+   ```
+   **2、** mysql-shell 在上一个章节已经安装好了
+
+   **3、** dbm-agent 还提供了一个拿来就用的创建 innodb-cluster 的 javascript 脚本，所以你要做的只是在primary结点所有的主机上运行一下如下脚本
+   ```bash
+   mysqlsh --uri innodbclusteradmin@127.0.0.1:3306 --password=dbma@0352 < /usr/local/dbm-agent/etc/templates/create-innodb-cluster.js 
+   WARNING: Using a password on the command line interface can be insecure.
+   A new InnoDB cluster will be created based on the existing replication group on instance '127.0.0.1:3306'.
+   
+   Creating InnoDB cluster 'production' on '127.0.0.1:3306'...
+   
+   Adding Seed Instance...
+   Adding Instance 'mgr192_168_23_200:3306'...
+   Adding Instance 'mgr192_168_23_201:3306'...
+   Adding Instance 'mgr192_168_23_202:3306'...
+   Resetting distributed recovery credentials across the cluster...
+   Cluster successfully created based on existing replication group.
+   ```
+
+   到这里 innodb cluster 就创建完成了(如果你结合 dbm-center 一起使用只要在 web 界面上点一下，所以的操作都是自动的)
+
+   ---
+
+## 自动化配置mysql-router
+   **由于官方推荐 mysql-router 和应用程序安装在同一台主机上，从这个角度来说 mysql-router 已经不是数据库管理系统要操心的事了，所以 dbm-agent 不实现对 mysql-router的安装。不过有一个惊喜要告诉你，就是 mysql-router 已经被官方打包到了 mysql-server ，也就是说你只要安装好了 mysql-server 就那你就已经有了 mysql-router**
+
+   **第一步：** 配置 mysql-router
+
+   ```bash
+   # 创建 mysqlrouter 的运行用户
+   useradd router
+
+   ## 创建用于保存 mysql-router 配置的目录
+   mkdir /usr/local/routers/
+
+   
+   # 调用 --bootstrap 让 mysqlrouter 可以根据实例中 innodb-cluster 的信息完成自我配置(router 这个时候会提示你输入密码要注意了)
+   # 连接时并不会使用这 root 这里的 root 只是用来给 mysqlrouter 做自动化配置的
+   mysqlrouter --bootstrap root@localhost:3306 --directory /usr/local/routers/3306 --conf-use-sockets --user=router
+
+   # Bootstrapping MySQL Router instance at '/usr/local/routers/3306'...
+   
+   - Checking for old Router accounts
+     - No prior Router accounts found
+   - Creating mysql account 'mysql_router1_9nyhh5odceex'@'%' for cluster management
+   - Storing account in keyring
+   - Adjusting permissions of generated files
+   - Creating configuration /usr/local/routers/3306/mysqlrouter.conf
+   
+   # MySQL Router configured for the InnoDB cluster 'production'
+   
+   After this MySQL Router has been started with the generated configuration
+   
+       $ mysqlrouter -c /usr/local/routers/3306/mysqlrouter.conf
+   
+   the cluster 'production' can be reached by connecting to:
+   
+   ## MySQL Classic protocol
+   
+   - Read/Write Connections: localhost:6446, /usr/local/routers/3306/mysql.sock
+   - Read/Only Connections:  localhost:6447, /usr/local/routers/3306/mysqlro.sock
+   
+   ## MySQL X protocol
+   
+   - Read/Write Connections: localhost:64460, /usr/local/routers/3306/mysqlx.sock
+   - Read/Only Connections:  localhost:64470, /usr/local/routers/3306/mysqlxro.sock
+   ```
+   **第二步：** 启动 mysql-router
+   ```bash
+   cd /usr/local/routers/3306/
+   ll
+   总用量 16
+   drwx------. 2 router router   39 10月 31 17:08 data
+   drwx------. 2 router router   29 10月 31 17:08 log
+   -rw-------. 1 router router 1477 10月 31 17:08 mysqlrouter.conf
+   -rw-------. 1 router router   94 10月 31 17:08 mysqlrouter.key
+   drwx------. 2 router router    6 10月 31 17:08 run
+   -rwx------. 1 router router  379 10月 31 17:08 start.sh
+   -rwx------. 1 router router  179 10月 31 17:08 stop.sh
+   
+   ./start.sh 
+   PID 2949 written to '/usr/local/routers/3306/mysqlrouter.pid'
+   logging facility initialized, switching logging to loggers specified in configuration
+   ```
+   **第三步：** 检查
+   ```bash
+   netstat -ltpn | grep mysqlrouter
+   tcp        0      0 0.0.0.0:64460           0.0.0.0:*               LISTEN      2949/mysqlrouter    
+   tcp        0      0 0.0.0.0:6446            0.0.0.0:*               LISTEN      2949/mysqlrouter    
+   tcp        0      0 0.0.0.0:6447            0.0.0.0:*               LISTEN      2949/mysqlrouter    
+   tcp        0      0 0.0.0.0:64470           0.0.0.0:*               LISTEN      2949/mysqlrouter
+   ```
+
+   **第四步：** 对读写功能的检查
+
+   对读的检查
+   ```bash
+   # 默认 mysqlrouter 的读端口是 6447
+   mysql -uappuser -pdbma@0352 -h127.0.0.1 -P6447 -e"select @@server_id"
+   +-------------+
+   | @@server_id |
+   +-------------+
+   |         641 |
+   +-------------+
+   mysql -uappuser -pdbma@0352 -h127.0.0.1 -P6447 -e"select @@server_id"
+   +-------------+
+   | @@server_id |
+   +-------------+
+   |         879 |
+   +-------------+
+   mysql -uappuser -pdbma@0352 -h127.0.0.1 -P6447 -e"select @@server_id"
+   +-------------+
+   | @@server_id |
+   +-------------+
+   |         641 |
+   +-------------+
+   mysql -uappuser -pdbma@0352 -h127.0.0.1 -P6447 -e"select @@server_id"
+   +-------------+
+   | @@server_id |
+   +-------------+
+   |         879 |
+   +-------------+
+   ```
+   对写的检查
+   ```bash
+   # 默认 mysqlrouter 的写端口是 6446
+   mysql -uappuser -pdbma@0352 -h127.0.0.1 -P6446 -e"create database tempdb;show databases;select @@server_id;"
+   +-------------------------------+
+   | Database                      |
+   +-------------------------------+
+   | information_schema            |
+   | mysql                         |
+   | mysql_innodb_cluster_metadata |
+   | performance_schema            |
+   | sys                           |
+   | tempdb                        |
+   +-------------------------------+
+   +-------------+
+   | @@server_id |
+   +-------------+
+   |        1411 |
+   +-------------+
+   ```
+   
+   ---
+
 
 
 ## 自动采集主机监控并上传到服务端
