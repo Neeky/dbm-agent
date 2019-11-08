@@ -4,7 +4,7 @@ import time
 import requests
 import logging
 from . import dbmacnf
-from . import gather
+#from . import gather
 from . import version
 
 

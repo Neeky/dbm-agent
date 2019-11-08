@@ -25,7 +25,8 @@ import mysql.connector
 import logging.handlers
 from .daemon import start_daemon, stop_daemon
 from .initialization import is_user_exists, get_uid_gid, is_root
-from . import pusher
+from .monitor import HostMonitor
+#from . import pusher
 from . dbmacnf import cnf
 
 
@@ -94,9 +95,12 @@ def start(args):
     #
     #
     # 1 、 主机信息上报
-    system_monitor_thread = threading.Thread(
-        target=pusher.push_system_monitor_item, daemon=True)
-    system_monitor_thread.start()
+    # system_monitor_thread = threading.Thread(
+    #    target=pusher.push_system_monitor_item, daemon=True)
+    # system_monitor_thread.start()
+    # 1、为主机层面的监控单开一个线程
+    hostmonitor = HostMonitor()
+    hostmonitor.start()
 
     #
     # 以下是主进程的逻辑、一个死循环
