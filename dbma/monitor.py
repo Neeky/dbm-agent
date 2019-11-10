@@ -1,216 +1,21 @@
+import os
 import time
 import distro
 import psutil
 import logging
+import requests
 import threading
+from mysql import connector
 from datetime import datetime
 from collections import namedtuple
-from mysql import connector
 from . import dbmacnf
+from . import version
 
 """
 各项性能指标的采集
 """
 
-logger = logging.getLogger('dbm-agent').getChild(__name__)
-
-# 为什么要在 psutil 已经存在的数据结构之前再加上一层数据结构
-# 1、要保证不管 psutil 的数据结构怎么变化 dbm-agent 输出的数据结构不变
-# 2、一定程序上兼容 mac
-
-CpuTimes = namedtuple(
-    'CpuTimes', ['user', 'system', 'idle', 'nice', 'iowait', 'irq', 'softirq'])
-CpuCores = namedtuple('CpuCores', ['counts'])
-CpuFrequency = namedtuple('CpuFrequency', ['current'])
-
-MemDistri = namedtuple('MemDistri', ['total', 'available', 'used', 'free'])
-
-DiskUsage = namedtuple('DiskUsage', ['mountpoint', 'total', 'used', 'free'])
-GlobalDiskIOCounter = namedtuple('GlobalDiskIOCounter', [
-                                 'read_count', 'write_count', 'read_bytes', 'write_bytes'])
-
-# ipv4
-AF_INET = 2
 NetInterface = namedtuple('NetInterface', ['name', 'speed', 'isup', 'address'])
-GlobalNetIOCounter = namedtuple(
-    'GlobalNetIOCounter', ['bytes_sent', 'bytes_recv'])
-
-# mysql
-DMLStat = namedtuple(
-    'DMLStat', ['comselect', 'comupdate', 'cominsert', 'comdelete', 'slowquery'])
-
-
-def os_version():
-    return '-'.join(distro.linux_distribution())
-
-
-def cpu_cores() -> CpuCores:
-    """
-    采集当前操作系统上 cpu 的逻辑核心数量
-    """
-    cores = psutil.cpu_count()
-    return CpuCores(counts=cores)
-
-
-def cpu_times() -> CpuTimes:
-    """
-    采集 CPU 时间片分布
-    """
-    c = psutil.cpu_times()
-    total = sum(c)
-    if len(c) == 10:
-        # linux platform
-        # 解包
-        user, nice, system, idle, iowait, irq, softirq, *_ = c
-        return CpuTimes(user=user/total,
-                        nice=nice/total,
-                        system=system/total,
-                        idle=idle/total,
-                        iowait=iowait/total,
-                        irq=irq/total,
-                        softirq=softirq/total)
-    else:
-        # mac platform
-        user, nice, system, idle, *_ = c
-        return CpuTimes(user=user/total,
-                        nice=nice/total,
-                        system=system/total,
-                        idle=idle/total,
-                        iowait=0/total,
-                        irq=0/total,
-                        softirq=0/total)
-
-
-def cpu_frequence() -> CpuFrequency:
-    """
-    cpu 当前的运行频率
-    """
-    f = psutil.cpu_freq()
-    return CpuFrequency(current=f.current)
-
-
-def mem_distri() -> MemDistri:
-    """
-    内存使用分布情况
-    """
-    m = psutil.virtual_memory()
-    total, available, _, used, free, *_ = m
-    return MemDistri(total=total,
-                     available=available,
-                     used=used,
-                     free=free)
-
-
-def disk_usage():
-    """
-    返回
-        /
-        /backup
-        /database
-    这三个挂载点对应的磁盘使用情况
-    """
-    du = []
-    for mp in ['/', '/database', '/backup']:
-        total, used, free, _ = psutil.disk_usage(mp)
-        du.append(DiskUsage(mountpoint=mp, total=total, used=used, free=free))
-    return du
-
-
-def global_disk_io_counter():
-    """
-    全局 磁盘 IO 计数器
-    """
-    dio = psutil.disk_io_counters()
-    read_count, write_count, read_bytes, write_bytes, *_ = dio
-
-    return GlobalDiskIOCounter(read_count=read_count,
-                               write_count=write_count,
-                               read_bytes=read_bytes,
-                               write_bytes=write_bytes)
-
-
-def net_interfaces():
-    """
-    返回网卡信息的列表：
-    [NetInterface(name='eth0', speed=10000, isup=True,
-                  address='172.17.0.2'),... ]
-    """
-    infs = psutil.net_if_stats()
-    addresses = psutil.net_if_addrs()
-
-    def get_ipv4_addr(addrs):
-        """
-        返回 ipv4 地址
-        """
-        for addr in addrs:
-            if addr.family == AF_INET:
-                return addr.address
-        return None
-    interfaces = []
-    for inf in infs.keys():
-        if inf == 'lo':
-            pass
-        else:
-            addr = get_ipv4_addr(addresses[inf])
-            i = speed = infs[inf]
-            speed = i.speed
-            isup = i.isup
-            interfaces.append(NetInterface(
-                name=inf, speed=speed, isup=isup, address=addr))
-    return interfaces
-
-
-def global_net_io_counter():
-    """
-    全局 网络 IO 计数器
-    """
-    n = psutil.net_io_counters()
-    bytes_sent, bytes_recv, *_ = n
-    return GlobalNetIOCounter(bytes_sent=bytes_sent, bytes_recv=bytes_recv)
-
-# mysql 相关的监控
-# 不想把 dbm 做成一套监控系统，推荐使用 zabbix 来做监控
-# dbm 实现少数几个监控项还是有必要的
-
-
-def dml_stat(host: str = "127.0.0.1",
-             port: int = 3306,
-             user: str = "dbma",
-             password: str = "dbma@0352") -> DMLStat:
-    """
-    一个轻量级的监控实现，只采集
-    select
-    update
-    insert
-    delete
-    slow_query
-    这几个计数器
-    """
-    cnx = None
-    try:
-        cnx = connecotr.connect(host=host, port=port,
-                                user=user, password=password)
-        cursor = cnx.cursor()
-        cursor.execute("show global status ;")
-        all_status = cursor.fetchall()
-
-        status_dict = dict(all_status)
-        comselect = status_dict['Com_select']
-        cominsert = status_dict['Com_insert']
-        comdelete = status_dict['Com_delete']
-        comupdate = status_dict['Com_update']
-        slowquery = status_dict['Slow_queries']
-
-        dmlstat = DMLStat(comselect=comselect, comupdate=comupdate, cominsert=cominsert,
-                          comdelete=comdelete, slowquery=slowquery)
-        return dmlstat
-
-    except Exception as err:
-        logger.error(str(err))
-        return None
-    finally:
-        if hasattr(cnx, 'close'):
-            cnx.close()
 
 
 class ItemSenderMixin(object):
@@ -218,11 +23,315 @@ class ItemSenderMixin(object):
     实现将采集到的信息发送 dbmc
     """
 
+    def _create_session(self) -> "Session":
+        """
+        创建一个 http(s) 会话
+        """
+        logger = self.logger.getChild("_create_session")
+
+        try:
+            session = requests.Session()
+            session.headers.update({'Referer': self.cnf.dbmc_site})
+            api_url = os.path.join(self.cnf.dbmc_site, self.cnf.api_host)
+            session.get(api_url + '?pk=-1')
+
+            self.session = session
+
+        except Exception as err:
+            logger.warning(f"connect to {self.cnf.dbmc_site} fail")
+            self.session = None
+
+    def _send_host(self):
+        """
+        发送主机信息到 dbm-center
+        """
+        logger = self.logger.getChild('_send_host')
+        if self.session is None:
+            logger.debug(
+                f"session object is None, can not send monitor item to {self.dbmc_site}")
+            return
+
+        # 准备数据
+        csrfmiddlewaretoken = self.session.cookies['csrftoken']
+        host_uuid = self.cnf.host_uuid
+
+        # 准备数据 2
+        # 从主机所有的 IP 地址中过滤出管理网 IP
+        for interface in self.net_interfaces:
+
+            # 过滤
+            if interface.name == self.cnf.net_if:
+                manger_net_ip = interface.address
+                break
+        else:
+            logger.error(
+                "manger_net_ip can not find in host's ip list;skip sender")
+
+            # 指定的管理网卡不存在，不再发送数据到 dbmc
+            return
+
+        # 准备数据 3
+        cpu_cores = self.cpu_cores
+        mem_total_size = self.mem_total
+        os_version = self.os_version
+
+        # 组装数据
+        data = {
+            'csrfmiddlewaretoken': csrfmiddlewaretoken,
+            'host_uuid': host_uuid,
+            'cpu_cores': cpu_cores,
+            'mem_total_size': mem_total_size,
+            'os_version': os_version,
+            'agent_version': version.agent_version,
+            'manger_net_ip': manger_net_ip,
+        }
+
+        api_url = os.path.join(self.cnf.dbmc_site, self.cnf.api_host)
+        logger.info(f"send host item '{data}' to {api_url}")
+
+        response = self.session.post(api_url, data=data)
+        logger.info(response.json())
+
+    def _send_cpu_times(self):
+        """
+        发送 cpu 时间片信息到 dbmc
+        """
+        logger = self.logger.getChild('_send_cpu_times')
+        if self.session is None:
+
+            # 如果 session 是 None 就跳过向 dbm-center 发送信息的流程
+            logger.error("session object is None ,skip send cpu_time to dbmc")
+            return
+
+        # 准备数据
+        csrfmiddlewaretoken = self.session.cookies['csrftoken']
+        data = {
+            'user': self.cpu_time_user,
+            'system': self.cpu_time_system,
+            'idle': self.cpu_time_idle,
+            'nice': self.cpu_time_nice,
+            'iowait': self.cpu_time_iowait,
+            'irq': self.cpu_time_irq,
+            'softirq': self.cpu_time_softirq,
+            'csrfmiddlewaretoken': csrfmiddlewaretoken,
+            'host_uuid': self.cnf.host_uuid,
+        }
+        logger.info(f'prepare send cpu times to dbmc {data}')
+
+        # 发送数据
+        response = self.session.post(self.cnf.api_cpu_times, data=data)
+
+        logger.info(response.json())
+
+    def _send_cpu_frequence(self):
+        """
+        上传 cpu 主频信息
+        """
+        logger = self.logger.getChild('_send_cpu_frequence')
+
+        if self.session is None:
+
+            # 如果 sesssion 是 None 就跳过数据上报逻辑
+            logger.error("session is None ,skip send cpu frequence ")
+            return
+
+        # 准备数据
+        csrfmiddlewaretoken = self.session.cookies['csrftoken']
+        data = {
+            'csrfmiddlewaretoken': csrfmiddlewaretoken,
+            'current': self.cpu_frequence,
+        }
+        logger.info(f"prepare send cpu frequence {data}")
+
+        # 发送数据
+        response = self.session.post(
+            self.cnf.api_cpu_frequences, data=data)
+        logger.info(response.json())
+
+    def _send_mem_distribution(self):
+        """
+        上传内存使用情况到 dbmc
+        """
+        logger = self.logger.getChild('_send_mem_distribution')
+
+        if self.session is None:
+
+            # 如果 session 是 None 那么直接退出
+            logger.error("session is None,skip send mem info")
+            return
+
+        # 准备数据
+        csrfmiddlewaretoken = self.session.cookies['csrftoken']
+        data = {
+            'csrfmiddlewaretoken': csrfmiddlewaretoken,
+            'total': self.mem_total,
+            'used': self.mem_used,
+            'available': self.mem_available,
+            'free': self.mem_free,
+            'host_uuid': self.cnf.host_uuid,
+        }
+        logger.info(f"prepare send mem info {data}")
+
+        # 发送数据
+        response = self.session.post(
+            self.cnf.api_memory_distributions, data=data)
+        logger.info(response.json())
+
+    def _send_disk_usage(self):
+        """
+        上传各个关键目录的磁盘使用情况
+        """
+
+        logger = self.logger.getChild('_send_disk_usage')
+
+        if self.session is None:
+
+            # 如果 session 是 None 那么直接退出
+            logger.error("session is None,skip send disk usage info")
+            return
+
+        mounts = ['root', 'binlog', 'backup', 'database', 'user_local']
+
+        for mount in mounts:
+
+            # 循环各个要收集的挂载点
+            if hasattr(self, f'disk_{mount}'):
+
+                # 执行到这里说明有对应的目录
+                # 准备数据
+                du = getattr(self, f'disk_{mount}')
+                csrfmiddlewaretoken = self.session.cookies['csrftoken']
+                data = {
+                    'csrfmiddlewaretoken': csrfmiddlewaretoken,
+                    'host_uuid': self.cnf.host_uuid,
+                    'mount_point': self.paths[mount],
+                    'total': du.total,
+                    'used': du.used,
+                    'free': du.free,
+                }
+                logger.info(
+                    f"prepare send disk usage info '{self.paths[mount]}' {data}")
+
+                # 在送数据
+                response = self.session.post(
+                    self.cnf.api_disk_usages, data=data)
+                logger.info(response.json())
+
+    def _send_global_disk_io_counter(self):
+        """
+        上传主机层面的磁盘读写计数器到 dbmc
+        """
+        logger = self.logger.getChild('_send_global_disk_io_counter')
+
+        if self.session is None:
+
+            # Session 是 None 就跳过发送环节
+            logger.info("session is None,skip send disk io counter info")
+            return
+
+        # 准备数据
+        csrfmiddlewaretoken = self.session.cookies['csrftoken']
+        data = {
+            'csrfmiddlewaretoken': csrfmiddlewaretoken,
+            'host_uuid': self.cnf.host_uuid,
+            'read_count': self.global_disk_read_count,
+            'write_count': self.global_disk_write_count,
+            'read_bytes': self.global_disk_read_bytes,
+            'write_bytes': self.global_disk_write_bytes,
+        }
+        logger.info(f'prepare send global disk io counter {data}')
+
+        # 发送数据
+        response = self.session.post(self.cnf.api_disk_io_counters, data=data)
+        logger.info(response.json())
+
+    def _send_net_interfaces(self):
+        """
+        """
+        logger = self.logger.getChild('_send_net_interface')
+
+        if self.session is None:
+
+            # Session 是 None 就跳过发送环节
+            logger.info("session is None,skip send net interface info")
+            return
+
+        # 数据准备
+        data = None
+        for interface in self.net_interfaces:
+
+            csrfmiddlewaretoken = self.session.cookies['csrftoken']
+            data = {
+                'name': interface.name,
+                'isup': interface.isup,
+                'speed': interface.speed,
+                'address': interface.address,
+                'csrfmiddlewaretoken': csrfmiddlewaretoken,
+                'host_uuid': self.cnf.host_uuid,
+            }
+            logger.info(f"prepare send net interface info {data}")
+
+            # 发送数据
+            response = self.session.post(
+                self.cnf.api_net_interfaces, data=data)
+            logger.info(response.json())
+
+    def _send_global_net_io_counter(self):
+        """
+        上传全局网络 IO 计数据器
+        """
+        logger = self.logger.getChild('_send_global_net_io_counter')
+
+        if self.session is None:
+
+            # Session 是 none 就跳过发送环节
+            logger.error("session is None,skip send global net io counter")
+            return
+
+        # 数据准备
+        csrfmiddlewaretoken = self.session.cookies['csrftoken']
+        data = {
+            'bytes_sent': self.global_net_bytes_sent,
+            'bytes_recv': self.global_net_bytes_recv,
+            'host_uuid': self.cnf.host_uuid,
+            'csrfmiddlewaretoken': csrfmiddlewaretoken,
+        }
+        logger.info(f"prepare send global net counter {data}")
+        # 发送数据
+        response = self.session.post(self.cnf.api_net_io_counters, data=data)
+        logger.info(response.json())
+
     def send_host_monitor_item(self):
         """
+        封闭所有主机监控的发送逻辑
         """
         logger = self.logger.getChild('send_host_monitor_item')
         logger.info('send host monitor item...')
+
+        self._create_session()
+        if self.session is None:
+
+            # session 是 None 说明连接不上，直接跳过上报逻辑
+            logger.error(f"create session faile {self.cnf.dbmc_site}")
+            return
+
+        # 依次发送主机层面的监控信息
+        # 1、主机的基本硬件配置与操作系统信息
+        # 2、cpu 时间片分布情况
+        # 3、cpu 运行频率信息
+        # 4、内存使用情况
+        # 5、磁盘使用情况
+        # 6、全局磁盘读写计数器
+        # 7、网卡信息
+        # 8、全局网络计数器
+        self._send_host()
+        self._send_cpu_times()
+        self._send_cpu_frequence()
+        self._send_mem_distribution()
+        self._send_disk_usage()
+        self._send_global_disk_io_counter()
+        self._send_net_interfaces()
+        self._send_global_net_io_counter()
 
     def send_mysql_monitor_item(self):
         """
@@ -234,7 +343,8 @@ class HostMonitor(threading.Thread, ItemSenderMixin):
     """
     实现主机级别的监控
     """
-    logger = logging.getLogger('dbm-agent').getChild(__name__)
+    logger = logging.getLogger(
+        'dbm-agent').getChild(__name__).getChild('HostMonitor')
 
     def __init__(self, name: str = "host-monitor", daemon=True, interval=60):
         """
@@ -246,10 +356,18 @@ class HostMonitor(threading.Thread, ItemSenderMixin):
         threading.Thread.__init__(self, name=name, daemon=daemon)
 
         # dbma 配置文件对象
-        self.dbmacnf = dbmacnf.cnf
+        self.cnf = dbmacnf.cnf
 
         # 每 interval 秒运行一次
         self.interval = interval
+
+        self.paths = {
+            'user_local': '/usr/local/',
+            'database': '/database/',
+            'backup': '/backup/',
+            'binlog': '/binlog/',
+            'root': '/',
+        }
 
         logger.info("init host monitor thread")
 
@@ -380,15 +498,7 @@ class HostMonitor(threading.Thread, ItemSenderMixin):
         """
         logger = self.logger.getChild('_get_disk_usage')
 
-        paths = {
-            'user_local': '/usr/local/',
-            'database': '/database/',
-            'backup': '/backup/',
-            'binlog': '/binlog/',
-            'root': '/',
-        }
-
-        for path_name, path in paths.items():
+        for path_name, path in self.paths.items():
             try:
                 usage = psutil.disk_usage(path)
                 setattr(self, f"disk_{path_name}", usage)
@@ -507,7 +617,10 @@ class HostMonitor(threading.Thread, ItemSenderMixin):
 
                 # 收集监控项
                 self.gather_monitor_item()
+
+                # 发送监控信息到 dbm-center
                 self.send_host_monitor_item()
+
                 # 测试父进程是不要强制退出子进程
                 if self._is_completed == True:
                     return
