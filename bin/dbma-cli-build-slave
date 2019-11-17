@@ -8,44 +8,37 @@ import os
 import sys
 import time
 import shutil
+import psutil
 import logging
 import argparse
 import subprocess
-import dbma.backups as backups
+from dbma.mysqldeploy import MySQLBuildSlave
 
 
 def parser_cmd_args():
     """
     实现命令行参数的处理
     """
+    cores = psutil.cpu_count()
 
     parser = argparse.ArgumentParser(__name__)
-    parser.add_argument('--user', type=str, default='root',
-                        help='mysql root user')
-    parser.add_argument('--password', type=str,
-                        default='dbma@0352', help='root password')
     parser.add_argument('--host', type=str, default="127.0.0.1",
-                        help='recipient host(localhost)')
+                        help='master host ip')
     parser.add_argument('--port', type=int, default=3306, help='mysql port')
+    parser.add_argument('--repl-password', type=str,
+                        default="dbma@0352", help="the password of replicaton user")
+    parser.add_argument('--clone-password', type=str,
+                        default="dbma@0352", help="the password for clone user")
+    parser.add_argument(
+        '--pkg', type=str, default="mysql-8.0.18-linux-glibc2.12-x86_64.tar.xz", help="mysql install package")
+    parser.add_argument('--max-mem', type=int, default=128,
+                        help="max memory for instacne(MB)")
+    parser.add_argument('--cores', type=int, default=cores,
+                        help="machine cpu cores")
 
-    parser.add_argument('--dhost', type=str,
-                        default="192.168.100.100", help="donor host ip")
-    parser.add_argument('--dport', type=int, default=3306,
-                        help='doner mysql port')
-
-    parser.add_argument('--cuser', type=str, default="cloneuser",
-                        help="clone user connect to dhost")
-    parser.add_argument('--cpassword', type=str,
-                        default="dbma@0352", help="the password of cuser")
-
-    parser.add_argument('--ruser', type=str,
-                        default="repluser", help="replication user")
-    parser.add_argument('--rpassword', type=str,
-                        default="dbma@0352", help="the password of ruser")
     parser.add_argument('--log', type=str, default='info',
                         choices=['debug', 'info', 'warning', 'error'])
-    parser.add_argument('action', type=str, choices=[
-                        'only-clone', 'build-slave'])
+    parser.add_argument('action', type=str, choices=['build-slave'])
 
     args = parser.parse_args()
     return args
@@ -61,20 +54,17 @@ def main():
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(message)s')
+        '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(lineno)s  - %(message)s')
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
 
     try:
-        backuper = backups.RemoteClone(host=args.host, port=args.port, user=args.user, password=args.password,
-                                       dhost=args.dhost, dport=args.dport,
-                                       cuser=args.cuser, cpassword=args.cpassword,
-                                       ruser=args.ruser, rpassword=args.rpassword)
-        if args.action == 'only-clone':
-            backuper.clone()
-        elif args.action == 'build-slave':
-            backuper.clone()
-            backuper.build_slave()
+        builder = MySQLBuildSlave(pkg=args.pkg, host=args.host, port=args.port,
+                                  clone_user='cloneuser', clone_password=args.clone_password,
+                                  replication_user='repluser', replication_password=args.repl_password,
+                                  max_mem=args.max_mem, cores=args.cores, name='bms', daemon=True)
+        builder.start()
+        builder.join()
     except Exception as err:
         logger.error(str(err))
 

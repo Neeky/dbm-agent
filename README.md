@@ -4,25 +4,23 @@
 - [依赖](#依赖)
 - [安装](#安装)
 - [初始化](#初始化)
+- [dbm-agent集成的命令行工具](#dbm-agent集成的命令行工具)
+   - [自动化安装单实例](#自动化安装单实例)
+   - [自动化卸载](#自动化卸载)
+   - [自动备份](#自动备份)
+   - [自动增加Slave](#自动增加Slave)
+   - [自动搭建MGR](#自动搭建MGR)
+   - [自动安装mysql-shell](#自动安装mysql-shell)
+   - [自动化配置innodb-cluster](#自动化配置innodb-cluster)
+   - [自动化配置mysql-router](#自动化配置mysql-router)
 - [启动](#启动)
 - [关闭](#关闭)
 - [升级](#升级)
 - [卸载](#卸载)
-- [参数说明](#参数说明)
-- [dbm-agent集成的命令行工具](#dbm-agent集成的命令行工具)
-   - [自动化安装卸载MySQL](#自动化安装卸载MySQL)
-   - [自动备份](#自动备份)
-   - [自动增加Slave](#自动增加Slave)
-   - [自动搭建MGR高可用集群](#自动搭建MGR高可用集群)
-   - [自动安装mysql-shell](#自动安装mysql-shell)
-   - [自动化配置innodb-cluster](#自动化配置innodb-cluster)
-   - [自动化配置mysql-router](#自动化配置mysql-router)
-   - [自动采集主机监控并上传到服务端(dbm-center)](#自动采集主机监控并上传到服务端)
-
 ---
 
 ## dbm-agent
-  **dbm(DataBase Management center)-agent：MySQL 数据库管理中心客户端程序**
+  **dbm(DataBase Management center)-agent：MySQL|Redis 数据库管理中心客户端程序**
 
   我们希望 DBA 可以从日常的工作中解放出来，做到只要在 web 界面上点一下“同意”系统就能自动、高效、优质的完成所有的操作；同样对于那些我们认为不合理的需求只要点一个“驳回”系统除了向需求方回一个被驳回的响应之外什么都不会干，安静的像一个美男子；更有意思的事，对于所有能用自动化解决的问题，dbm 绝对不会大半夜打 dba 的电话，出现故障自动解决，完成之后记录一下日志就行。
 
@@ -32,9 +30,9 @@
 
   dbm-agent 是安装在你机器上的一个 python 程序，它可以工作在两个模式
   
-  一：守护进程模式，这里它会定时从数据库管理中心(dbm-center)查询要执行的任务，并定时上报一些监控信息到数据库管理中心，这样你只要通过 dbm-center 提供的 web 界面就能完成所有的操作。
+  一：守护进程模式，这个模式下它会定时从数据库管理中心(dbm-center)查询要执行的任务，并定时上报一些监控信息到管理中心；管理中心会用这些数据来做预测分析，问题早发现(自动发现)，早解决(自动解决)，另外管理中心还会用这个来生成报表，一天只要看一眼你对你所管理的数据库便了然于胸。还有另一些情况你可能会打开管理中心的 web 界面，那就是审批了，其它时间喝咖啡去吧！！！
 
-  二：命令行模式，这个模式下直接通过 dbm-agent 提供的命令完成操作，相较手工操作这个模式也能极大的提高效率，相对与守护进程模式，这是一种临时的救急的模式。
+  二：命令行模式，这个模式下直接执行 dbm-agent 提供的命令完成操作，相较手工操作这个模式也能极大的提高效率，相对与守护进程模式，它不是 low 了一级别。
 
   ---
 
@@ -47,6 +45,7 @@
   |systemd 配置文件保存的位置 | /usr/lib/systemd/system/mysqld-{port}.service |
   |数据目录   | /database/mysql/data/{port} |
   |备份目录   | /backup/mysql/{port} |
+  |binlog目录| /binlog/mysql/binlog/{port} |
   |默认密码   | dbma@0352 |
   |MySQL 安装目录| /usr/local/|
   |MySQL-shell 安装目录| /usr/local/|
@@ -73,7 +72,7 @@
    ```bash
    sudo su
    # 安装依赖
-   pip3 install jinja2 psutil requests mysql-connector-python==8.0.17 distro==1.4.0
+   pip3 install jinja2 psutil requests mysql-connector-python==8.0.18 distro==1.4.0
 
    # 先手工运行一下自动化测试用例，以确保你的平台有被支持
    cd dbm-agent
@@ -103,14 +102,14 @@
 
    Installing collected packages: dbm-agent
      Running setup.py install for dbm-agent ... done
-   Successfully installed dbm-agent-0.1.2
+   Successfully installed dbm-agent-0.4.2
    ```
    如果你是在国内，推荐使用腾讯云的源对 pip 安装进行加速，配置也非常简单一行命令搞定
    ```bash
-   pip3 config set global.index-url  https://mirrors.aliyun.com/pypi/simple
+   pip3 config set global.index-url  https://mirrors.cloud.tencent.com/pypi/simple
    ```
 
-   > pip3 是 python3 的一个包管理工具，类似于 centos 中的 yum ，版本号的最后一位是奇数表示它是一个开发版本，偶数表示它是一个稳定版本
+   > pip3 是 python3 的一个包管理工具，类似于 centos 中的 yum ，另外 dbm-agent 版本号的最后一位是奇数表示它是一个开发版本，偶数表示它是一个稳定版本
 
    ---
 
@@ -148,269 +147,281 @@
        ├── mysql-8.0.18-linux-glibc2.12-x86_64.tar.xz          # 各个软件的安装包(要自己下载并保存到这里，dbm-agent不会自动下载它)
        └── mysql-shell-8.0.18-linux-glibc2.12-x86-64bit.tar.gz # 各个软件的安装包(要自己下载并保存到这里，dbm-agent不会自动下载它)
    ```
+   dbm-agent init 时还有几个比较重要的参数
+
+   **1、** init-pwd 选项，init 的时候 dbm-agent 会创建若干用户(/usr/local/dbm-agent/etc/init-users.sql) 这些用户的密码都用的是 init-pwd 中指定的值。
+   如果你没有指定，那么它默认取 dbma@0352
+
+   **2、** dbmc-site 选项，指定数据库管理中心(dbm-center)站点的根路径，如果你目前还不要用上这么高大上的功能，也可以不指定(事实上目前还没有开发完全，我自己也都还没有用)。
+   
+   再开始使用之前，你还要下载 mysql 和 mysql-shell 的二进制包到 /usr/local/dbm-agent/pkg/ ，这样 dbm-agent 就有能力为你安装&配置各种 MySQL 环境了
 
    ---
 
-## 启动
-   **dbm-agent 默认会自动以守护进程的方式运行**
-
-   **1、** 启动
-   ```bash
-   dbm-agent start
-   Successful start and log file save to '/usr/local/dbm-agent/logs/dbma.log'
-
-   ```
-   启动完成之后 dbm-agent 会以守护进程的方式在后台运行，周期性的上报主机的性能指标到服务端(dbm-center)，并从 dbm-center 检查要执行的任务(任务是一个抽象的概念，任何之前需要 DBA 手工执行的操作都可以看成一个任务)
-   ```sql
-   -- 更多其它方面的监控请查看 dbm-center 这个项目
-   mysql> select * from hosts_cputimesmodel order by id  limit 23,17;
-   +----+----------------------------+-------+--------+-------+-------+--------+-------+---------+---------+
-   | id | create_time                | user  | system | idle  | nice  | iowait | irq   | softirq | host_id |
-   +----+----------------------------+-------+--------+-------+-------+--------+-------+---------+---------+
-   | 24 | 2019-10-03 18:37:41.849744 | 0.007 |  0.005 | 0.989 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
-   | 25 | 2019-10-03 18:38:42.902971 | 0.006 |  0.005 | 0.989 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
-   | 26 | 2019-10-03 18:39:35.405399 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
-   | 27 | 2019-10-03 18:40:35.487535 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
-   | 28 | 2019-10-03 18:41:35.574100 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
-   | 29 | 2019-10-03 18:43:44.879151 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
-   | 30 | 2019-10-03 18:44:44.988876 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
-   | 31 | 2019-10-03 18:45:45.017535 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
-   | 32 | 2019-10-03 18:46:45.042812 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
-   | 33 | 2019-10-03 18:47:45.086554 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
-   | 34 | 2019-10-03 18:48:45.146277 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
-   | 35 | 2019-10-03 18:49:45.227072 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
-   | 36 | 2019-10-03 18:50:45.263859 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
-   | 37 | 2019-10-03 18:51:45.360525 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
-   | 38 | 2019-10-03 18:52:45.437180 | 0.007 |  0.005 | 0.989 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
-   | 39 | 2019-10-03 18:53:45.464134 | 0.007 |  0.005 | 0.989 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
-   +----+----------------------------+-------+--------+-------+-------+--------+-------+---------+---------+
-   16 rows in set (0.00 sec)
-
-   -- 
-   ```
-   **2、** 观察进程的运行状态
-   ```bash
-   ps -ef | grep dbm                                                         
-   dbma       7225      1  0 11:31 ?        00:00:00 /usr/local/python-3.7.3/bin/python3.7 /usr/local/python/bin/dbm-agent start
-   root       7229   7167  0 11:32 pts/0    00:00:00 grep --color=auto dbm
-   ```
-   **3、** dbm-agent 的日志保存在 /usr/local/dbm-agent/logs/dbma.log 文件中
-   ```bash
-   cat /usr/local/dbm-agent/logs/dbma.log
-   2019-08-31 07:57:08,409 - dbm-agent.server - MainThread - INFO - dbm-agent starting
-   ```
-
-   ---
-
-## 关闭
-   **关闭 dbm-agent 守护进程**
-   ```bash
-   dbm-agent stop                                                              
-   Successful exit
-   ```
-   ---
-
-## 升级
-   **升级 dbm-agent 要分两步走**
-   ```
-   # 第一步：升级软件
-   dbm-agent stop
-   pip3 install dbm-agent
-
-   # 第二步：升级配置文件
-   dbm-agent upgrade
-
-   2019-09-16 16:47:49,328 INFO going to upgrade dbm-agent
-   2019-09-16 16:47:49,329 INFO backup etc/templates
-   2019-09-16 16:47:49,329 INFO create new etc/templates
-   2019-09-16 16:47:49,333 INFO upgrade complete
-   ```
-   ---
-
-## 卸载
-   **卸载 dbm-agent 要分两步走、第一步：删除 dbm-agent 对应的用户和数据 第二步：卸载 dbm-agent 软件包**
-   ```bash
-   # uninit 会自动完成相关用户(dbma)和数据(/usr/local/dbm-agent/)的删除
-   dbm-agent uninit
-   # 卸载 dbm-agent
-   pip3 uninstall dbm-agent
-   ```
-
-   ---
-
-## 参数说明
-   **dbm-agent 支持若干参数，详细内容如下**
-
-   |**参数名** | **意义** | **默认值** |
-   |--------------|----------|-----------|
-   |-- dbmc-site  | dbm服务端http(s)根路径 | https://192.168.100.100 |
-   |-- basedir    | dbm-agent 的安装目标 | /usr/local/dbm-agent/ |
-   |-- config-file| dbm-agent 配置文件的位置 | etc/dbma.cnf |
-   |-- idc-name   | 主机所属的机房信息         | mysql-idc |
-   |-- user       | 运行 dbm-agent 的主机用户 | dbma       |
-   |action        | 要执行的操作 {start \| stop} | |
-
-   ---
 
 ## dbm-agent集成的命令行工具
-   实现生活中，用户对一套完整的数据库管理平台并不强烈，主要是因为他那里的数据库实例个数一个手都数的过来；然后告诉他部署一套管理平台要用的机器
-   比现在的数据库都多，他还要个锤子。
-
-   好消息是 dbm-agent 自带了许多开箱即用的命令行工具，做到 0 成本升级生产工具
+   dbm-agent 不强求一定要与 dbm-center 配套使用，它自带的命令足够强大，看下面的功能介绍吧。
 
    --- 
 
-## 自动化安装卸载MySQL
-   **1、安装 dbm-agent 并 初始化**
+## 自动化安装单实例
+
+   **1、自动安装 MySQL 单机(支持单机多实例)**
+
+   下面以在本地上安装一个单实例(监听在 3306 端口)为例子
    ```bash
-   pip3 install dbm-agent
-   dbm-agent init
+   dbma-cli-single-instance --port=3306 install 
+
+   2019-11-16 21:06:03,729 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller.install - im - INFO - 1115 - execute checkings for install mysql
+   2019-11-16 21:06:03,756 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._create_mysql_user - im - INFO - 864 - create user 'mysql3306' complete
+   2019-11-16 21:06:03,757 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._create_data_dir - im - INFO - 888 - create datadir '/database/mysql/data/3306' complete
+   2019-11-16 21:06:03,758 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._create_binlog_dir - im - INFO - 910 - create binary dir '/binlog/mysql/binlog/3306' complete
+   2019-11-16 21:06:03,758 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._create_backup_dir - im - INFO - 932 - create backup dir '/backup/mysql/backup/3306' complete
+   2019-11-16 21:06:03,759 - dbm-agent.dbma.mysqldeploy.MyCnfInitRender.render_template_file - im - INFO - 518 - using template 'mysql-8.0-init-only.jinja' 
+   2019-11-16 21:06:03,759 - dbm-agent.dbma.mysqldeploy.MyCnfInitRender.set_template - im - INFO - 457 - using template file 'mysql-8.0-init-only.jinja' 
+   2019-11-16 21:06:03,806 - dbm-agent.dbma.mysqldeploy.MyCnfInitRender.render - im - INFO - 497 - render mysql config file /tmp/mysql-init.cnf
+   2019-11-16 21:06:03,806 - dbm-agent.dbma.mysqldeploy.MyCnfInitRender.render_template_file - im - INFO - 524 - render template file complete
+   2019-11-16 21:06:03,806 - dbm-agent.dbma.mysqldeploy.MyCnfMSRender.render_template_file - im - INFO - 548 - using template 'mysql-8.0.18.cnf.jinja' 
+   2019-11-16 21:06:03,807 - dbm-agent.dbma.mysqldeploy.MyCnfMSRender.set_template - im - INFO - 457 - using template file 'mysql-8.0.18.cnf.jinja' 
+   2019-11-16 21:06:03,845 - dbm-agent.dbma.mysqldeploy.MyCnfMSRender.render - im - INFO - 497 - render mysql config file /etc/my-3306.cnf
+   2019-11-16 21:06:03,845 - dbm-agent.dbma.mysqldeploy.MyCnfMSRender.render_template_file - im - INFO - 554 - render template file complete
+   2019-11-16 21:06:03,845 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._render_production_cnf - im - INFO - 956 - render production cnf complete
+   2019-11-16 21:06:03,846 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._init_database - im - INFO - 1004 - ['/usr/local/mysql-8.0.18-linux-glibc2.12-x86_64/bin/mysqld', '--defaults-file=/tmp/mysql-init.cnf', '--initialize-insecure', '--user=mysql3306', '--init-file=/usr/local/dbm-agent/etc/init-users.sql']
+   2019-11-16 21:06:10,167 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._init_database - im - INFO - 1011 - init database complete
+   2019-11-16 21:06:10,170 - dbm-agent.dbma.mysqldeploy.MySQLSystemdRender.render - im - INFO - 666 - render systemd config file complete
+   2019-11-16 21:06:10,170 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._config_systemd - im - INFO - 1027 - mysql systemd config complete
+   2019-11-16 21:06:10,355 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._enable_mysql - im - INFO - 1038 - config mysql auto start on boot complete
+   2019-11-16 21:06:12,386 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._start_mysql - im - INFO - 1068 - start mysql complete
+   2019-11-16 21:06:12,388 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._export_path - im - INFO - 1078 - export path complete
+   2019-11-16 21:06:12,389 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._export_header_file - im - INFO - 1106 - export header file complete
+   2019-11-16 21:06:12,389 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._export_so - im - INFO - 1093 - so file has been exported
+   2019-11-16 21:06:12,389 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller.install - im - INFO - 1150 - install mysql single instance complete
    ```
-   **2、复制 mysql 二进制安装包到 /usr/local/dbm-agent/pkg/ 目录**
-   ```bash
-   # dbm-agent 只支持 mysql-8.0.17 及以上版本
-   cp mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz /usr/local/dbm-agent/pkg
+   
+   检查 mysql 数据库是否正常启动
    ```
-   **3、自动安装 MySQL 单机(支持单机多实例)**
-   ```bash
-   -- max_mem 指定实例使用的内存大小
-   -- port 指定实例监控的端口端口
-
-   dbma-cli-single-instance install --port=3306
-
-
-   2019-09-16 16:10:30,951 - dbm-agent - MainThread - INFO - enter install mysql instance logic port=3306
-   2019-09-16 16:10:30,951 - dbm-agent.dbma.mysql - MainThread - INFO - install mysql instance with this mysql version mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz port 3306 max_mem 1024 MB
-   2019-09-16 16:10:30,951 - dbm-agent.dbma.mysql - MainThread - INFO - check port 3306 is in use or not
-   2019-09-16 16:10:30,952 - dbm-agent.dbma.mysql - MainThread - INFO - check config file  /etc/my-3306.cnf 
-   2019-09-16 16:10:30,952 - dbm-agent.dbma.mysql - MainThread - INFO - check datadir /database/mysql/data/3306
-   2019-09-16 16:10:30,952 - dbm-agent.dbma.mysql - MainThread - INFO - check mysql version mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz
-   2019-09-16 16:10:30,967 - dbm-agent.dbma.mysql - MainThread - INFO - create datadir /database/mysql/data/3306
-   2019-09-16 16:10:30,967 - dbm-agent.dbma.mysql - MainThread - INFO - unarchive mysql pkg to /usr/local/
-   2019-09-16 16:10:30,967 - dbm-agent.dbma.mysql - MainThread - WARNING - /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64 exists mysql may has been installed. skip untar mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz to /usr/local/
-   2019-09-16 16:10:30,967 - dbm-agent.dbma.configrender - MainThread - INFO - load template from /usr/local/dbm-agent/etc/templates/
-   2019-09-16 16:10:30,967 - dbm-agent.dbma.configrender - MainThread - INFO - template file name mysql-8.0.17.cnf.jinja
-   2019-09-16 16:10:30,971 - dbm-agent.dbma.configrender - MainThread - INFO - mysql pkg mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz max memory 1024
-   2019-09-16 16:10:30,971 - dbm-agent.dbma.configrender - MainThread - INFO - config cpu options
-   2019-09-16 16:10:30,971 - dbm-agent.dbma.configrender - MainThread - INFO - config memory options
-   2019-09-16 16:10:30,971 - dbm-agent.dbma.configrender - MainThread - INFO - config disk options
-   2019-09-16 16:10:30,971 - dbm-agent.dbma.configrender - MainThread - INFO - going to render config file
-   2019-09-16 16:10:30,972 - dbm-agent.dbma.mysql - MainThread - INFO - init database with --initialize-insecure
-   2019-09-16 16:10:30,972 - dbm-agent.dbma.mysql - MainThread - WARNING - ['/usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld', '--defaults-file=/etc/my-3306.cnf', '--initialize-insecure', '--user=mysql3306', '--init-file=/usr/local/dbm-agent/etc/templates/init-users.sql']
-   2019-09-16 16:10:35,772 - dbm-agent.dbma.mysql - MainThread - INFO - config service(systemd) and daemon-reload
-   2019-09-16 16:10:35,772 - dbm-agent.dbma.configrender - MainThread - INFO - load template from /usr/local/dbm-agent/etc/templates/
-   2019-09-16 16:10:35,772 - dbm-agent.dbma.configrender - MainThread - INFO - template file name mysqld.service.jinja
-   2019-09-16 16:10:35,854 - dbm-agent.dbma.mysql - MainThread - INFO - config mysql auto start on boot
-   2019-09-16 16:10:35,923 - dbm-agent.dbma.mysql - MainThread - INFO - config path env variable /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/
-   2019-09-16 16:10:35,923 - dbm-agent.dbma.mysql - MainThread - INFO - start mysqld-3306 by systemcl start mysqld-3306
-   2019-09-16 16:10:35,942 - dbm-agent.dbma.mysql - MainThread - INFO - export so file
-   2019-09-16 16:10:35,942 - dbm-agent.dbma.mysql - MainThread - INFO - export header file
-
-   # 检查 mysql 数据为是否正常启动
-   ps -ef | grep mysql                                                        
-   mysql33+  10284      1  1 16:10 ?        00:00:02 /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3306.cnf  
-
-   # 如果要实现单机多实例只要把端口改一下就行了
-   dbma-cli-single-instance install --port=3309   
-
-   2019-09-16 16:13:04,319 - dbm-agent - MainThread - INFO - enter install mysql instance logic port=3309
-   2019-09-16 16:13:04,319 - dbm-agent.dbma.mysql - MainThread - INFO - install mysql instance with this mysql version mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz port 3309 max_mem 1024 MB
-   2019-09-16 16:13:04,319 - dbm-agent.dbma.mysql - MainThread - INFO - check port 3309 is in use or not
-   2019-09-16 16:13:04,320 - dbm-agent.dbma.mysql - MainThread - INFO - check config file  /etc/my-3309.cnf 
-   2019-09-16 16:13:04,320 - dbm-agent.dbma.mysql - MainThread - INFO - check datadir /database/mysql/data/3309
-   2019-09-16 16:13:04,320 - dbm-agent.dbma.mysql - MainThread - INFO - check mysql version mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz
-   2019-09-16 16:13:04,334 - dbm-agent.dbma.mysql - MainThread - INFO - create datadir /database/mysql/data/3309
-   2019-09-16 16:13:04,334 - dbm-agent.dbma.mysql - MainThread - INFO - unarchive mysql pkg to /usr/local/
-   2019-09-16 16:13:04,335 - dbm-agent.dbma.mysql - MainThread - WARNING - /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64 exists mysql may has been installed. skip untar mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz to /usr/local/
-   2019-09-16 16:13:04,335 - dbm-agent.dbma.configrender - MainThread - INFO - load template from /usr/local/dbm-agent/etc/templates/
-   2019-09-16 16:13:04,335 - dbm-agent.dbma.configrender - MainThread - INFO - template file name mysql-8.0.17.cnf.jinja
-   2019-09-16 16:13:04,338 - dbm-agent.dbma.configrender - MainThread - INFO - mysql pkg mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz max memory 1024
-   2019-09-16 16:13:04,338 - dbm-agent.dbma.configrender - MainThread - INFO - config cpu options
-   2019-09-16 16:13:04,338 - dbm-agent.dbma.configrender - MainThread - INFO - config memory options
-   2019-09-16 16:13:04,338 - dbm-agent.dbma.configrender - MainThread - INFO - config disk options
-   2019-09-16 16:13:04,339 - dbm-agent.dbma.configrender - MainThread - INFO - going to render config file
-   2019-09-16 16:13:04,339 - dbm-agent.dbma.mysql - MainThread - INFO - init database with --initialize-insecure
-   2019-09-16 16:13:04,339 - dbm-agent.dbma.mysql - MainThread - WARNING - ['/usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld', '--defaults-file=/etc/my-3309.cnf', '--initialize-insecure', '--user=mysql3309', '--init-file=/usr/local/dbm-agent/etc/templates/init-users.sql']
-   2019-09-16 16:13:11,011 - dbm-agent.dbma.mysql - MainThread - INFO - config service(systemd) and daemon-reload
-   2019-09-16 16:13:11,011 - dbm-agent.dbma.configrender - MainThread - INFO - load template from /usr/local/dbm-agent/etc/templates/
-   2019-09-16 16:13:11,011 - dbm-agent.dbma.configrender - MainThread - INFO - template file name mysqld.service.jinja
-   2019-09-16 16:13:11,094 - dbm-agent.dbma.mysql - MainThread - INFO - config mysql auto start on boot
-   2019-09-16 16:13:11,178 - dbm-agent.dbma.mysql - MainThread - INFO - config path env variable /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/
-   2019-09-16 16:13:11,179 - dbm-agent.dbma.mysql - MainThread - INFO - start mysqld-3309 by systemcl start mysqld-3309
-   2019-09-16 16:13:11,195 - dbm-agent.dbma.mysql - MainThread - INFO - export so file
-   2019-09-16 16:13:11,196 - dbm-agent.dbma.mysql - MainThread - INFO - export header file
-
    ps -ef | grep mysql
-
-   mysql33+  10284      1  1 16:10 ?        00:00:02 /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3306.cnf                                                      
-   mysql33+  10425      1  7 16:13 ?        00:00:04 /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3309.cnf
-
+   mysql33+  11672      1  2 21:06 ?        00:00:01 /usr/local/mysql-8.0.18-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3306.cnf                                                      
+   root      11718   7270  0 21:07 pts/0    00:00:00 grep --color=auto mysql
    ```
-   **4、卸载 MySQL**
-   这个操作会删除实例对应的用户、配置文件、数据目录
+
+   如果还想在机器上再安装一个 MySQL 呢？ 改一下监听的端口就行了，别的都交给 dbm-agent 吧
+   ```
+   dbma-cli-single-instance --port=3307 install                
+   2019-11-16 21:11:23,139 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller.install - im - INFO - 1115 - execute checkings for install mysql
+   2019-11-16 21:11:23,165 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._create_mysql_user - im - INFO - 864 - create user 'mysql3307' complete
+   2019-11-16 21:11:23,166 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._create_data_dir - im - INFO - 888 - create datadir '/database/mysql/data/3307' complete
+   2019-11-16 21:11:23,167 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._create_binlog_dir - im - INFO - 910 - create binary dir '/binlog/mysql/binlog/3307' complete
+   2019-11-16 21:11:23,168 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._create_backup_dir - im - INFO - 932 - create backup dir '/backup/mysql/backup/3307' complete
+   2019-11-16 21:11:23,169 - dbm-agent.dbma.mysqldeploy.MyCnfInitRender.render_template_file - im - INFO - 518 - using template 'mysql-8.0-init-only.jinja' 
+   2019-11-16 21:11:23,170 - dbm-agent.dbma.mysqldeploy.MyCnfInitRender.set_template - im - INFO - 457 - using template file 'mysql-8.0-init-only.jinja' 
+   2019-11-16 21:11:23,214 - dbm-agent.dbma.mysqldeploy.MyCnfInitRender.render - im - INFO - 497 - render mysql config file /tmp/mysql-init.cnf
+   2019-11-16 21:11:23,214 - dbm-agent.dbma.mysqldeploy.MyCnfInitRender.render_template_file - im - INFO - 524 - render template file complete
+   2019-11-16 21:11:23,215 - dbm-agent.dbma.mysqldeploy.MyCnfMSRender.render_template_file - im - INFO - 548 - using template 'mysql-8.0.18.cnf.jinja' 
+   2019-11-16 21:11:23,215 - dbm-agent.dbma.mysqldeploy.MyCnfMSRender.set_template - im - INFO - 457 - using template file 'mysql-8.0.18.cnf.jinja' 
+   2019-11-16 21:11:23,255 - dbm-agent.dbma.mysqldeploy.MyCnfMSRender.render - im - INFO - 497 - render mysql config file /etc/my-3307.cnf
+   2019-11-16 21:11:23,256 - dbm-agent.dbma.mysqldeploy.MyCnfMSRender.render_template_file - im - INFO - 554 - render template file complete
+   2019-11-16 21:11:23,256 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._render_production_cnf - im - INFO - 956 - render production cnf complete
+   2019-11-16 21:11:23,256 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._init_database - im - INFO - 1004 - ['/usr/local/mysql-8.0.18-linux-glibc2.12-x86_64/bin/mysqld', '--defaults-file=/tmp/mysql-init.cnf', '--initialize-insecure', '--user=mysql3307', '--init-file=/usr/local/dbm-agent/etc/init-users.sql']
+   2019-11-16 21:11:29,590 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._init_database - im - INFO - 1011 - init database complete
+   2019-11-16 21:11:29,593 - dbm-agent.dbma.mysqldeploy.MySQLSystemdRender.render - im - INFO - 666 - render systemd config file complete
+   2019-11-16 21:11:29,593 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._config_systemd - im - INFO - 1027 - mysql systemd config complete
+   2019-11-16 21:11:29,786 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._enable_mysql - im - INFO - 1038 - config mysql auto start on boot complete
+   2019-11-16 21:11:31,809 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._start_mysql - im - INFO - 1068 - start mysql complete
+   2019-11-16 21:11:31,812 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._export_path - im - INFO - 1078 - export path complete
+   2019-11-16 21:11:31,813 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._export_header_file - im - INFO - 1106 - export header file complete
+   2019-11-16 21:11:31,813 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller._export_so - im - INFO - 1093 - so file has been exported
+   2019-11-16 21:11:31,813 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller.install - im - INFO - 1150 - install mysql single instance complete
+   ```
+
+   检查两个 MySQL 实例是不是都正常运行
+   ```
+   ps -ef | grep mysql
+   mysql33+  11672      1  0 21:06 ?        00:00:03 /usr/local/mysql-8.0.18-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3306.cnf                                                      
+   mysql33+  11818      1  2 21:11 ?        00:00:01 /usr/local/mysql-8.0.18-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3307.cnf                                                      
+   root      11863   7270  0 21:12 pts/0    00:00:00 grep --color=auto mysql 
+   ```
+
+   还是连接上去看试一下吧，还记得 dbm-agent init 时指定的 init-pwd 参数吗？如果你没有为用户指定这个初始化密码，那么所有的用户密码都会是 dbm@0352
+   ```sql
+   mysql -h127.0.0.1 -P3306 -uroot -pdbma@0352
+
+   mysql: [Warning] Using a password on the command line interface can be insecure.
+   Welcome to the MySQL monitor.  Commands end with ; or \g.
+   Your MySQL connection id is 9
+   Server version: 8.0.18 MySQL Community Server - GPL
+   
+   Copyright (c) 2000, 2019, Oracle and/or its affiliates. All rights reserved.
+   
+   Oracle is a registered trademark of Oracle Corporation and/or its
+   affiliates. Other names may be trademarks of their respective
+   owners.
+   
+   Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+   
+   mysql> select @@version;
+   +-----------+
+   | @@version |
+   +-----------+
+   | 8.0.18    |
+   +-----------+
+   1 row in set (0.00 sec)
+   ```
+
+   想要在性能上对配置文件有所控制？
    ```bash
-   dbma-cli-single-instance uninstall --port=3309
-   # dbm-agent 有对卸载做安全检查、如果实例还在运行中这个时候卸载会失败
-
-  2019-09-16 16:14:46,533 - dbm-agent - MainThread - INFO - enter uninstall mysql instance logic port=3309
-  2019-09-16 16:14:46,534 - dbm-agent.dbma.mysql - MainThread - ERROR - mysql-3309 is runing cant uninstall 'systemctl stop mysqld-3309'
-
-   # 先关闭数据库服务
-   systemctl stop mysqld-3309
-
-   dbma-cli-single-instance uninstall --port=3309
+   dbma-cli-single-instance --help                                      
+   usage: __main__ [-h] [--port PORT] [--pkg PKG] [--max-mem MAX_MEM]
+                   [--cores CORES] [--log {debug,info,warning,error}]
+                   {install,uninstall}
    
-   2019-09-16 16:15:39,812 - dbm-agent - MainThread - INFO - enter uninstall mysql instance logic port=3309
-   2019-09-16 16:15:39,813 - dbm-agent.dbma.mysql - MainThread - INFO - delete user mysql3309
-   2019-09-16 16:15:39,829 - dbm-agent.dbma.mysql - MainThread - INFO - remove mysql config file /etc/my-3309.cnf
-   2019-09-16 16:15:39,829 - dbm-agent.dbma.mysql - MainThread - INFO - remove systemctl config file /usr/lib/systemd/system/mysqld-3309.service
-   2019-09-16 16:15:39,829 - dbm-agent.dbma.mysql - MainThread - INFO - remove datadir /database/mysql/data/3309
-
-   ps -ef | grep mysql                                                        
-   mysql33+  10284      1  1 16:10 ?        00:00:03 /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3306.cnf 
+   positional arguments:
+     {install,uninstall}
    
+   optional arguments:
+     -h, --help            show this help message and exit
+     --port PORT           instance port                          # 实例监听的端口，默认 3306
+     --pkg PKG             mysql install package                  # 指 mysql 安装包
+     --max-mem MAX_MEM     the max memory mysql instances can use # 指定最大可用内存
+     --cores CORES         cpu logic cores                        # 指定可用核心数
+     --log {debug,info,warning,error}                             # 日志级别
    ```
+   >dbm-agent 对内存，处理器并不是严格限制的
 
    ---
+
+## 自动化卸载
+   **当一个实例的生命周期已经走到限头，我们就可以卸载这个实例了，如果你使用 dbm-agent 这一切也都非常简单**
+
+   **1、** dbm-agent 会阻止你卸载一个正在运行的实例
+   ```bash
+   dbma-cli-single-instance --port=3307 uninstall                       
+   2019-11-16 21:24:34,555 - dbm-agent - MainThread - INFO - 66 - start uninstall mysqld-3307
+   2019-11-16 21:24:34,557 - dbm-agent.dbma.mysqldeploy.MysqlUninstaller._basic_checks - um - ERROR - 1169 - port '3307' is in use
+   2019-11-16 21:24:34,557 - dbm-agent.dbma.mysqldeploy.MysqlUninstaller.uninstall - um - WARNING - 1186 - mysql is runing,want stop it? 'systemctl stop mysqld-3307'
+   ```
+   >它也给出了提示命令 systemctl stop mysqld-3307 来停止实例的运行
+
+   **2、** 停止实例并卸载
+   ```bash
+   systemctl stop mysqld-3307
+   dbma-cli-single-instance --port=3307 uninstall
+
+   2019-11-16 21:27:28,785 - dbm-agent - MainThread - INFO - 66 - start uninstall mysqld-3307
+   2019-11-16 21:27:28,787 - dbm-agent.dbma.mysqldeploy.MysqlUninstaller.uninstall - um - INFO - 1196 - start drop instance mysqld-3307
+   2019-11-16 21:27:28,850 - dbm-agent.dbma.mysqldeploy.MysqlUninstaller.uninstall - um - INFO - 1201 - user 'mysql3307' deleted
+   2019-11-16 21:27:28,925 - dbm-agent.dbma.mysqldeploy.MysqlUninstaller.uninstall - um - INFO - 1207 - data directory '/database/mysql/data/3307' deleted
+   2019-11-16 21:27:28,926 - dbm-agent.dbma.mysqldeploy.MysqlUninstaller.uninstall - um - INFO - 1212 - binlog directory '/binlog/mysql/binlog/3307' deleted
+   2019-11-16 21:27:28,926 - dbm-agent.dbma.mysqldeploy.MysqlUninstaller.uninstall - um - INFO - 1217 - backup direcotry '/backup/mysql/backup/3307' deleted
+   2019-11-16 21:27:29,061 - dbm-agent.dbma.mysqldeploy.MysqlUninstaller.uninstall - um - INFO - 1230 - drop mysql instance 3307 complete
+   ```
+   检查是不是已经卸载了
+   ```bash
+   # 可以看到 3307 已经不存在了(事实上对应的数据、日志、配置、用户都没有了)
+   ps -ef | grep mysql
+   mysql33+  11672      1  0 21:06 ?        00:00:10 /usr/local/mysql-8.0.18-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3306.cnf                                                      
+   root      11930  11870  0 21:33 pts/0    00:00:00 grep --color=auto mysql
+   ```
+   ---
+
+
+
+
 
 ## 自动备份
    **现在 dbm-agent 在备份操作上支持 clone-plugin 之后会支持到 mysqlbackup extrabackup mysqldump 等工具**
    ```bash
-   dbma-cli-backup-instance --host=127.0.0.1 --port=3306 --user=root --password=dbma@0352 clone
+   dbma-cli-clone --host=127.0.0.1 --port=3306  --clone-password=dbma@0352 local-clone 
    
-   2019-09-19 19:31:04,649 - dbm-agent.dbma.backups - MainThread - INFO - start backup mysql-3306 useing clone-plugin
-   2019-09-19 19:31:05,031 - dbm-agent.dbma.backups - MainThread - INFO - backup mysql-3306 complete.
+   2019-11-16 21:54:15,482 - dbm-agent - MainThread - INFO - 61  - enter local clone logic
+   2019-11-16 21:54:15,483 - dbm-agent.dbma.mysqldeploy.MySQLCloner.local_clone - cm - INFO - 1448  - start clone mysqld-3306
+   2019-11-16 21:54:15,483 - dbm-agent.dbma.mysqldeploy.MySQLCloner.local_clone - cm - INFO - 1449  - save backup files to '/backup/mysql/backup/3306/2019-11-16T21:54:15.482956'
+   2019-11-16 21:54:15,768 - dbm-agent.dbma.mysqldeploy.MySQLCloner.local_clone - cm - INFO - 1475  - locale clone 'mysqld-3306' complete
 
-   # 备份文件保存到了 /backup/mysql/{port} 目录下
-   ll /backup/mysql/3306
-   总用量 0
-   drwxr-x--- 5 mysql3306 mysql 168 9月  19 19:31 2019-09-19T19:31:04.649136
+   tree /backup/mysql/backup/3306/2019-11-16T21:54:15.482956
+   /backup/mysql/backup/3306/2019-11-16T21:54:15.482956
+   ├── #clone
+   │   ├── #replace_files
+   │   ├── #status_fix
+   │   ├── #view_progress
+   │   └── #view_status
+   ├── ib_buffer_pool
+   ├── ibdata1
+   ├── ib_logfile0
+   ├── ib_logfile1
+   ├── mysql
+   ├── mysql.ibd
+   ├── sys
+   │   └── sys_config.ibd
+   ├── undo_001
+   └── undo_002
+   
+   3 directories, 12 files
    ```
    ---
 
 ## 自动增加Slave
-   **总的来说这个是一个相对较大的任务、人工完成会非常的繁琐、但是用 dbm-agent 只要两个命令，下面用为实例 172.16.192.100:3306 增加一个新的 slave 172.16.192.110:3306为例**
+   **总的来说这个是一个相对较大的任务、人工完成会非常的繁琐、但是用 dbm-agent 只要一行命令**
+   
+   假设我们要实现下表这样的一个主从架构，现在 master 已经有了，剩下的就是在 172.16.192.110 上增加一个 slave
 
-   **第一步：在 172.16.192.110 主机上安装新实例**
+   |**IP**|**PORT**|**ROLE**|
+   |------|--------|--------|
+   |172.16.192.100 | 3306 | master |
+   |172.16.192.110 | 3306 | slave |
+   
+   **1、** 自动搭建 slave
    ```bash
-   # 在 172.16.192.110 机器上操作
-   dbma-cli-single-instance install --port=3306
-   ```
-   **第二步：从 172.16.192.100:3306 克隆数据并建立复制关系**
-   ```bash
-   # 在 172.16.192.110 机器上操作
-   dbma-cli-build-slave --host=127.0.0.1 --port=3306 --user=root --password=dbma@0352 --dhost=172.16.192.100 --dport=3306 --cuser=cloneuser --cpassword=dbma@0352  --ruser=repluser --rpassword=dbma@0352 build-slave
+   dbma-cli-build-slave --host=172.16.192.100 --port=3306 build-slave  
 
-   2019-09-22 12:55:08,103 - dbm-agent.dbma.backups - MainThread - INFO - set @@global.clone_valid_donor_list='172.16.192.100:3306';
-   2019-09-22 12:55:08,104 - dbm-agent.dbma.backups - MainThread - INFO - clone instance from cloneuser@'172.16.192.100':3306 identified by 'dbma@0352';
-   2019-09-22 12:55:10,033 - dbm-agent.dbma.backups - MainThread - INFO - remonte clone complete.
-   2019-09-22 12:55:10,034 - dbm-agent.dbma.backups - MainThread - INFO - mysqld-3306 restart complete.
-   2019-09-22 12:55:10,034 - dbm-agent.dbma.backups - MainThread - INFO - wait 11 seconds
-   2019-09-22 12:55:21,063 - dbm-agent.dbma.backups - MainThread - INFO - change master to master_host='172.16.192.100',master_port=3306,master_user='repluser',master_password='dbma@0352',master_ssl = 1,master_auto_position=1;
-   2019-09-22 12:55:21,074 - dbm-agent.dbma.backups - MainThread - INFO - change master complete.
-   2019-09-22 12:55:21,080 - dbm-agent.dbma.backups - MainThread - INFO - start slave complete.
+   2019-11-17 10:57:40,650 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave.remote_clone - bms - INFO - 1494  - execute checkings for install mysql
+   2019-11-17 10:57:40,688 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave.install - bms - INFO - 1115  - execute checkings for install mysql
+   2019-11-17 10:57:40,718 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave._create_mysql_user - bms - INFO - 864  - create user 'mysql3306' complete
+   2019-11-17 10:57:40,719 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave._create_data_dir - bms - INFO - 888  - create datadir '/database/mysql/data/3306' complete
+   2019-11-17 10:57:40,720 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave._create_binlog_dir - bms - INFO - 910  - create binary dir '/binlog/mysql/binlog/3306' complete
+   2019-11-17 10:57:40,721 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave._create_backup_dir - bms - INFO - 932  - create backup dir '/backup/mysql/backup/3306' complete
+   2019-11-17 10:57:40,721 - dbm-agent.dbma.mysqldeploy.MyCnfInitRender.render_template_file - bms - INFO - 518  - using template 'mysql-8.0-init-only.jinja' 
+   2019-11-17 10:57:40,721 - dbm-agent.dbma.mysqldeploy.MyCnfInitRender.set_template - bms - INFO - 457  - using template file 'mysql-8.0-init-only.jinja' 
+   2019-11-17 10:57:40,762 - dbm-agent.dbma.mysqldeploy.MyCnfInitRender.render - bms - INFO - 497  - render mysql config file /tmp/mysql-init.cnf
+   2019-11-17 10:57:40,762 - dbm-agent.dbma.mysqldeploy.MyCnfInitRender.render_template_file - bms - INFO - 524  - render template file complete
+   2019-11-17 10:57:40,763 - dbm-agent.dbma.mysqldeploy.MyCnfMSRender.render_template_file - bms - INFO - 548  - using template 'mysql-8.0.18.cnf.jinja' 
+   2019-11-17 10:57:40,763 - dbm-agent.dbma.mysqldeploy.MyCnfMSRender.set_template - bms - INFO - 457  - using template file 'mysql-8.0.18.cnf.jinja' 
+   2019-11-17 10:57:40,797 - dbm-agent.dbma.mysqldeploy.MyCnfMSRender.render - bms - INFO - 497  - render mysql config file /etc/my-3306.cnf
+   2019-11-17 10:57:40,797 - dbm-agent.dbma.mysqldeploy.MyCnfMSRender.render_template_file - bms - INFO - 554  - render template file complete
+   2019-11-17 10:57:40,797 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave._render_production_cnf - bms - INFO - 956  - render production cnf complete
+   2019-11-17 10:57:40,797 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave._init_database - bms - INFO - 1004  - ['/usr/local/mysql-8.0.18-linux-glibc2.12-x86_64/bin/mysqld', '--defaults-file=/tmp/mysql-init.cnf', '--initialize-insecure', '--user=mysql3306', '--init-file=/usr/local/dbm-agent/etc/init-users.sql']
+   2019-11-17 10:57:52,606 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave._init_database - bms - INFO - 1011  - init database complete
+   2019-11-17 10:57:52,609 - dbm-agent.dbma.mysqldeploy.MySQLSystemdRender.render - bms - INFO - 666  - render systemd config file complete
+   2019-11-17 10:57:52,610 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave._config_systemd - bms - INFO - 1027  - mysql systemd config complete
+   2019-11-17 10:57:52,775 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave._enable_mysql - bms - INFO - 1038  - config mysql auto start on boot complete
+   2019-11-17 10:57:54,800 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave._start_mysql - bms - INFO - 1068  - start mysql complete
+   2019-11-17 10:57:54,802 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave._export_path - bms - INFO - 1078  - export path complete
+   2019-11-17 10:57:54,808 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave._export_header_file - bms - INFO - 1106  - export header file complete
+   2019-11-17 10:57:54,809 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave._export_so - bms - INFO - 1093  - so file has been exported
+   2019-11-17 10:57:54,809 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave.install - bms - INFO - 1150  - install mysql single instance complete
+   2019-11-17 10:57:54,833 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave.remote_clone - bms - INFO - 1517  - prepare execute 'set @@global.clone_valid_donor_list='172.16.192.100:3306';' 
+   2019-11-17 10:57:54,834 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave.remote_clone - bms - INFO - 1522  - prepare execute 'clone instance from cloneuser@'172.16.192.100':3306 identified by 'dbma@0352';' 
+   2019-11-17 10:57:54,970 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave.remote_clone - bms - INFO - 1526  - got some error during remonte clone 3870 (HY000): Clone Donor plugin group_replication is not active in Recipient.
+   2019-11-17 10:57:54,971 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave.build_slave - bms - INFO - 1593  - wait mysql protocol avaiable
+   2019-11-17 10:58:05,996 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave.build_slave - bms - INFO - 1614  - prepare execute 'change master to master_host='172.16.192.100',master_port=3306,master_user='repluser',master_password='dbma@0352',master_ssl = 1,master_auto_position=1;'
+   2019-11-17 10:58:06,011 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave.build_slave - bms - INFO - 1620  - prepare execute 'start slave;' 
+   2019-11-17 10:58:06,018 - dbm-agent.dbma.mysqldeploy.MySQLBuildSlave.build_slave - bms - INFO - 1632  - rebuild mysql slave complete
    ```
-   **第三步：检查**
+   **1.1、** --host 用于指定 master 所在的主机 IP 
+
+   **1.2、** --port 用于指定 master 所监听的端口
+
+   **1.3、** 自动创建 slave 的过程大致如下 
+   ```
+   I: 在本地(172.16.192.110)创建一个监听在 --port 上的实例
+   II: 从 master 克隆数据到本地实例
+   III: 配置好本地实例与 master 的主从关系
+   ```
+
+   ---
+
+
+   **2、** 检查主从关系是否正常
    ```sql
    mysql -uroot -pdbma@0352 -h127.0.0.1 -P3306
    mysql> show slave status \G
@@ -441,7 +452,7 @@
    ---
 
 
-## 自动搭建MGR高可用集群
+## 自动搭建MGR
    **以下面三台机器上搭建 MGR 集群为例**
 
    |**IP**|**角色**|
@@ -452,101 +463,91 @@
 
    **搭建 primary 结点**
 
-   dbm-agent 在搭建 MGR 时把会 --members 选项中给定的第一个 IP 设置为 primary 其它的都设置为 seconder，所以 IP 地址出现的次序对结果尤为重要
+   dbm-agent 在搭建 MGR 时把会 --members 选项中给定的第一个 IP 设置为 primary 其它的都设置为 seconder，所以 IP 地址出现的次序对结果尤为重要；还有另一个次序也同样重要，虽然 primary 结点和 seconder 结点执行的是同一行命令，但是 seconder 结点要克隆 primary 结点的数据，所以要求命令先在 primary 上执行完成后，才能到 sconder 结点上执行。
    ```bash
    # 在 192.168.100.101 上执行
-dbma-cli-build-mgr --port=3306 --max-mem=256 --members=192.168.100.101,192.168.100.102,192.168.100.103
+   dbma-cli-build-mgr --port=3306 --max-mem=128 --members=192.168.100.101,192.168.100.102,192.168.100.103 build-mgr
 
-2019-09-25 19:29:22,830 - dbm-agent.dbma.mysql - MainThread - INFO - build mgr with members 192.168.100.101,192.168.100.102,192.168.100.103
-2019-09-25 19:29:22,830 - dbm-agent.dbma.mysql - MainThread - INFO - check members option is right or not
-2019-09-25 19:29:22,830 - dbm-agent.dbma.mysql - MainThread - INFO - mysql group replication use 33061 for communicate
-2019-09-25 19:29:22,830 - dbm-agent.dbma.mysql - MainThread - INFO - mgr ip {'192.168.100.101'}
-2019-09-25 19:29:22,830 - dbm-agent.dbma.mysql - MainThread - INFO - mysql group replication  local_address use 192.168.100.101:33061
-2019-09-25 19:29:22,830 - dbm-agent.dbma.mysql - MainThread - INFO - mysql group replication  group_seeds use  192.168.100.101:33061,192.168.100.102:33061,192.168.100.103:33061
-2019-09-25 19:29:22,830 - dbm-agent.dbma.configrender - MainThread - INFO - load template from /usr/local/dbm-agent/etc/templates/
-2019-09-25 19:29:22,830 - dbm-agent.dbma.configrender - MainThread - INFO - template file name mysql-8.0.17.cnf.jinja
-2019-09-25 19:29:22,852 - dbm-agent.dbma.configrender - MainThread - INFO - mysql pkg mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz max memory 256
-2019-09-25 19:29:22,852 - dbm-agent.dbma.mysql - MainThread - INFO - install mysql instance with mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz port 3306 max_mem 256 MB cores = 0
-2019-09-25 19:29:22,852 - dbm-agent.dbma.mysql - MainThread - INFO - entry mysql group replication install logic
-2019-09-25 19:29:22,852 - dbm-agent.dbma.mysql - MainThread - INFO - check package '/usr/local/dbm-agent/pkg/mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz' is exists
-2019-09-25 19:29:22,853 - dbm-agent.dbma.mysql - MainThread - INFO - check port 3306 is in use or not
-2019-09-25 19:29:22,853 - dbm-agent.dbma.mysql - MainThread - INFO - check config file  /etc/my-3306.cnf 
-2019-09-25 19:29:22,853 - dbm-agent.dbma.mysql - MainThread - INFO - check datadir /database/mysql/data/3306
-2019-09-25 19:29:22,853 - dbm-agent.dbma.mysql - MainThread - INFO - check mysql version mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz
-2019-09-25 19:29:22,854 - dbm-agent.dbma.mysql - MainThread - INFO - check group_replication_local_address = 192.168.100.101:33061 option is right or not
-2019-09-25 19:29:22,855 - dbm-agent.dbma.mysql - MainThread - INFO - check group_replication_group_seeds = 192.168.100.101:33061,192.168.100.102:33061,192.168.100.103:33061 option is right or not
-2019-09-25 19:29:22,855 - dbm-agent.dbma.mysql - MainThread - INFO - change hostname to mgr192_168_100_101
-2019-09-25 19:29:22,900 - dbm-agent.dbma.mysql - MainThread - INFO - config dns
-2019-09-25 19:29:22,902 - dbm-agent.dbma.common - MainThread - INFO - 192.168.100.101 is a local ip force an record
-2019-09-25 19:29:22,920 - dbm-agent.dbma.mysql - MainThread - INFO - create datadir /database/mysql/data/3306
-2019-09-25 19:29:22,920 - dbm-agent.dbma.mysql - MainThread - INFO - unarchive mysql pkg to /usr/local/
-2019-09-25 19:29:22,920 - dbm-agent.dbma.mysql - MainThread - WARNING - /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64 exists mysql may has been installed. skip untar mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz to /usr/local/
-2019-09-25 19:29:22,920 - dbm-agent.dbma.configrender - MainThread - INFO - config cpu options
-2019-09-25 19:29:22,921 - dbm-agent.dbma.configrender - MainThread - INFO - config memory options
-2019-09-25 19:29:22,921 - dbm-agent.dbma.configrender - MainThread - INFO - config disk options
-2019-09-25 19:29:22,921 - dbm-agent.dbma.configrender - MainThread - INFO - going to render config file
-2019-09-25 19:29:22,921 - dbm-agent.dbma.mysql - MainThread - INFO - init database with --initialize-insecure
-2019-09-25 19:29:22,921 - dbm-agent.dbma.mysql - MainThread - WARNING - ['/usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/mysqld', '--defaults-file=/etc/my-3306.cnf', '--initialize-insecure', '--user=mysql3306', '--init-file=/usr/local/dbm-agent/etc/init-users.sql']
-2019-09-25 19:29:27,414 - dbm-agent.dbma.mysql - MainThread - INFO - config service(systemd) and daemon-reload
-2019-09-25 19:29:27,414 - dbm-agent.dbma.configrender - MainThread - INFO - load template from /usr/local/dbm-agent/etc/templates/
-2019-09-25 19:29:27,414 - dbm-agent.dbma.configrender - MainThread - INFO - template file name mysqld.service.jinja
-2019-09-25 19:29:27,480 - dbm-agent.dbma.mysql - MainThread - INFO - config mysql auto start on boot
-2019-09-25 19:29:27,533 - dbm-agent.dbma.mysql - MainThread - INFO - config path env variable /usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/
-2019-09-25 19:29:27,534 - dbm-agent.dbma.mysql - MainThread - INFO - start mysqld-3306 by systemctl start mysqld-3306
-2019-09-25 19:29:27,576 - dbm-agent.dbma.mysql - MainThread - INFO - export so file
-2019-09-25 19:29:27,576 - dbm-agent.dbma.mysql - MainThread - INFO - export header file
-2019-09-25 19:29:27,584 - dbm-agent.dbma.common - MainThread - INFO - wait for 127.0.0.1:3306 avaiable
-2019-09-25 19:29:28,586 - dbm-agent.dbma.mysql - MainThread - INFO - sleep 7 secondes wait for mysql protoco avaiable
-2019-09-25 19:29:35,590 - dbm-agent.dbma.mysql - MainThread - INFO - this is a primary node prepare bootstrap a group
-2019-09-25 19:29:35,608 - dbm-agent.dbma.mysql - MainThread - INFO - change master to master_user='repluser',master_password='dbma@0352' for channel 'group_replication_recovery';
-2019-09-25 19:29:35,616 - dbm-agent.dbma.mysql - MainThread - INFO - set @@global.group_replication_bootstrap_group=ON;start group_replication;set @@global.group_replication_bootstrap_group=OFF;
-2019-09-25 19:29:35,616 - dbm-agent.dbma.mysql - MainThread - INFO - mysql group replication primary node config complete
+   2019-11-17 11:52:25,266 - dbm-agent - MainThread - INFO - 58  - enter build MGR logic
+   2019-11-17 11:52:25,266 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR.__init__ - MainThread - INFO - 1674  - using 192.168.100.101:3306 as primary node
+   2019-11-17 11:52:25,266 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR.__init__ - MainThread - WARNING - 1681  - clone user info user='cloneuser' password='dbma@0352' 
+   2019-11-17 11:52:25,266 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR.__init__ - MainThread - INFO - 1685  - group_replication_group_seeds = 192.168.100.101:33061,192.168.100.102:33061,192.168.100.103:33061
+   2019-11-17 11:52:25,267 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR.__init__ - MainThread - INFO - 1700  - group_replication_local_address = 192.168.100.101:33061
+   2019-11-17 11:52:25,267 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR.__init__ - MainThread - INFO - 1704  - current node is primary node? = True
+   2019-11-17 11:52:25,270 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR.install - imgr - INFO - 1115  - execute checkings for install mysql
+   2019-11-17 11:52:25,302 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR._create_mysql_user - imgr - INFO - 864  - create user 'mysql3306' complete
+   2019-11-17 11:53:04,399 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR._extract_install_pgk - imgr - INFO - 842  - extract mysql package completed
+   2019-11-17 11:53:04,400 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR._create_data_dir - imgr - INFO - 888  - create datadir '/database/mysql/data/3306' complete
+   2019-11-17 11:53:04,400 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR._create_binlog_dir - imgr - INFO - 910  - create binary dir '/binlog/mysql/binlog/3306' complete
+   2019-11-17 11:53:04,401 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR._create_backup_dir - imgr - INFO - 932  - create backup dir '/backup/mysql/backup/3306' complete
+   2019-11-17 11:53:04,402 - dbm-agent.dbma.mysqldeploy.MyCnfInitRender.render_template_file - imgr - INFO - 518  - using template 'mysql-8.0-init-only.jinja' 
+   2019-11-17 11:53:04,402 - dbm-agent.dbma.mysqldeploy.MyCnfInitRender.set_template - imgr - INFO - 457  - using template file 'mysql-8.0-init-only.jinja' 
+   2019-11-17 11:53:04,432 - dbm-agent.dbma.mysqldeploy.MyCnfInitRender.render - imgr - INFO - 497  - render mysql config file /tmp/mysql-init.cnf
+   2019-11-17 11:53:04,432 - dbm-agent.dbma.mysqldeploy.MyCnfInitRender.render_template_file - imgr - INFO - 524  - render template file complete
+   2019-11-17 11:53:04,432 - dbm-agent.dbma.mysqldeploy.MyCnfMGRRender.render_template_file - imgr - INFO - 599  - using template 'mysql-8.0.18.cnf.jinja' 
+   2019-11-17 11:53:04,432 - dbm-agent.dbma.mysqldeploy.MyCnfMGRRender.set_template - imgr - INFO - 457  - using template file 'mysql-8.0.18.cnf.jinja' 
+   2019-11-17 11:53:04,462 - dbm-agent.dbma.mysqldeploy.MyCnfMGRRender.render - imgr - INFO - 497  - render mysql config file /etc/my-3306.cnf
+   2019-11-17 11:53:04,462 - dbm-agent.dbma.mysqldeploy.MyCnfMGRRender.render_template_file - imgr - INFO - 605  - render template file complete
+   2019-11-17 11:53:04,462 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR._init_database - imgr - INFO - 1004  - ['/usr/local/mysql-8.0.18-linux-glibc2.12-x86_64/bin/mysqld', '--defaults-file=/tmp/mysql-init.cnf', '--initialize-insecure', '--user=mysql3306', '--init-file=/usr/local/dbm-agent/etc/init-users.sql']
+   2019-11-17 11:53:10,164 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR._init_database - imgr - INFO - 1011  - init database complete
+   2019-11-17 11:53:10,170 - dbm-agent.dbma.mysqldeploy.MySQLSystemdRender.render - imgr - INFO - 666  - render systemd config file complete
+   2019-11-17 11:53:10,170 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR._config_systemd - imgr - INFO - 1027  - mysql systemd config complete
+   2019-11-17 11:53:10,411 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR._enable_mysql - imgr - INFO - 1038  - config mysql auto start on boot complete
+   2019-11-17 11:53:11,436 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR._start_mysql - imgr - INFO - 1068  - start mysql complete
+   2019-11-17 11:53:11,438 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR._export_path - imgr - INFO - 1078  - export path complete
+   2019-11-17 11:53:11,440 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR._export_header_file - imgr - INFO - 1106  - export header file complete
+   2019-11-17 11:53:11,441 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR._export_so - imgr - INFO - 1091  - export so file complete
+   2019-11-17 11:53:11,441 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR.install - imgr - INFO - 1150  - install mysql single instance complete
+   2019-11-17 11:53:11,441 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR.build_primary - imgr - INFO - 1784  - connector to primary node(127.0.0.1:3306) user='dbma' password='dbma@0352' 
+   2019-11-17 11:53:11,467 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR.build_primary - imgr - INFO - 1790  - set @@global.group_replication_bootstrap_group=ON;start group_replication;set @@global.group_replication_bootstrap_group=OFF;
+   2019-11-17 11:53:11,467 - dbm-agent.dbma.mysqldeploy.MySQLBuildMGR.build_primary - imgr - INFO - 1804  - build MGR primary node complete
 
-mysql -h127.0.0.1 -P3306 -uroot -pdbma@0352 -e"select * from performance_schema.replication_group_members;"
-+---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
-| CHANNEL_NAME              | MEMBER_ID                            | MEMBER_HOST        | MEMBER_PORT | MEMBER_STATE | MEMBER_ROLE | MEMBER_VERSION |
-+---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
-| group_replication_applier | ba505d15-df87-11e9-9432-000c29f3e728 | mgr192_168_100_101 |        3306 | ONLINE       | PRIMARY     | 8.0.17         |
-+---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
 
-```
-添加第二个结点
-```bash
-# 在 192.168.100.102 上执行
-dbma-cli-build-mgr --port=3306 --max-mem=256 --members=192.168.100.101,192.168.100.102,192.168.100.103
-... ...
-... ...
+   mysql -h127.0.0.1 -P3306 -uroot -pdbma@0352 -e"select * from performance_schema.replication_group_members;"
+   +---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+   | CHANNEL_NAME              | MEMBER_ID                            | MEMBER_HOST        | MEMBER_PORT | MEMBER_STATE | MEMBER_ROLE | MEMBER_VERSION |
+   +---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+   | group_replication_applier | ba505d15-df87-11e9-9432-000c29f3e728 | mgr192_168_100_101 |        3306 | ONLINE       | PRIMARY     | 8.0.18         |
+   +---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
 
-mysql -h127.0.0.1 -P3306 -uroot -pdbma@0352 -e"select * from performance_schema.replication_group_members;"
-mysql: [Warning] Using a password on the command line interface can be insecure.
-+---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
-| CHANNEL_NAME              | MEMBER_ID                            | MEMBER_HOST        | MEMBER_PORT | MEMBER_STATE | MEMBER_ROLE | MEMBER_VERSION |
-+---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
-| group_replication_applier | ba505d15-df87-11e9-9432-000c29f3e728 | mgr192_168_100_101 |        3306 | ONLINE       | PRIMARY     | 8.0.17         |
-| group_replication_applier | c47e73dd-df87-11e9-894e-000c290844eb | mgr192_168_100_102 |        3306 | ONLINE       | SECONDARY   | 8.0.17         |
-+---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+   ```
+   添加第二个结点
+   ```bash
+   # 在 192.168.100.102 上执行
+   dbma-cli-build-mgr --port=3306 --max-mem=128 --members=192.168.100.101,192.168.100.102,192.168.100.103 build-mgr
+   ... ...
+   ... ...
 
-```
-添加第三个结点
-```bash
-# 在 192.168.100.103 上执行
-dbma-cli-build-mgr --port=3306 --max-mem=256 --members=192.168.100.101,192.168.100.102,192.168.100.103
-... ...
-... ...
+   mysql -h127.0.0.1 -P3306 -uroot -pdbma@0352 -e"select * from performance_schema.replication_group_members;"
 
-mysql -h127.0.0.1 -P3306 -uroot -pdbma@0352 -e"select * from performance_schema.replication_group_members;"
-+---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
-| CHANNEL_NAME              | MEMBER_ID                            | MEMBER_HOST        | MEMBER_PORT | MEMBER_STATE | MEMBER_ROLE | MEMBER_VERSION |
-+---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
-| group_replication_applier | ba505d15-df87-11e9-9432-000c29f3e728 | mgr192_168_100_101 |        3306 | ONLINE       | PRIMARY     | 8.0.17         |
-| group_replication_applier | c47e73dd-df87-11e9-894e-000c290844eb | mgr192_168_100_102 |        3306 | ONLINE       | SECONDARY   | 8.0.17         |
-| group_replication_applier | e3eba066-df87-11e9-a9d6-000c29d535bc | mgr192_168_100_103 |        3306 | ONLINE       | SECONDARY   | 8.0.17         |
-+---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+   +---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+   | CHANNEL_NAME              | MEMBER_ID                            | MEMBER_HOST        | MEMBER_PORT | MEMBER_STATE | MEMBER_ROLE | MEMBER_VERSION |
+   +---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+   | group_replication_applier | ba505d15-df87-11e9-9432-000c29f3e728 | mgr192_168_100_101 |        3306 | ONLINE       | PRIMARY     | 8.0.18         |
+   | group_replication_applier | c47e73dd-df87-11e9-894e-000c290844eb | mgr192_168_100_102 |        3306 | ONLINE       | SECONDARY   | 8.0.18         |
+   +---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+
+   ```
+   添加第三个结点
+   ```bash
+   # 在 192.168.100.103 上执行
+   dbma-cli-build-mgr --port=3306 --max-mem=128 --members=192.168.100.101,192.168.100.102,192.168.100.103 build-mgr
+   ... ...
+   ... ...
+   
+   mysql -h127.0.0.1 -P3306 -uroot -pdbma@0352 -e"select * from performance_schema.replication_group_members;"
+   +---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+   | CHANNEL_NAME              | MEMBER_ID                            | MEMBER_HOST        | MEMBER_PORT | MEMBER_STATE | MEMBER_ROLE | MEMBER_VERSION |
+   +---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
+   | group_replication_applier | ba505d15-df87-11e9-9432-000c29f3e728 | mgr192_168_100_101 |        3306 | ONLINE       | PRIMARY     | 8.0.18         |
+   | group_replication_applier | c47e73dd-df87-11e9-894e-000c290844eb | mgr192_168_100_102 |        3306 | ONLINE       | SECONDARY   | 8.0.18         |
+   | group_replication_applier | e3eba066-df87-11e9-a9d6-000c29d535bc | mgr192_168_100_103 |        3306 | ONLINE       | SECONDARY   | 8.0.18         |
+   +---------------------------+--------------------------------------+--------------------+-------------+--------------+-------------+----------------+
    ```
 
 **注意事项：**
 
-1、你应该也看出来了，我们在三台主机上执行的命令是相同的，对这个就是为了方便 DBA 无脑操作
+1、我们在三台主机上执行的命令是相同的，对这个就是为了方便 DBA 无脑操作
 
 2、对于自动搭建 MGR 高可用集群来说，你只要保证防火墙是开放的就行，其它的事 dbm-agent 包圆了
 
@@ -555,8 +556,6 @@ mysql -h127.0.0.1 -P3306 -uroot -pdbma@0352 -e"select * from performance_schema.
 
 
 ## 自动安装mysql-shell
-   **dbm-agent-0.2.9 及以上版本支持自动化安装 mysql-shell,并且会在初始化实现的时候就创建 innodbclusteradmin 这个 innodb-cluster 管理用户,也就是说已经完成了对 innodb-cluster 的相关准备**
-
    **第一步：** 确保 mysql-shell 的安装包已经下载到本地
    ```bash
    ll /usr/local/dbm-agent/pkg/
@@ -567,16 +566,14 @@ mysql -h127.0.0.1 -P3306 -uroot -pdbma@0352 -e"select * from performance_schema.
 
    **第二步：自动化安装 mysql-shell**
    ```bash
-   dbma-cli-mysqlsh --pkg=mysql-shell-8.0.18-linux-glibc2.12-x86-64bit.tar.gz install
-   2019-10-31 16:46:29,781 - dbm-agent.dbma.mysqlops.MySQLShellInstaller.per_checkings - MainThread - INFO - checking mysql-shell version
-   2019-10-31 16:46:29,782 - dbm-agent.dbma.mysqlops.MySQLShellInstaller.per_checkings - MainThread - INFO - cheking file /usr/local/dbm-agent/pkg/mysql-shell-8.0.18-linux-glibc2.12-x86-64bit.tar.gz exists or not
-   2019-10-31 16:46:29,782 - dbm-agent.dbma.mysqlops.MySQLShellInstaller.create_mysqlsh_user - MainThread - INFO - mysqlsh user exists skip create it
-   2019-10-31 16:46:29,782 - dbm-agent.dbma.mysqlops.MySQLShellInstaller.untar_pkg - MainThread - INFO - prepare untar mysql-shell-8.0.18-linux-glibc2.12-x86-64bit.tar.gz to /usr/local/
-   2019-10-31 16:46:30,710 - dbm-agent.dbma.mysqlops.MySQLShellInstaller.change_owner - MainThread - INFO - change owner to mysqlsh
-   2019-10-31 16:46:30,815 - dbm-agent.dbma.mysqlops.MySQLShellInstaller.export_path - MainThread - INFO - export PATH=/usr/local/mysql-shell-8.0.18-linux-glibc2.12-x86-64bit/bin/:$PATH has been exported.
-   2019-10-31 16:46:30,815 - dbm-agent.dbma.mysqlops.MySQLShellInstaller.install - MainThread - INFO - mysql-shell-8.0.18-linux-glibc2.12-x86-64bit.tar.gz install compelete
+   dbma-cli-install-mysqlsh install-mysqlsh
+   2019-11-17 13:34:34,464 - dbm-agent - MainThread - INFO - 55  - enter install mysql-shell logic
+   2019-11-17 13:34:36,062 - dbm-agent.dbma.mysqldeploy.MySQLShellInstaller._extract_install_pkg - imshell - INFO - 1344  - extract mysql-shell complete
+   2019-11-17 13:34:36,062 - dbm-agent.dbma.mysqldeploy.MySQLShellInstaller._export_path - imshell - INFO - 1359  - mysql-shell path not exported
+   2019-11-17 13:34:36,063 - dbm-agent.dbma.mysqldeploy.MySQLShellInstaller._export_path - imshell - INFO - 1370  - mysql-shell path exported
+   2019-11-17 13:34:36,063 - dbm-agent.dbma.mysqldeploy.MySQLShellInstaller._export_path - imshell - INFO - 1372  - export mysql-shell path complete
+   2019-11-17 13:34:36,063 - dbm-agent.dbma.mysqldeploy.MySQLShellInstaller.install - imshell - INFO - 1395  - install mysql-shell complete
    ```
-   
    dbm-agent 会把 mysql-shell 也安装到 /usr/local/ 目录下，并且会自动导出 mysqlsh 这个命令
    ```bash
    which mysqlsh
@@ -586,25 +583,10 @@ mysql -h127.0.0.1 -P3306 -uroot -pdbma@0352 -e"select * from performance_schema.
    ---
 
 ## 自动化配置innodb-cluster
-   **在完成 mysql-shell 的安装之后，就可以 MGR 的主结点(primary)上配置 innodb-cluster 了**
-
-   dbm-agent 在自动化安装 MGR 和 mysql-shell 的时候就已经为将来配置 innodb-cluster 打下了基础，所以到这一步就非常简单了一行命令解决问题，于是 dbm-agent 就没对这一行命令进行封装
-
-   **1、** 在初始化实例时已经完成了对 innodb-cluster 管理用户的创建于授权
-   ```sql
-   select user,host from mysql.user where user='innodbclusteradmin';
-   +--------------------+------+
-   | user               | host |
-   +--------------------+------+
-   | innodbclusteradmin | %    |
-   +--------------------+------+
-   1 row in set (0.02 sec)
-   ```
-   **2、** mysql-shell 在上一个章节已经安装好了
-
-   **3、** dbm-agent 还提供了一个拿来就用的创建 innodb-cluster 的 javascript 脚本，所以你要做的只是在primary结点所有的主机上运行一下如下脚本
+   **dbm-agent 把一切准备好了，你只要 primary 结点上运行一条简单的命令，一个 innodb-cluster 就出来了**
    ```bash
    mysqlsh --uri innodbclusteradmin@127.0.0.1:3306 --password=dbma@0352 < /usr/local/dbm-agent/etc/templates/create-innodb-cluster.js 
+
    WARNING: Using a password on the command line interface can be insecure.
    A new InnoDB cluster will be created based on the existing replication group on instance '127.0.0.1:3306'.
    
@@ -747,55 +729,93 @@ mysql -h127.0.0.1 -P3306 -uroot -pdbma@0352 -e"select * from performance_schema.
 
 
 
-## 自动采集主机监控并上传到服务端
-   **dbm-agent 守护进程在后台运行的时候就会周期性的上报主机的监控信息，如果你想手工体验的话 dbm-agent 也有给出命令行接口**
-   ```bash
-   dbma-cli-pusher all 
 
-   2019-10-03 18:17:03,498 - dbm-agent.dbma.pusher.push_host - MainThread - INFO - using http://172.16.192.1:8080/dbmc/hosts/?pk=-1 Got csrfmiddlewaretoken = RUNN9CL9UzZwUQbfkchmIv8qXQvuHlE5x1bhE8knz4HPMTQni2UVyZUB6oqfZaZr
-   2019-10-03 18:17:03,505 - dbm-agent.dbma.pusher.push_host - MainThread - INFO - gather host info = {'host_uuid': 'dde1f082-67fc-436f-a149-90a1fa4612c2', 'agent_version': '0.2.0', 'cpu_cores': 1, 'mem_total_size': 1535696896, 'manger_net_ip': '172.16.192.100', 'csrfmiddlewaretoken': 'RUNN9CL9UzZwUQbfkchmIv8qXQvuHlE5x1bhE8knz4HPMTQni2UVyZUB6oqfZaZr', 'os_version': 'CentOS Linux-7-Core'}
-   2019-10-03 18:17:03,506 - dbm-agent.dbma.pusher.push_host - MainThread - INFO - post host info to http://172.16.192.1:8080/dbmc/hosts/
-   2019-10-03 18:17:03,584 - dbm-agent.dbma.pusher.push_host - MainThread - INFO - {'code': 201, 'message': '数据库中已经存在 host_uuid = dde1f082-67fc-436f-a149-90a1fa4612c2 ,服务端已经完成了对这条记录的更新'}
-   2019-10-03 18:17:03,584 - dbm-agent.dbma.pusher.push_host - MainThread - INFO - push host info complete
-   2019-10-03 18:17:03,585 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - push cpu times info to dbmc
-   2019-10-03 18:17:03,585 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - query http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/cpu-times/?pk=-1 for get csrftoken
-   2019-10-03 18:17:03,618 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - csrftoken = lf89MkihOZDGf2FKo8iYHkDmDhD6ZUn1pj8xIQO40K71OOfz7GMTyBqNfTtk6nCS
-   2019-10-03 18:17:03,618 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - cpu times = {'user': 0.007474045184000431, 'system': 0.005311213926884194, 'idle': 0.9870196488006041, 'nice': 8.409141746175102e-06, 'iowait': 9.92278726048662e-05, 'irq': 0.0, 'softirq': 8.745507416022106e-05, 'host_uuid': 'dde1f082-67fc-436f-a149-90a1fa4612c2', 'csrfmiddlewaretoken': 'lf89MkihOZDGf2FKo8iYHkDmDhD6ZUn1pj8xIQO40K71OOfz7GMTyBqNfTtk6nCS'}
-   2019-10-03 18:17:03,696 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - {'code': 200, 'message': '保存成功', 'data': []}
-   2019-10-03 18:17:03,696 - dbm-agent.dbma.pusher.push_cpu_times - MainThread - INFO - push cpu times info completed.
-   2019-10-03 18:17:03,697 - dbm-agent.dbma.pusher.push_cpu_frequence - MainThread - INFO - prepare push cpu frequence to dbmc
-   2019-10-03 18:17:03,730 - dbm-agent.dbma.pusher.push_cpu_frequence - MainThread - INFO - OrderedDict([('current', 2899.721), ('csrfmiddlewaretoken', '6JN7WBm6Z5aSsim3vrb4kx2fP5qnNT03tT8sJrTaretnj8w4HFPKj9gPLluH2Q8w')])
-   2019-10-03 18:17:03,809 - dbm-agent.dbma.pusher.push_cpu_frequence - MainThread - INFO - {'code': 200, 'message': '保存成功', 'data': []}
-   2019-10-03 18:17:03,809 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - prepase push net interface info
-   2019-10-03 18:17:03,841 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - using http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/net-interfaces/?pk=-1 for go token
-   2019-10-03 18:17:03,841 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - csrftoken = gcGwN4bJkXqRD4Jnfh5e91oymaJ2GIk3d690LTBRCSf5KIdjIcv7w8KaoSDg3K1Q
-   2019-10-03 18:17:03,842 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - nifs = [NetInterface(name='ens33', speed=1000, isup=True, address='172.16.192.100')]
-   2019-10-03 18:17:03,920 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - {'code': 200, 'message': '数据库中存在对应的网卡信息，更新成功', 'data': []}
-   2019-10-03 18:17:03,920 - dbm-agent.dbma.pusher.push_net_interfaces - MainThread - INFO - net-interface push complete
-   2019-10-03 18:17:03,921 - dbm-agent.dbma.pusher.push_net_io_counter - MainThread - INFO - prepare push net io counter info
-   2019-10-03 18:17:03,921 - dbm-agent.dbma.pusher.push_net_io_counter - MainThread - INFO - query http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/net-io-counters/?pk=-1 for get csrftoken
-   2019-10-03 18:17:03,954 - dbm-agent.dbma.pusher.push_net_io_counter - MainThread - INFO - csrftoken = aj0KsWYk7ifp4EG2I0SZrKqy5PgRyRYZDHObjZXeI5n2AiIXjyzXm13I4WP89rmC
-   2019-10-03 18:17:03,954 - dbm-agent.dbma.pusher.push_net_io_counter - MainThread - INFO - net io counter = OrderedDict([('bytes_sent', 656208), ('bytes_recv', 1946535), ('csrfmiddlewaretoken', 'aj0KsWYk7ifp4EG2I0SZrKqy5PgRyRYZDHObjZXeI5n2AiIXjyzXm13I4WP89rmC')])
-   2019-10-03 18:17:04,035 - dbm-agent.dbma.pusher.push_net_io_counter - MainThread - INFO - {'code': 201, 'message': '新的网络监控数据插入成功', 'data': []}
-   2019-10-03 18:17:04,036 - dbm-agent.dbma.pusher.push_memory_distribution - MainThread - INFO - prepare push memory distribution info to dbmc
-   2019-10-03 18:17:04,036 - dbm-agent.dbma.pusher.push_memory_distribution - MainThread - INFO - query http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/memory-distributions/?pk=-1 for csrftoken
-   2019-10-03 18:17:04,070 - dbm-agent.dbma.pusher.push_memory_distribution - MainThread - INFO - csrftoken  = {csrfmiddlewaretoken}
-   2019-10-03 18:17:04,070 - dbm-agent.dbma.pusher.push_memory_distribution - MainThread - INFO - data = {'csrfmiddlewaretoken': 'kL3EL09bXG8IaUgWsNlWp2qgDuJ2mZ2v7HQF7TJcgZPo0JLdjmKUvA5NDAekclBx', 'total': 1535696896, 'available': 1209077760, 'used': 169832448, 'free': 1201819648}
-   2019-10-03 18:17:04,151 - dbm-agent.dbma.pusher.push_memory_distribution - MainThread - INFO - {'code': 200, 'message': '数据录入成功', 'data': []}
-   2019-10-03 18:17:04,152 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - prepare push disk uasge info to dbmc
-   2019-10-03 18:17:04,152 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - query http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/disk-usages/?pk=-1 for csrftoken
-   2019-10-03 18:17:04,190 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - csrftoken  = pmJM3v4itTxYdUX6vw7JzkCSEH9tOj5cIfamJuMJlzG8mVK7OWjlinKN45a8ya7f
-   2019-10-03 18:17:04,191 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - data = {'csrfmiddlewaretoken': 'pmJM3v4itTxYdUX6vw7JzkCSEH9tOj5cIfamJuMJlzG8mVK7OWjlinKN45a8ya7f', 'mountpoint': '/', 'total': 53660876800, 'used': 5087141888, 'free': 48573734912}
-   2019-10-03 18:17:04,270 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - data = {'csrfmiddlewaretoken': 'pmJM3v4itTxYdUX6vw7JzkCSEH9tOj5cIfamJuMJlzG8mVK7OWjlinKN45a8ya7f', 'mountpoint': '/database', 'total': 53660876800, 'used': 5087141888, 'free': 48573734912}
-   2019-10-03 18:17:04,346 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - data = {'csrfmiddlewaretoken': 'pmJM3v4itTxYdUX6vw7JzkCSEH9tOj5cIfamJuMJlzG8mVK7OWjlinKN45a8ya7f', 'mountpoint': '/backup', 'total': 53660876800, 'used': 5087141888, 'free': 48573734912}
-   2019-10-03 18:17:04,421 - dbm-agent.dbma.pusher.push_disk_usage - MainThread - INFO - push disk usage info complete
-   2019-10-03 18:17:04,422 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - prepare push disk io counter to dbmc
-   2019-10-03 18:17:04,422 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - query http://172.16.192.1:8080/dbmc/hosts/dde1f082-67fc-436f-a149-90a1fa4612c2/disk-io-counters/?pk=-1 for csrftoken
-   2019-10-03 18:17:04,455 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - csrftoken  = 619fGisKvlKQWeh4s23ZT7sl55xbCsedNtEuILTSsHlheeP8QUo7562HXOJBMUuN
-   2019-10-03 18:17:04,456 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - data = {'csrfmiddlewaretoken': '619fGisKvlKQWeh4s23ZT7sl55xbCsedNtEuILTSsHlheeP8QUo7562HXOJBMUuN', 'read_count': 10898, 'write_count': 9636, 'read_bytes': 308108288, 'write_bytes': 74499072}
-   2019-10-03 18:17:04,534 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - {'code': 200, 'message': '录入成功', 'data': []}
-   2019-10-03 18:17:04,534 - dbm-agent.dbma.pusher.push_disk_io_counter - MainThread - INFO - push disk usage info complete
+## 启动
+   **dbm-agent 默认会自动以守护进程的方式运行**
+
+   由于 dbm-center 到目前为止还是一个 beta 版本，
+
+   **1、** 启动
+   ```bash
+   dbm-agent start
+   Successful start and log file save to '/usr/local/dbm-agent/logs/dbma.log'
+
+   ```
+   启动完成之后 dbm-agent 会以守护进程的方式在后台运行，周期性的上报主机的性能指标到服务端(dbm-center)，并从 dbm-center 检查要执行的任务(任务是一个抽象的概念，任何之前需要 DBA 手工执行的操作都可以看成一个任务)
+   ```sql
+   -- 更多其它方面的监控请查看 dbm-center 这个项目
+   mysql> select * from hosts_cputimesmodel order by id  limit 23,17;
+   +----+----------------------------+-------+--------+-------+-------+--------+-------+---------+---------+
+   | id | create_time                | user  | system | idle  | nice  | iowait | irq   | softirq | host_id |
+   +----+----------------------------+-------+--------+-------+-------+--------+-------+---------+---------+
+   | 24 | 2019-10-03 18:37:41.849744 | 0.007 |  0.005 | 0.989 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
+   | 25 | 2019-10-03 18:38:42.902971 | 0.006 |  0.005 | 0.989 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
+   | 26 | 2019-10-03 18:39:35.405399 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
+   | 27 | 2019-10-03 18:40:35.487535 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
+   | 28 | 2019-10-03 18:41:35.574100 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
+   | 29 | 2019-10-03 18:43:44.879151 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
+   | 30 | 2019-10-03 18:44:44.988876 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
+   | 31 | 2019-10-03 18:45:45.017535 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
+   | 32 | 2019-10-03 18:46:45.042812 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
+   | 33 | 2019-10-03 18:47:45.086554 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
+   | 34 | 2019-10-03 18:48:45.146277 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
+   | 35 | 2019-10-03 18:49:45.227072 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
+   | 36 | 2019-10-03 18:50:45.263859 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
+   | 37 | 2019-10-03 18:51:45.360525 | 0.007 |  0.005 | 0.988 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
+   | 38 | 2019-10-03 18:52:45.437180 | 0.007 |  0.005 | 0.989 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
+   | 39 | 2019-10-03 18:53:45.464134 | 0.007 |  0.005 | 0.989 | 0.000 |  0.000 | 0.000 |   0.000 |       2 |
+   +----+----------------------------+-------+--------+-------+-------+--------+-------+---------+---------+
+   16 rows in set (0.00 sec)
+
+   -- 
+   ```
+   **2、** 观察进程的运行状态
+   ```bash
+   ps -ef | grep dbm                                                         
+   dbma       7225      1  0 11:31 ?        00:00:00 /usr/local/python-3.7.3/bin/python3.7 /usr/local/python/bin/dbm-agent start
+   root       7229   7167  0 11:32 pts/0    00:00:00 grep --color=auto dbm
+   ```
+   **3、** dbm-agent 的日志保存在 /usr/local/dbm-agent/logs/dbma.log 文件中
+   ```bash
+   cat /usr/local/dbm-agent/logs/dbma.log
+   2019-08-31 07:57:08,409 - dbm-agent.server - MainThread - INFO - dbm-agent starting
+   ```
+
+   ---
+
+## 关闭
+   **关闭 dbm-agent 守护进程**
+   ```bash
+   dbm-agent stop                                                              
+   Successful exit
    ```
    ---
 
+## 升级
+   **升级 dbm-agent 要分两步走**
+   ```
+   # 第一步：升级软件
+   dbm-agent stop
+   pip3 install dbm-agent
 
+   # 第二步：升级配置文件
+   dbm-agent upgrade
+
+   2019-09-16 16:47:49,328 INFO going to upgrade dbm-agent
+   2019-09-16 16:47:49,329 INFO backup etc/templates
+   2019-09-16 16:47:49,329 INFO create new etc/templates
+   2019-09-16 16:47:49,333 INFO upgrade complete
+   ```
+   
+   ---
+
+## 卸载
+   **卸载 dbm-agent 要分两步走、第一步：删除 dbm-agent 对应的用户和数据 第二步：卸载 dbm-agent 软件包**
+   ```bash
+   # uninit 会自动完成相关用户(dbma)和数据(/usr/local/dbm-agent/)的删除
+   dbm-agent uninit
+   # 卸载 dbm-agent
+   pip3 uninstall dbm-agent
+   ```
+
+   ---

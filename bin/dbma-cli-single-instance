@@ -4,25 +4,19 @@
 实例单实例架构下的 MySQL 安装与卸载
 """
 
+import psutil
 import logging
 import argparse
-from dbma.mysqlops import MySQLInstaller, MySQLUninstaller, MySQLSingleInstaller
-from dbma.gather import cpu_cores
+#from dbma.mysqlops import MySQLInstaller, MySQLUninstaller
+#from dbma.gather import cpu_cores
+from dbma.mysqldeploy import MySQLInstaller, MySQLUninstaller
 
 
 def parser_cmd_args():
     """
     实现命令行参数的处理
     """
-    def _cores(c: int = 0) -> int:
-        if c == 0:
-            return cpu_cores().counts
-        try:
-            return int(c)
-        except TypeError:
-            logging.error(
-                f"{c} convert to int fail !!! reset cores to {cpu_cores().counts}")
-        return cpu_cores().counts
+    cores = psutil.cpu_count()
 
     parser = argparse.ArgumentParser(__name__)
     parser.add_argument('--port', type=int, default=3306, help="instance port")
@@ -30,8 +24,8 @@ def parser_cmd_args():
         '--pkg', type=str, default="mysql-8.0.18-linux-glibc2.12-x86_64.tar.xz", help="mysql install package")
     parser.add_argument('--max-mem', type=int, default=1024,
                         help="the max memory mysql instances can use")
-    parser.add_argument('--cores', type=_cores,
-                        default=0, help='cpu logic cores')
+    parser.add_argument('--cores', type=int,
+                        default=cores, help='cpu logic cores')
     parser.add_argument('--log', type=str, default='info',
                         choices=['debug', 'info', 'warning', 'error'])
     parser.add_argument('action', type=str, choices=['install', 'uninstall'])
@@ -49,7 +43,7 @@ def main():
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(message)s')
+        '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(lineno)s - %(message)s')
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
 
@@ -60,14 +54,22 @@ def main():
     cores = args.cores
 
     if action == 'install':
-        logger.info(f'enter install mysql instance logic port={port}')
-        m = MySQLSingleInstaller(
-            port=port, pkg=pkg, max_mem=max_mem, cores=cores)
-        m.install()
+
+        # 数据库安装
+        installer = MySQLInstaller(
+            pkg=pkg, max_mem=max_mem, port=port, cores=cores)
+        installer.start()
+
+        # 主线程等待安装完成
+        installer.join()
     elif action == 'uninstall':
-        logger.info(f'enter uninstall mysql instance logic port={port}')
-        m = MySQLUninstaller(port=port)
-        m.uninstall()
+        logger.info(f"start uninstall mysqld-{args.port}")
+        # 数据库卸载
+        uninstaller = MySQLUninstaller(port=args.port)
+        uninstaller.start()
+
+        # 主线程等待卸载完成
+        uninstaller.join()
 
 
 if __name__ == "__main__":

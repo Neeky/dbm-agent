@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+
+"""
+实例 clone 
+"""
+
+import os
+import sys
+import psutil
+import logging
+import argparse
+import shutil
+from dbma import common
+from dbma import checkings
+from dbma.mysqldeploy import MySQLShellInstaller
+
+
+def parser_cmd_args():
+    """
+    实现命令行参数的处理
+    """
+    name, *_ = os.path.basename(__file__).split('.')
+    parser = argparse.ArgumentParser(name)
+    parser.add_argument('--pkg', type=str, default="mysql-shell-8.0.18-linux-glibc2.12-x86-64bit.tar.gz",
+                        help="mysql-shell install package")
+    parser.add_argument('--log', type=str, default='info',
+                        choices=['debug', 'info', 'warning', 'error'])
+    parser.add_argument('action', type=str, choices=[
+                        'install-mysqlsh'])
+    args = parser.parse_args()
+    return args
+
+
+def main():
+    """
+    完成备份相关的功能
+    """
+    # 配置日志
+    args = parser_cmd_args()
+    level = getattr(logging, args.log.upper())
+    logger = logging.getLogger('dbm-agent')
+    logger.setLevel(level)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(lineno)s  - %(message)s')
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
+
+    args = parser_cmd_args()
+
+    if args.action == 'install-mysqlsh':
+
+        # 安装 mysql-shell
+        logger.info("enter install mysql-shell logic")
+        sheller = MySQLShellInstaller(pkg=args.pkg)
+        sheller.start()
+        sheller.join()
+    else:
+        # 不支持的操作
+        logger.error("not supported operation")
+
+
+if __name__ == "__main__":
+    main()

@@ -103,7 +103,6 @@ def delete_group(group_name):
             subprocess.run(f"groupdel {group_name}",shell=True,capture_output=True)
     logger.debug(f"exit 'delete_group' function ")
 
-
 def config_path(path="/usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/",user_name="mysql3306"):
     """
     配置环境变量

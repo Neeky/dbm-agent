@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-实例单实例架构下的 MySQL 安装与卸载
+实例 clone 
 """
 
 import os
@@ -24,12 +24,14 @@ def parser_cmd_args():
     parser.add_argument('--port', type=int, default=3306, help="instance port")
     parser.add_argument('--host', type=str,
                         default="127.0.0.1", help="host ip")
-    parser.add_argument('--user', type=str, default='root', help="backup user")
-    parser.add_argument('--password', type=str,
+    parser.add_argument('--clone-password', type=str,
                         default="dbma@0352", help="backup user")
+    parser.add_argument('--pkg', type=str, default="mysql-8.0.18-linux-glibc2.12-x86_64.tar.xz",
+                        help="mysql install package")
     parser.add_argument('--log', type=str, default='info',
                         choices=['debug', 'info', 'warning', 'error'])
-    parser.add_argument('tool', type=str, choices=['clone'])
+    parser.add_argument('action', type=str, choices=[
+                        'local-clone', 'remote-clone'])
     args = parser.parse_args()
     return args
 
@@ -51,31 +53,31 @@ def main():
     logger.addHandler(stream_handler)
 
     args = parser_cmd_args()
-
     cores = psutil.cpu_count()
-    #backupdir = f"/backup/mysql/backup/{args.port}"
-    # if not checkings.is_directory_exists(backupdir):
-    #    logger.warning(
-    #        f"direcotry '{backupdir}' not exists dbm-agent going to create it")
-    #    common.create_directory(backupdir)
-    #    common.recursive_change_owner(
-    #        backupdir, user=f"mysql{args.port}", group="mysql")
-    # else:
-    #    shutil.chown(backupdir, user=f"mysql{args.port}", group="mysql")
-    #
-    # if not checkings.is_port_in_use(args.host, args.port):
-    #    logger.error(f"can't connect to {args.host}:{args.port} backup fail.")
-    #    sys.exit(1)
 
-    if args.tool == 'clone':
-        # backuper = backups.LocalClone(
-        #    host=args.host, port=args.port, user=args.user, password=args.password)
-        # backuper.backup()
-        cloner = MySQLCloner(host=args.host, port=args.port, user=args.user,
-                             password=args.password, coroes=cores)
+    if args.action == 'local-clone':
+
+        # 本地克隆
+        logger.info("enter local clone logic")
+
+        # 创建用于备份的任务线程
+        cloner = MySQLCloner(host='127.0.0.1', port=args.port, clone_user="cloneuser",
+                             clone_password=args.clone_password, cores=cores)
         cloner.start()
+        cloner.join()
+
+    elif args.action == 'remote-clone':
+
+        # 克隆远程实例到本地
+        logger.info("enter remonte clone logic")
+        cloner = MySQLCloner(host=args.host, port=args.port, clone_user="cloneuser",
+                             clone_password=args.clone_password, cores=cores)
+        cloner.start()
+        cloner.join()
     else:
-        logger.error(f"not suported backup tool {args.tool}")
+
+        # 不支持的操作
+        logger.error("not supported operation")
 
 
 if __name__ == "__main__":

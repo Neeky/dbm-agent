@@ -13,7 +13,7 @@ from jinja2 import Environment,FileSystemLoader
 from . import errors
 from . import checkings
 from . import common
-from . import gather
+#from . import gather
 
 logger = logging.getLogger('dbm-agent').getChild(__name__)
 

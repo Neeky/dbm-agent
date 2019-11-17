@@ -12,7 +12,7 @@ def get_version():
     with open(version_file) as f:
         line = f.readline()
 
-    m = re.search(r'\d\.\d\.\d', line)
+    m = re.search(r'\d\.\d\.\d*', line)
 
     if m:
         return m.group(0)
@@ -29,8 +29,8 @@ setup(name='dbm-agent',
       author_email="neeky@live.com",
       maintainer='Neeky',
       maintainer_email='neeky@live.com',
-      scripts=['bin/dbm-agent', 'bin/dbma-cli-single-instance', 'bin/dbma-cli-backup-instance',
-               'bin/dbma-cli-build-slave', 'bin/dbma-cli-build-mgr', 'bin/dbma-cli-pusher', 'bin/dbma-cli-mysqlsh'],
+      scripts=['bin/dbm-agent', 'bin/dbma-cli-single-instance', 'bin/dbma-cli-install-mysqlsh',
+               'bin/dbma-cli-build-slave', 'bin/dbma-cli-build-mgr', 'bin/dbma-cli-clone'],
       packages=['dbma'],
       package_data={'dbma': ['static/cnfs/*']},
       url='https://github.com/Neeky/dbm-agent',

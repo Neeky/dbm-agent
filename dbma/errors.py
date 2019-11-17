@@ -111,3 +111,10 @@ class MySQLIsNotRunningError(Error):
     当通过 127.0.0.1:${port} 连接不上 MySQL 时就可以报这个错
     """
     pass
+
+
+class LocalCloneFaileError(Error):
+    """
+    本地克隆出错
+    """
+    pass

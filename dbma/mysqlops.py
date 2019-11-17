@@ -15,20 +15,11 @@ from . import errors
 from . import common
 from . import checkings
 from . import configrender
-from . import gather
 import mysql.connector as connector
 
 logger = logging.getLogger('dbm-agent').getChild(__name__)
 
-# 读取配置文件
-#parser = configparser.ConfigParser()
-#parser.read("/usr/local/dbm-agent/etc/dbma.cnf")
-#dbma_basedir = parser['dbma']['base_dir']   # /usr/local/dbm-agent/
-#template_dir = os.path.join(dbma_basedir,'etc/templates/') # /usr/local/dbm-agent/etc/templates/
-#pkg_dir = os.path.join(dbma_basedir,'pkg') # /usr/local/dbm-agent/pkg/
-#default_pkg = "mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz" # mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz
-
-_cores = gather.cpu_cores().counts
+_cores = 1
 
 class MySQLInstaller(object):
     """
@@ -98,7 +89,6 @@ class MySQLInstaller(object):
         else:
             logger.error(f"not supported mysql version {self.version}")
             raise errors.NotSupportedMySQLVersionError(self.version)
-
 
     def __init__(self,port:int=3306,
                  pkg:str="mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz",

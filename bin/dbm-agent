@@ -1,38 +1,52 @@
 #!/usr/bin/evn python3
 
-# (c) 2019, LeXing Jinag <neeky@live.com 1721900707@qq.com https://www.sqlpy.com/> 
+# (c) 2019, LeXing Jinag <neeky@live.com 1721900707@qq.com https://www.sqlpy.com/>
 # Copyright: (c) 2019, dbm Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 import os
 import sys
 import argparse
-from dbma.daemon import start_daemon,stop_daemon
+from dbma.daemon import start_daemon, stop_daemon
 from dbma import server
 from dbma.version import agent_version
 from dbma import initialization
 
+
 def parser_cmd_args():
     parser = argparse.ArgumentParser(f'dbma-agent {agent_version}')
-    parser.add_argument('--dbmc-site',type=str,default="https://192.168.100.100",help='dbm-center url')
-    parser.add_argument('--base-dir',type=str,default="/usr/local/dbm-agent/",help='dbm-agent work dir')
-    parser.add_argument('--config-file',type=str,default="etc/dbma.cnf",help="dbm-agent config file")
-    parser.add_argument('--log-file',type=str,default="logs/dbma.log",help="dbm-agent log file")
-    parser.add_argument('--log-level',type=str,default="info",choices=['info','debug','error'])
-    parser.add_argument('--user-name',type=str,default="dbma",help="user")
-    parser.add_argument('--pid',type=str,default="/tmp/dbm-agent.pid",help="pid file")
-    parser.add_argument('--init-pwd',type=str,default="dbma@0352",help="default password of all user")
-    parser.add_argument('--net-if',type=str,default="ens33",help="interface (exsample eth0,eth1,ens33)")
-    parser.add_argument('--heartbeat-api',type=str,default="hosts/heatheat",help="heartbeat http interface")
-    parser.add_argument('--heartbeat-interval',type=int,default=5,help="the interval between heartbeat")
-    parser.add_argument('action',type=str,default='start',choices=('init','uninit','start','stop','version','upgrade'),help='')
+    parser.add_argument('--dbmc-site', type=str,
+                        default="https://192.168.100.100", help='dbm-center url')
+    parser.add_argument('--base-dir', type=str,
+                        default="/usr/local/dbm-agent/", help='dbm-agent work dir')
+    parser.add_argument('--config-file', type=str,
+                        default="etc/dbma.cnf", help="dbm-agent config file")
+    parser.add_argument('--log-file', type=str,
+                        default="logs/dbma.log", help="dbm-agent log file")
+    parser.add_argument('--log-level', type=str, default="info",
+                        choices=['info', 'debug', 'error'])
+    parser.add_argument('--user-name', type=str, default="dbma", help="user")
+    parser.add_argument('--pid', type=str,
+                        default="/tmp/dbm-agent.pid", help="pid file")
+    parser.add_argument('--init-pwd', type=str,
+                        default="dbma@0352", help="default password of all user")
+    parser.add_argument('--net-if', type=str, default="ens33",
+                        help="interface (exsample eth0,eth1,ens33)")
+    parser.add_argument('--mysql-install-dir', type=str,
+                        default="/usr/local/", help="mysql install derectory")
+    parser.add_argument('--heartbeat-api', type=str,
+                        default="hosts/heatheat", help="heartbeat http interface")
+    parser.add_argument('--heartbeat-interval', type=int,
+                        default=5, help="the interval between heartbeat")
+    parser.add_argument('action', type=str, default='start', choices=(
+        'init', 'uninit', 'start', 'stop', 'version', 'upgrade'), help='')
     args = parser.parse_args()
     return args
 
 
 def main():
     args = parser_cmd_args()
-    
+
     if args.action == 'init':
         initialization.init(args)
     elif args.action == 'start':
@@ -45,26 +59,7 @@ def main():
         initialization.uninit(args)
     elif args.action == 'upgrade':
         initialization.upgrade(args)
-    
-    
+
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

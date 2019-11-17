@@ -4,41 +4,38 @@
 实现自动配置 MGR
 """
 
+import os
 import sys
+import psutil
 import logging
 import argparse
-from dbma.gather import cpu_cores
-from dbma.mysqlops import MySQLMGRInstaller
-import dbma.common as common
-import dbma.checkings as checkings
+from dbma.mysqldeploy import MySQLBuildMGR
 
 
 def parser_cmd_args():
     """
     实现命令行参数的处理
     """
-    def _cores(c: int = 0) -> int:
-        if c == 0:
-            return cpu_cores().counts
-        try:
-            return int(c)
-        except TypeError:
-            logging.error(
-                f"{c} convert to int fail !!! reset cores to {cpu_cores().counts}")
-        return cpu_cores().counts
+    name, *_ = os.path.basename(__file__).split('.')
+    cores = psutil.cpu_count()
 
-    parser = argparse.ArgumentParser(__name__)
+    parser = argparse.ArgumentParser(name)
     parser.add_argument('--port', type=int, default=3306, help="instance port")
-    parser.add_argument('--pkg', type=str,
-                        default="mysql-8.0.18-linux-glibc2.12-x86_64.tar.xz", help="mysql install package")
-    parser.add_argument('--max-mem', type=int, default=1024,
-                        help="the max memory mysql instances can use")
-    parser.add_argument('--cores', type=_cores,
-                        default=0, help='cpu logic cores')
+    parser.add_argument('--members', type=str,
+                        default="192.168.100.10,192.168.100.20,192.168.100.30", help="mgr member list")
+    parser.add_argument('--max-mem', type=int,
+                        default=128, help="max memory")
+    parser.add_argument('--cores', type=str,
+                        default=cores, help="cpu cores")
+    parser.add_argument('--pkg', type=str, default="mysql-8.0.18-linux-glibc2.12-x86_64.tar.xz",
+                        help="mysql install package")
+    parser.add_argument('--clone-password', type=str,
+                        default="dbma@0352", help="the password of clone user")
+    parser.add_argument('--repl-password', type=str,
+                        default="dbma@0352", help="the password of replication user")
     parser.add_argument('--log', type=str, default='info',
                         choices=['debug', 'info', 'warning', 'error'])
-    parser.add_argument('--members', type=str,
-                        help="member ip list(comma sep)")
+    parser.add_argument('action', choices=['build-mgr'])
     args = parser.parse_args()
     return args
 
@@ -53,14 +50,17 @@ def main():
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(message)s')
+        '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(lineno)s  - %(message)s')
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
-    # 创建 MGR 安装器
-    installer = MySQLMGRInstaller.from_members(port=args.port, pkg=args.pkg,
-                                               max_mem=args.max_mem, cores=args.cores,
-                                               members=args.members)
-    installer.install()
+
+    #
+    logger.info("enter build MGR logic")
+    builder = MySQLBuildMGR(pkg=args.pkg, port=args.port, members=args.members,
+                            max_mem=args.max_mem, cores=args.cores,
+                            repl_password=args.repl_password, clone_password=args.clone_password, name="imgr")
+    builder.start()
+    builder.join()
 
 
 if __name__ == "__main__":
