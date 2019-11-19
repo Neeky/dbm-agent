@@ -1,6 +1,6 @@
 #!/usr/bin/evn python3
 
-# (c) 2019, LeXing Jinag <neeky@live.com 1721900707@qq.com https://www.sqlpy.com/>
+# (c) 2019, LeXing Jiang <neeky@live.com 1721900707@qq.com https://www.sqlpy.com/>
 # Copyright: (c) 2019, dbm Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -1002,7 +1002,7 @@ class MySQLInstallerMixin(object):
             args = [f'{self.basedir}/bin/mysqld', f'--defaults-file=/tmp/mysql-init.cnf',
                     '--initialize-insecure', f'--user=mysql{self.port}', f'--init-file={init_file}']
             logger.info(args)
-            subprocess.run(args, capture_output=True)
+            subprocess.run(args, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
         # 删除初始化文件
         logger.debug("remove /tmp/mysql-init.cnf")
@@ -1032,9 +1032,9 @@ class MySQLInstallerMixin(object):
         """
         logger = self.logger.getChild("_enable_mysql")
         with common.sudo(f"enable systemd mysqld-{self.port}"):
-            subprocess.run(['systemctl daemon-reload'], shell=True)
+            subprocess.run(['systemctl daemon-reload'], shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
             subprocess.run(
-                [f'systemctl enable mysqld-{self.port}'], shell=True)
+                [f'systemctl enable mysqld-{self.port}'], shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
         logger.info("config mysql auto start on boot complete")
 
     def _start_mysql(self):
@@ -1044,7 +1044,7 @@ class MySQLInstallerMixin(object):
         logger = self.logger.getChild("_start_mysql")
         with common.sudo(f"enable systemd mysqld-{self.port}"):
             subprocess.run(
-                [f'systemctl start mysqld-{self.port}'], shell=True)
+                [f'systemctl start mysqld-{self.port}'], shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
         logger.debug("wait mysql start")
 
@@ -1217,7 +1217,7 @@ class MySQLUninstallerMixin(object):
                     logger.info(f"backup direcotry '{self.backupdir}' deleted")
 
                 # 去除开机自启动
-                subprocess.run(f"systemctl disable mysqld-{self.port}", shell=True,capture_output=True)
+                subprocess.run(f"systemctl disable mysqld-{self.port}", shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
                 
                 # 删除配置文件
                 if checkings.is_file_exists(self.cnf_file):
@@ -1847,7 +1847,7 @@ class MySQLBuildMGR(MySQLCloner):
                 # 配置主机名
                 # dbm-127-0-0-1
                 hostname = "dbm-{}".format(member_ip.split('.', '-'))
-                subprocess.run(f"hostnamectl set-hostname {hostname} ", shell=True)
+                subprocess.run(f"hostnamectl set-hostname {hostname} ", shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
                 
                 # 配置 /etc/hosts
                 line = f"{member_ip}    {hostname}"

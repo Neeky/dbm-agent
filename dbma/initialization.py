@@ -7,7 +7,7 @@
 
 # 目前给 initilization 的定义是作为代码库中相对独立的部分不参与任何代码重用
 """
-# (c) 2019, LeXing Jinag <neeky@live.com 1721900707@qq.com https://www.sqlpy.com/>
+# (c) 2019, LeXing Jiang <neeky@live.com 1721900707@qq.com https://www.sqlpy.com/>
 # Copyright: (c) 2019, dbm Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -95,9 +95,9 @@ def create_user(user_name: str):
             if not is_group_exists(user_name):
                 logging.info(f"groupadd {user_name}")
                 subprocess.run(f"groupadd {user_name}",
-                               shell=True, capture_output=True)
+                               shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             subprocess.run(
-                f"useradd {user_name} -g {user_name} ", shell=True, capture_output=True)
+                f"useradd {user_name} -g {user_name} ", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except Exception as err:
         logging.error(
             f"an exception been tiggered in create usere stage. {str(err)}")
@@ -116,7 +116,8 @@ def delete_user(user_name: str):
 
     try:
         with sudo(f"delete user {user_name}"):
-            subprocess.run(f"userdel {user_name}", shell=True)
+            subprocess.run(f"userdel {user_name}",
+                           shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     except Exception as err:
         raise errors.ExternalError(
@@ -204,7 +205,7 @@ def init(args):
     # 修改 /usr/local/dbm-agent 目录的权限
     if is_user_exists(args.user_name):
         subprocess.run(
-            ["chown", "-R", f"{args.user_name}:{args.user_name}", args.base_dir])
+            ["chown", "-R", f"{args.user_name}:{args.user_name}", args.base_dir], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         #subprocess.run(["chmod","-R",f"600",os.path.join(args.base_dir,'etc') ])
 
     logging.info("init complete")
@@ -227,7 +228,7 @@ def upgrade(args):
     shutil.copytree(pkg_dir, os.path.join(args.base_dir, 'etc/templates'))
     if is_user_exists(args.user_name):
         subprocess.run(
-            ["chown", "-R", f"{args.user_name}:{args.user_name}", args.base_dir])
+            ["chown", "-R", f"{args.user_name}:{args.user_name}", args.base_dir], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     logging.info("upgrade complete")
 
 

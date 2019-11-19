@@ -1,11 +1,12 @@
-FROM 1721900707/dbma:0.0.0.9
+FROM 1721900707/dbma:0.0.1.0
 #FROM centos:7.6.1810
+
+
 
 MAINTAINER neeky@live.com
 #QQ:1721900707
 #WeChat: jianglegege
-
-#ENV PYTHON_VERSION 3.7.3
+#ENV PYTHON_VERSION 3.6.0
 #ENV PATH /usr/local/python/bin/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 #ENV LANG zh_CN.UTF-8
 #
@@ -25,22 +26,22 @@ MAINTAINER neeky@live.com
 #    && rm python.tar.xz \
 #    && cd /usr/src/python \
 #    && ./configure \
-#        --prefix=/usr/local/python-${PYTHON_VERSION%%[a-z]*}/ \
+#    --prefix=/usr/local/python-${PYTHON_VERSION%%[a-z]*}/ \
 #    && make -j "$(nproc)" \
 #    && make install \
 #    && ldconfig \
 #    && ln -s /usr/local/python-${PYTHON_VERSION%%[a-z]*} /usr/local/python \
 #    && find /usr/local/python-${PYTHON_VERSION%%[a-z]*}/ -depth \
-#		\( \
-#			\( -type d -a \( -name test -o -name tests \) \) \
-#			-o \
-#			\( -type f -a \( -name '*.pyc' -o -name '*.pyo' \) \) \
-#		\) -exec rm -rf '{}' + \
+#    \( \
+#    \( -type d -a \( -name test -o -name tests \) \) \
+#    -o \
+#    \( -type f -a \( -name '*.pyc' -o -name '*.pyo' \) \) \
+#    \) -exec rm -rf '{}' + \
 #    && rm -rf /usr/src/python \
 #    && python3 --version 
 #
-#RUN pip3 config set global.index-url  https://mirrors.aliyun.com/pypi/simple && pip3 config set global.trusted-host  mirrors.aliyun.com
-#RUN pip3 install jinja2 psutil mysql-connector-python==8.0.17 requests distro
+#
+#RUN pip3 install jinja2 psutil mysql-connector-python==8.0.18 requests distro --index-url  https://mirrors.aliyun.com/pypi/simple
 
 ADD . /tmp/
 

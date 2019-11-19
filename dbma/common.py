@@ -1,5 +1,5 @@
 
-# (c) 2019, LeXing Jinag <neeky@live.com 1721900707@qq.com https://www.sqlpy.com/> 
+# (c) 2019, LeXing Jiang <neeky@live.com 1721900707@qq.com https://www.sqlpy.com/> 
 # Copyright: (c) 2019, dbm Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -46,7 +46,7 @@ def create_group(group_name):
     if not checkings.is_group_exists(group_name):
         logger.debug(f"group not exists in current os {group_name} prepare create it")
         with sudo(f"create group {group_name}"):
-            subprocess.run(f'groupadd {group_name}',shell=True)
+            subprocess.run(f'groupadd {group_name}',shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     logging.debug(f"exit 'create_group' function")
     
 def create_user(user_name):
@@ -63,15 +63,15 @@ def create_user(user_name):
         if not checkings.is_group_exists('mysql'):
             create_group('mysql')
         with sudo(f"create user {user_name}"):
-            subprocess.run(f"useradd -g mysql {user_name}",shell=True,capture_output=True)
+            subprocess.run(f"useradd -g mysql {user_name}",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     elif 'zabbix' in user_name:
         if not checkings.is_group_exists('zabbix'):
             create_group('zabbix')
         with sudo(f"create user {user_name}"):
-            subprocess.run(f"useradd -g zabbix {user_name}",shell=True,capture_output=True)
+            subprocess.run(f"useradd -g zabbix {user_name}",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     else:
         with sudo(f"create user {user_name}"):
-            subprocess.run(f"useradd {user_name}",shell=True,capture_output=True)
+            subprocess.run(f"useradd {user_name}", shell=True, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     logger.debug(f"exit 'create_user' function")
 
 def create_directory(path:str="/database/mysql/data/3306"):
@@ -90,7 +90,7 @@ def delete_user(user_name):
     logger.debug(f"enter 'delete_user' function user_name={user_name}")
     if checkings.is_user_exists(user_name):
         with sudo(f"delete user {user_name}"):
-            subprocess.run(f'userdel -r {user_name}',shell=True,capture_output=True)
+            subprocess.run(f'userdel -r {user_name}',shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     logger.debug(f"exit 'delete_user' function ")
 
 def delete_group(group_name):
@@ -100,7 +100,7 @@ def delete_group(group_name):
     logger.debug(f"enter 'delete_group' function group_name={group_name}")
     if checkings.is_group_exists(group_name):
         with sudo(f"delete group {group_name}"):
-            subprocess.run(f"groupdel {group_name}",shell=True,capture_output=True)
+            subprocess.run(f"groupdel {group_name}",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     logger.debug(f"exit 'delete_group' function ")
 
 def config_path(path="/usr/local/mysql-8.0.17-linux-glibc2.12-x86_64/bin/",user_name="mysql3306"):
@@ -140,7 +140,7 @@ def enable_service(service_name:str="mysqld-3306"):
     配置 服务开机启动
     """
     with sudo(f"systemctl enable {service_name}"):
-        subprocess.run([f'systemctl enable {service_name}'],shell=True)
+        subprocess.run([f'systemctl enable {service_name}'],shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 def config_mysql_include(version:str="mysql-8.0.17-linux-glibc2.12-x86_64"):
     """
@@ -151,7 +151,7 @@ def config_mysql_include(version:str="mysql-8.0.17-linux-glibc2.12-x86_64"):
         src = f"/usr/local/{version}/lib"
         if not os.path.islink(link):
             os.symlink(src,link)
-        subprocess.run('ldconfig')
+        subprocess.run('ldconfig',stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 def config_mysql_so(version:str="mysql-8.0.17-linux-glibc2.12-x86_64"):
     """
@@ -233,7 +233,7 @@ def wait_until_tcp_ready(ip:str="127.0.0.1",port:int=3306,timeout=3600):
 
 def config_hostname(name):
     with sudo('config host name'):
-        subprocess.run(f"hostnamectl set-hostname {name} ",shell=True)
+        subprocess.run(f"hostnamectl set-hostname {name} ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 
 
