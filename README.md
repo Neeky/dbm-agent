@@ -291,7 +291,7 @@
    ---
 
 ## 自动化卸载
-   **当一个实例的生命周期已经走到限头，我们就可以卸载这个实例了，如果你使用 dbm-agent 这一切也都非常简单**
+   **当一个实例的生命周期已经走到尽头，我们就可以卸载这个实例了，如果你使用 dbm-agent 这一切也都非常简单**
 
    **1、** dbm-agent 会阻止你卸载一个正在运行的实例
    ```bash
@@ -458,12 +458,12 @@
    |**IP**|**角色**|
    |------|--------|
    |192.168.100.101| primary |
-   |192.168.100.102| seconder |
-   |192.168.100.103| seconder |
+   |192.168.100.102| secondery |
+   |192.168.100.103| secondery |
 
    **搭建 primary 结点**
 
-   dbm-agent 在搭建 MGR 时把会 --members 选项中给定的第一个 IP 设置为 primary 其它的都设置为 seconder，所以 IP 地址出现的次序对结果尤为重要；还有另一个次序也同样重要，虽然 primary 结点和 seconder 结点执行的是同一行命令，但是 seconder 结点要克隆 primary 结点的数据，所以要求命令先在 primary 上执行完成后，才能到 sconder 结点上执行。
+   dbm-agent 在搭建 MGR 时把会 --members 选项中给定的第一个 IP 设置为 primary 其它的都设置为 secondery，所以 IP 地址出现的次序对结果尤为重要；还有另一个次序也同样重要，虽然 primary 结点和 secondery 结点执行的是同一行命令，但是 secondery 结点要克隆 primary 结点的数据，所以要求命令先在 primary 上执行完成后，才能到 scondery 结点上执行。
    ```bash
    # 在 192.168.100.101 上执行
    dbma-cli-build-mgr --port=3306 --max-mem=128 --members=192.168.100.101,192.168.100.102,192.168.100.103 build-mgr
