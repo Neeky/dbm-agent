@@ -17,6 +17,7 @@
 - [关闭](#关闭)
 - [升级](#升级)
 - [卸载](#卸载)
+- [交流&赞助](#交流&赞助)
 ---
 
 ## dbm-agent
@@ -819,3 +820,29 @@
    ```
 
    ---
+
+
+
+## 交流&赞助
+
+   你的投币是我更新的动力、技术交流也同样欢迎
+
+---
+
+<div style="display:flex; flex-direction: row;">
+
+<div style="flex:1; margin:7px;">
+    <img style="max-width: 100%;" src="imgs/jianglexgege.JPG">
+</div>
+
+<div style="flex:1; margin:7px;">
+    <img style="max-width: 100%;" src="imgs/wechat-pay.JPG">
+</div>
+
+<div style="flex:1; margin:7px; overflow:hidden;">
+    <img style="max-width: 100%; margin-top:-26%;" src="imgs/ali-pay.JPG">
+</div>
+</div>
+
+
+---
