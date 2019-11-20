@@ -832,15 +832,15 @@
 <div style="display:flex; flex-direction: row;">
 
 <div style="flex:1; margin:7px;">
-    <img style="max-width: 100%;" src="imgs/jianglexgege.JPG">
+    <img style="max-width: 100%;" src="./imgs/jianglexgege.jpg">
 </div>
 
 <div style="flex:1; margin:7px;">
-    <img style="max-width: 100%;" src="imgs/wechat-pay.JPG">
+    <img style="max-width: 100%;" src="./imgs/wechat-pay.JPG">
 </div>
 
 <div style="flex:1; margin:7px; overflow:hidden;">
-    <img style="max-width: 100%; margin-top:-26%;" src="imgs/ali-pay.JPG">
+    <img style="max-width: 100%; margin-top:-26%;" src="./imgs/ali-pay.jpg">
 </div>
 </div>
 
