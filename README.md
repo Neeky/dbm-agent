@@ -18,6 +18,7 @@
 - [升级](#升级)
 - [卸载](#卸载)
 - [交流与赞助](#交流与赞助)
+- [常见问题解答](#常见问题解答)
 ---
 
 ## dbm-agent
@@ -836,3 +837,17 @@
 
 
 ---
+
+
+## 常见问题解答
+   **1、** 无法识别的安装包
+   ```bash
+   2019-11-22 10:10:37,518 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller.run - im - ERROR - 1438 - 
+   exception occur during install mysql single instance Unknown archive format '/usr/local/dbm-agent/pkg/mysql-8.0.18-linux-glibc2.12-x86_64.tar.xz'
+   ```
+   原因：在编译安装 python-3.x.y 的时候缺少依赖，安装上如下依赖后再一次编译安装 python-3.x.y (这个问题在文档中依赖那一节有提到的)
+   ```bash
+   yum -y install gcc gcc-c++ libffi libyaml-devel libffi-devel zlib zlib-devel openssl shadow-utils \
+   openssl-devel libyaml sqlite-devel libxml2 libxslt-devel libxml2-devel wget vim mysql-devel 
+   ```
+   ---
