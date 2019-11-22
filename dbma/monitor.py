@@ -1,3 +1,12 @@
+"""
+实现对主机层面与数据库层面的监控
+"""
+
+# (c) 2019, LeXing Jiang <neeky@live.com 1721900707@qq.com https://www.sqlpy.com/>
+# Copyright: (c) 2019, dbm Project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+import re
 import os
 import time
 import distro
@@ -16,6 +25,19 @@ from . import version
 """
 
 NetInterface = namedtuple('NetInterface', ['name', 'speed', 'isup', 'address'])
+
+logger = logging.getLogger('dbm-agent').getChild(__name__)
+
+
+class InnodbStatuParser(object):
+    """
+    """
+    buffer_pool_hit_rate_pattern = re.compile("^Buffer pool hit rate\s*(\d*)\s*/\s*(\d*)")
+
+    def parser(self, innodb_status):
+        """
+        """
+
 
 
 class ItemSenderMixin(object):
@@ -633,3 +655,78 @@ class HostMonitor(threading.Thread, ItemSenderMixin):
                 pass
 
             time.sleep(self.interval)
+
+
+class MySQLMonitor(threading.Thread, ItemSenderMixin):
+    """
+    数据库层面的监控
+    """
+    logger = logger.getChild("MySQLMonitor")
+
+    def __init__(self,host="127.0.0.1",port=3306,monitor_user="monitor",monitor_password="dbma@0352"):
+        """
+        """
+        logger.info("")
+        self.host = host
+        self.port = port
+        self.monitor_user = monitor_user
+        self.monitor_password = monitor_password
+
+    @property
+    def is_mysql_can_connect(self):
+        """
+        MySQL 是否能连接的上
+        """
+        logger = self.logger.getChild("is_mysql_can_connect")
+
+        # 检查 monitor 用户是否可以连接到给定的实例
+        logger.debug(f"prepare checking mysql is can connect or not host='{self.host}' port='{self.port}' user='{self.monitor_user}' password='{self.monitor_password}'    ")
+        cnx = None
+        try:
+            cnx = connector.connect(host=self.host, port=self.port, user=self.monitor_user, password=self.monitor_password)
+            cursor = cnx.cursor()
+            cursor.execute("select 1 as ok")
+            logger.info(f"'{self.monitor_user}' can connect to mysqld-{self.port} ")
+            return True
+        except Exception as err:
+            logger.warning(f"mysqld-{self.port} cant't connected by '{self.monitor_user}' user")
+            return False
+        finally:
+            if hasattr(cnx, 'close'):
+                cnx.close()
+    
+        
+    def _get_monitor_items(self):
+        """
+        获取 MySQL 层面的监控项
+        """
+        cnx = None
+        try:
+            cnx = connector.connect(host=self.host, port=self.port, user=self.monitor_user, password=self.monitor_password)
+            cursor = cnx.cursor(dictionary=True)
+
+            # 查询出所有的 variable
+            cursor.execute("show global variables;")
+            data = cursor.fetchall()
+            self.variables = {k: v for k, v in data}
+
+            # 查询出所有的 status
+            cursor.execute("show global status;")
+            data = cursor.fetchall()
+            self.status = {k: v for k, v in data}
+
+            # innodb 的状态值
+            cursor.execute('show engine innodb status')
+            * _, data = cursor.fetchone()
+       
+
+        except Exception as err:
+            pass
+
+        finally:
+            if hasattr(cnx, 'close'):
+                cnx.close()
+
+
+
+
