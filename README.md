@@ -736,27 +736,26 @@
 ## 数据库监控网关dbm-monitor-gateway
    **1、** 为什么要有监控网关？
 
-   通常为了提高主机资源的使用率，DBA 会在同一台主机上部署多个 MySQL 实例；为了更加方便的发现和预防数据库的各种问题，DBA 还会为每一个实例增加上若干的监控；
-   由于 MySQL 实例数量的增加，进一步使得监控项的数量也同步增加，如果一个实例 100+ 的监控项，那么一个主机 1000+ 的监控项也就不是梦了。
+   通常为了提高主机资源的使用率，DBA 会在同一台主机上部署多个 MySQL 实例；为了更加方便的发现和预防数据库的各种问题，DBA 还会为每一个实例增加上若干的监控项；
+   由于 MySQL 实例数量的增加，进一步使得监控项数量也同步增加，如果一个实例 100+ 的监控项，那么一个主机 1000+ 的监控项也就不是梦了。
 
-   监控项多了就会消耗更多的主机性能，传统的监控项采集是在主机上对应的 agent(如 zabbix-agent)，agent 又通过调用脚本程序来采集监控项；一般来说不会有什么问题，
-   但是当主机上的实例数量增加到一定量时，问题就出来了。
+   监控项多了就会消耗更多的主机性能，传统的监控项采集是在主机上安装对应的 agent(如 zabbix-agent)，agent 又通过调用脚本程序来采集监控项；一般来说不会有什么问题，
+   但是当主机上的实例数量增加到一定量时，这就有可能成为问题，请看下面的分析。
 
-   I、为了执行采集监控项的脚本程序，OS 就要为这个脚本程序创建一个单独的“进程”，而“进程”创建的开销是比较大的；通常采集一个监控项是一个比较小的任务，可能看成心马上就能执行完成，这样整个过程就变成了 OS 刚创建完成一个进程，马上就又要销毁这个进程
+   I、为了执行采集监控项的脚本程序，OS 就要为这个脚本程序创建一个单独的进程，而创建进程算大开销；通常采集一个监控项是一个比较小的任务，可以看成马上就能执行完成，这样整个过程就变成了 OS 刚创建完成一个进程，马上就又要销毁这个进程
 
-   II、采集脚本启动后会去连接 MySQL 采集对应的监控项，还是和上面一样粗看没有什么问题，量上来了之后问题也比较大；脚本和 MySQL 要完成 TCP 层面的三次握手，权限验证，
-   执行 SQL，断开应用层连接，断开 TCP 连接。 就为了采集一个监控项，就要做这么多的前期准备，和后面的清理工作，事实上这个可以做成一个长连接。
+   II、采集脚本启动后会去连接 MySQL 采集对应的监控项，还是和上面 OS 的场景一样，粗看没有什么问题，量上来了之后问题也比较大；脚本和 MySQL 要完成 TCP 层面的三次握手，权限验证，执行 SQL，断开应用层连接，断开 TCP 连接。 就为了采集一个监控项，就要做这么多的前期准备，和后面的清理工作，事实上这里可以做成一个长连接。
 
-   III、每一个到数据库的连接 MySQL(社区版) 都会为这分配一个线程，在不考虑线程池的情况下，这个线程有可能和 OS 中的进程一样刚创建出来就又要销毁了。
+   III、每一个到数据库的连接 MySQL(社区版) 都会为它分配一个线程，在不考虑线程池的情况下，这个线程有可能和 OS 中的进程一样刚创建出来就又要销毁了。
 
    ---
    **2、** 要怎么做
 
-   I、创建一个守护进程，它能自动的发现当前主机上的 MySQL 实例，并为每一个 MySQL 实例维护一个长连接，所有的监控项采集都通过这一个连接完成。
+   I、创建一个守护进程，它能自动的发现当前主机上的 MySQL 实例，并为每一个 MySQL 实例维护一个长连接，所有的监控项采集都通过这一个连接完成，并且每一个实例的相关操作都在一个独立的线程中完成。
 
-   II、在守护进程内部，它还要实现一个 http-server 这样其它程序就可以通过 http-server 提供的接口来查询到监控项了
+   II、在守护进程内部，它还要实现一个 http-server ，这样就可以通过 WEB API 把监控到的数据供其它程序读取。
 
-   III、对每一个 MySQL 实例的监控在一个单独的线程中完成，监控项也要有一个缓存(失效时间默认为 7 秒)
+   III、监控项也要有一个缓存(失效时间默认为 7 秒)机制。
 
    ---
 
@@ -771,7 +770,7 @@
 
    **2、** 启动 dbm-monitor-gateway
    ```bash
-   dbm-monitor-gateway --bind-ip=172.16.192.100 --bind-port=8080 start    
+   dbm-monitor-gateway --bind-ip=172.16.192.100 --bind-port=8080 --monitor-user=monitor --monitor-password=dbma@0352 start    
    Successful start and log file save to '/usr/local/dbm-agent/logs/dbm-monitor-gateway.log'
    ```
    **3、** 通过浏览器查询当前被监控的实例列表
@@ -784,7 +783,7 @@
 
    ---
 
-   **4、** 查询特定实例的特定监控项(以 com_select 为例)
+   **4、** 查询某一实例的特定监控项(以 com_select 为例)
    ```bash
    curl http://172.16.192.100:8080/instances/3306/com_select
 
@@ -819,7 +818,7 @@
 
    ---
 
-   **6、** dbm-monitor-gateway 最值得称道的是它自动发现 MySQL 的能力，下面我们在主机上再安装一个监听在 3307 的实例，你并不需要重启监控网关，一分钟过后它自己发发现这个新增的实例
+   **6、** dbm-monitor-gateway 最值得称道的是它自动发现 MySQL 的能力，下面我们在主机上再安装一个监听在 3307 的实例，你并不需要重启监控网关，一分钟过后它自己会发现这个新增的实例
 
    ```bash
    dbma-cli-single-instance --max-mem=128 --port=3307 install
@@ -833,7 +832,11 @@
 
    I: dbm-monitor-gateway 通过端口扫描的方式来发现主机上存在的 MySQL 实例，这使得它可以独立于 dbm 而单独使用
 
-   II: dbm-monitor-gateway 默认使用 用户：monitor@127.0.0.1 密码：dbma@0352 来连接到对应的实例，所以它要求你主机上的所有实例上的监控用户都应该是**同名，同密码**
+   II: 全特性支持、支持监控 status，支持监控 variables ，支持监控 slave，支持监控 master ，支持监控 MGR
+
+   III: dbm-monitor-gateway 默认使用 用户：monitor@127.0.0.1 密码：dbma@0352 来连接到对应的实例，所以它要求你主机上的所有实例上的监控用户都应该是**同名，同密码**
+   
+
    ```bash
    dbm-monitor-gateway --help
    usage: dbm-monitor-gateway [-h] [--bind-port BIND_PORT] [--bind-ip BIND_IP]
@@ -851,9 +854,9 @@
      --bind-port BIND_PORT
                            http-server listening port
      --bind-ip BIND_IP     http-server listening ip
-     --monitor-user MONITOR_USER
+     --monitor-user MONITOR_USER                 # 在这里指定连接进 mysql 的用户名 
                            mysql monitor user
-     --monitor-password MONITOR_PASSWORD
+     --monitor-password MONITOR_PASSWORD         # 在这里指定密码
                            password of mysql monitor user
      --log {debug,info,warning,error}
      --log-file LOG_FILE
