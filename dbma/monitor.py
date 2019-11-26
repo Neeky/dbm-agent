@@ -11,6 +11,7 @@ import os
 import time
 import distro
 import psutil
+import socket
 import logging
 import requests
 import threading
@@ -1231,12 +1232,15 @@ class Mmps(object):
         """
         查询出所有可能的 MySQL 的监听端口
         """
+        logger = self.logger.getChild("_query_all_possible_port")
         with common.sudo("mysql-monitor-port-scan"):
             # 命令返回的是 bytes
             try:
+                
                 output_bytes = subprocess.check_output(
                     "netstat -ltnp | grep mysqld", shell=True)
             except subprocess.CalledProcessError:
+
                 # 如果没有 mysql 数据库在运行，这里会报异常
                 return []
 
@@ -1264,6 +1268,25 @@ class Mmps(object):
         检查给定的端口是不是 sql 端口
         """
         logger = self.logger.getChild("_is_sql_port")
+        
+        # 先用 socket 进行粗排
+        client_socket = None
+        try:
+            client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+            client_socket.connect(('127.0.0.1',port))
+            client_socket.settimeout(0.1)
+
+            #MySQL协议下是由Server端先发送握手信息到client的
+            message = client_socket.recv(1024)
+            message = message.decode('latin-1').lower()
+            #if 'password' in message:
+            #    return port
+        except Exception as e:
+            return False
+        finally:
+            if hasattr(client_socket,'close'):
+                client_socket.close()
+
 
         cnx = None
         try:
