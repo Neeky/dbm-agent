@@ -13,6 +13,7 @@
    - [自动安装mysql-shell](#自动安装mysql-shell)
    - [自动化配置innodb-cluster](#自动化配置innodb-cluster)
    - [自动化配置mysql-router](#自动化配置mysql-router)
+- [数据库监控网关dbm-monitor-gateway](#数据库监控网关dbm-monitor-gateway)
 - [启动](#启动)
 - [关闭](#关闭)
 - [升级](#升级)
@@ -731,6 +732,141 @@
 
 
 
+
+## 数据库监控网关dbm-monitor-gateway
+   **1、** 为什么要有监控网关？
+
+   通常为了提高主机资源的使用率，DBA 会在同一台主机上部署多个 MySQL 实例；为了更加方便的发现和预防数据库的各种问题，DBA 还会为每一个实例增加上若干的监控；
+   由于 MySQL 实例数量的增加，进一步使得监控项的数量也同步增加，如果一个实例 100+ 的监控项，那么一个主机 1000+ 的监控项也就不是梦了。
+
+   监控项多了就会消耗更多的主机性能，传统的监控项采集是在主机上对应的 agent(如 zabbix-agent)，agent 又通过调用脚本程序来采集监控项；一般来说不会有什么问题，
+   但是当主机上的实例数量增加到一定量时，问题就出来了。
+
+   I、为了执行采集监控项的脚本程序，OS 就要为这个脚本程序创建一个单独的“进程”，而“进程”创建的开销是比较大的；通常采集一个监控项是一个比较小的任务，可能看成心马上就能执行完成，这样整个过程就变成了 OS 刚创建完成一个进程，马上就又要销毁这个进程
+
+   II、采集脚本启动后会去连接 MySQL 采集对应的监控项，还是和上面一样粗看没有什么问题，量上来了之后问题也比较大；脚本和 MySQL 要完成 TCP 层面的三次握手，权限验证，
+   执行 SQL，断开应用层连接，断开 TCP 连接。 就为了采集一个监控项，就要做这么多的前期准备，和后面的清理工作，事实上这个可以做成一个长连接。
+
+   III、每一个到数据库的连接 MySQL(社区版) 都会为这分配一个线程，在不考虑线程池的情况下，这个线程有可能和 OS 中的进程一样刚创建出来就又要销毁了。
+
+   ---
+   **2、** 要怎么做
+
+   I、创建一个守护进程，它能自动的发现当前主机上的 MySQL 实例，并为每一个 MySQL 实例维护一个长连接，所有的监控项采集都通过这一个连接完成。
+
+   II、在守护进程内部，它还要实现一个 http-server 这样其它程序就可以通过 http-server 提供的接口来查询到监控项了
+
+   III、对每一个 MySQL 实例的监控在一个单独的线程中完成，监控项也要有一个缓存(失效时间默认为 7 秒)
+
+   ---
+
+   ### dbm-monitor-gateway检验
+   
+   **1、** 可以看到当前主机(172.16.192.100)上有两个 MySQL
+   ```bash
+   ps -ef | grep mysqld                                                   
+   mysql33+  10913      1  0 13:21 ?        00:00:56 /usr/local/mysql-8.0.18-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3306.cnf                                       
+   mysql33+  10995      1  0 13:25 ?        00:00:54 /usr/local/mysql-8.0.18-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3308.cnf
+   ```
+
+   **2、** 启动 dbm-monitor-gateway
+   ```bash
+   dbm-monitor-gateway --bind-ip=172.16.192.100 --bind-port=8080 start    
+   Successful start and log file save to '/usr/local/dbm-agent/logs/dbm-monitor-gateway.log'
+   ```
+   **3、** 通过浏览器查询当前被监控的实例列表
+   ```bash
+   curl http://172.16.192.100:8080/instances
+
+   [3306, 3308] # 可以看到 dbm-monitor-gateway 返回了当前主机(172.16.192.100) 上的实例列表
+   ```
+   <img src="./imgs/instances.png">
+
+   ---
+
+   **4、** 查询特定实例的特定监控项(以 com_select 为例)
+   ```bash
+   curl http://172.16.192.100:8080/instances/3306/com_select
+
+   {
+    "com_select": "1596"
+   }
+   ```
+   <img src="./imgs/instances-3306-com-select.png">
+
+   ---
+
+   **5、** 查询特定实例的所有监控项
+   ```bash
+   curl http://172.16.192.100:8080/instances/3306/
+
+   {
+       "aborted_clients": "5",
+       "aborted_connects": "155",
+       "acl_cache_items_count": "0",
+       "binlog_cache_disk_use": "0",
+       "binlog_cache_use": "0",
+       "binlog_stmt_cache_disk_use": "0",
+       "binlog_stmt_cache_use": "0",
+       "bytes_received": "495062",
+       "bytes_sent": "62005555",
+       .... 
+       ....
+       .... # 监控项太多了，只列出了前面几项
+   }
+   ```
+   <img src="./imgs/instances-3306.png"><br>
+
+   ---
+
+   **6、** dbm-monitor-gateway 最值得称道的是它自动发现 MySQL 的能力，下面我们在主机上再安装一个监听在 3307 的实例，你并不需要重启监控网关，一分钟过后它自己发发现这个新增的实例
+
+   ```bash
+   dbma-cli-single-instance --max-mem=128 --port=3307 install
+   ```
+   一分钟过后 3307 已经被发现了
+   <img src="./imgs/instances-mmps.png">
+
+   ---
+
+   **7、** 其它
+
+   I: dbm-monitor-gateway 通过端口扫描的方式来发现主机上存在的 MySQL 实例，这使得它可以独立于 dbm 而单独使用
+
+   II: dbm-monitor-gateway 默认使用 用户：monitor@127.0.0.1 密码：dbma@0352 来连接到对应的实例，所以它要求你主机上的所有实例上的监控用户都应该是**同名，同密码**
+   ```bash
+   dbm-monitor-gateway --help
+   usage: dbm-monitor-gateway [-h] [--bind-port BIND_PORT] [--bind-ip BIND_IP]
+                              [--monitor-user MONITOR_USER]
+                              [--monitor-password MONITOR_PASSWORD]
+                              [--log {debug,info,warning,error}]
+                              [--log-file LOG_FILE]
+                              {start,stop}
+   
+   positional arguments:
+     {start,stop}
+   
+   optional arguments:
+     -h, --help            show this help message and exit
+     --bind-port BIND_PORT
+                           http-server listening port
+     --bind-ip BIND_IP     http-server listening ip
+     --monitor-user MONITOR_USER
+                           mysql monitor user
+     --monitor-password MONITOR_PASSWORD
+                           password of mysql monitor user
+     --log {debug,info,warning,error}
+     --log-file LOG_FILE
+   ```
+   III: 默认监控用户的权限如下(如果你使用的是 dbm 那么这个用户会自动创建好)
+   ```sql
+   -- monitor
+   create user monitor@'127.0.0.1' identified by 'dbma@0352';
+   grant replication client,process on *.* to monitor@'127.0.0.1';
+   grant select on performance_schema.* to monitor@'127.0.0.1';
+   ```
+
+   ---
 
 ## 启动
    **dbm-agent 默认会自动以守护进程的方式运行**

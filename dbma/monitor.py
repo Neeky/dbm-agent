@@ -14,11 +14,18 @@ import psutil
 import logging
 import requests
 import threading
+import subprocess
+
 from mysql import connector
 from datetime import datetime
 from collections import namedtuple
+from socketserver import ThreadingMixIn
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+
 from . import dbmacnf
 from . import version
+from . import common
 
 """
 各项性能指标的采集
@@ -27,17 +34,6 @@ from . import version
 NetInterface = namedtuple('NetInterface', ['name', 'speed', 'isup', 'address'])
 
 logger = logging.getLogger('dbm-agent').getChild(__name__)
-
-
-class InnodbStatuParser(object):
-    """
-    """
-    buffer_pool_hit_rate_pattern = re.compile("^Buffer pool hit rate\s*(\d*)\s*/\s*(\d*)")
-
-    def parser(self, innodb_status):
-        """
-        """
-
 
 
 class ItemSenderMixin(object):
@@ -361,6 +357,443 @@ class ItemSenderMixin(object):
         logger = self.logger.getChild('send_mysql_monitor_item')
 
 
+class MySQLConnectionKeeperMixin(object):
+    """
+    用长连接的方式连接进 MySQL、并维护好这个连接
+    """
+    def get_cnx(self):
+        """
+        如果连接可用就返回 self.cnx
+        如果连接不可用就返回 None
+        """
+        logger = self.logger.getChild("get_cnx")
+
+        # 如果 self.cnx is None 说明连接还没有建立那么要建一个
+        if self.cnx is None:
+            try:
+                logger.debug(f"prepare create monitor session to mysqld-{self.port} user='{self.monitor_user}' password='{self.monitor_password}' ")
+                self.cnx = connector.connect(host=self.host, port=self.port, user=self.monitor_user, password=self.monitor_password)
+            except Exception as err:
+                logger.warning(f"create monitor session fail inner error '{err}' ")
+                self.cnx = None
+
+        # 执行到这里 self.cnx 要么是 None 要么是一个已经连接好的会话
+        if self.cnx is None:
+            return None
+
+        # 执行到这里有可能是连接之前是正常的，但是 MySQL 宕机了，使得 self.cnx 不为 None ，但是 self.cnx 不一定可用
+        try:
+
+            # 如果一切正常就返回 self.cnf
+            self.cnx.ping()
+            return self.cnx
+
+        except Exception as err:
+            
+            # 一旦遇到异常就把连接回收、并返回 None 
+            try:
+                if hasattr(self.cnx, 'close'):
+                    self.cnx.close()
+            except Exception :
+                pass
+            finally:
+                self.cnx = None
+
+            logger.warning("monitor session loss,may been killed or mysqld is down")
+            self.cnx = None
+            return None
+
+        # 永远都不应该执行到这里
+        logger.warning("unknown excecption ,dead code been executed !!!")
+        return None
+
+    def __del__(self):
+        """
+        连接回收
+        """
+        if hasattr(self.cnx, 'close'):
+            self.cnx.close()
+
+        if hasattr(self, 'kill'):
+            self.kill()
+
+
+class MySQLVariablesMonitorMixin(object):
+    """
+    完成对 global variables 的查询功能
+    """
+    variables_last_update_time = None
+
+    logger = logger.getChild("MySQLVariablesMonitorMixin")
+
+    def _query_variables(self):
+        """
+        查询数据库中的 variable 
+        """
+        logger = self.logger.getChild("_query_variables")
+        logger.debug("prepare start query variables")
+        
+        # 拿到连接
+        cnx = self.get_cnx()
+        if cnx is None:
+
+            # 如果连接对象拿不到，就直接把 variables 设置为空字典
+            # 并返回
+            logger.warning("cnx is None")
+            self.variables = {}
+            self.variables_last_update_time = datetime.now()
+            logger.info("set self.variables to None")
+            return
+        
+        # 执行到这里说明 cnx 对象不是 None
+        try:
+
+            # 就算不是 None 也还是有可能会引发异常
+            cursor = cnx.cursor()
+            cursor.execute("show global variables;")
+            data = cursor.fetchall()
+            self.variables = {k.lower(): v for k, v in data}
+            self.variables_last_update_time = datetime.now()
+            logger.info("query variables complete")
+        except Exception as err:
+            self.variables = {}
+            self.variables_last_update_time = datetime.now()
+            # 有可能引发异常、比如说权限不足
+            logger.warning(f"got exception {err}")
+
+    def __contains__(self, name):
+        """
+        为了支持 in 操作
+        """
+        # 如果不是空，那么 variables 里面有就返回 True ，没有就返回 False
+        return name.lower() in self.variables
+
+    def __getitem__(self,name):
+        """
+        定义索引操作
+        """
+
+        if self.variables_last_update_time == None:
+
+            # variables_last_update_time 还是 None 说明还没有到数据库中查询过 variables 
+            # 那么先要查询一下
+            self._query_variables()
+        
+        # 计算出上一次查询 variables 到现在已经过去了多少秒
+        now = datetime.now()
+        seconds_passed = (now - self.variables_last_update_time).second
+        if seconds_passed >= self.expire_seconds:
+            
+            # 说明 variables 已经过期了又要重新收集一下
+            self._query_variables()
+        
+        # 执行到这里要么 variables 是最新的状态值，要么就是空值
+        # 这两个值都是可用的
+
+        # 如果有这个项就返回、没有这返回 None
+        _lower_name = name.lower()
+        if _lower_name in self:
+            return self.variables[_lower_name]
+        
+        return None
+
+
+class MySQLStatusMonitorMixin(object):
+    """
+    成对 global status 的查询功能
+    """
+    status_last_update_time = None
+    logger = logger.getChild("MySQLStatusMonitorMixin")
+
+    def _query_status(self):
+        """
+        查询 global status 的值
+        """
+        logger = self.logger.getChild("_query_status")
+        logger.debug("prepare start query status")
+        # 获取连接对象
+        cnx = self.get_cnx()
+        if cnx is None:
+            
+            # 如果连接对象拿不到
+            logger.warning("cnx is None")
+            self.status = {}
+            self.status_last_update_time = datetime.now()
+            logger.warning("set self.staus to None")
+            return
+        
+        # 执行到这里说明连接对象拿到了
+        try:
+            cursor = cnx.cursor()
+            cursor.execute("show global status;")
+            data = cursor.fetchall()
+
+            # 所有的 status 变量小写
+            # key 相关的内容不要发出去
+            self.status = {k.lower():v for k,v in data if k not in('Caching_sha2_password_rsa_public_key','Rsa_public_key')}
+            self.status_last_update_time = datetime.now()
+
+            logger.debug("query status complete")
+        except Exception as err:
+            #
+            self.status = {}
+            self.status_last_update_time = datetime.now()
+            logger.warning(f"got exception {err}")
+
+    def __contains__(self, name):
+        """
+        支持 in 操作
+        """
+        
+        # 自动小写化
+        return name.lower() in self.status
+
+    def __getitem__(self, name):
+        """
+        支持索引操作
+        """
+        _lower_name = name.lower()
+
+        if self.status_last_update_time is None:
+
+            # 这个值还是 None 说明还没有查询过 status
+            self._query_status()
+        
+        now = datetime.now()
+        seconds_passed = (now - self.status_last_update_time).second
+        if seconds_passed >= self.expire_seconds:
+
+            # status 已经过期了
+            self._query_status()
+
+        # 执行到这里说明 self.status 要么是 None 要么真实可用
+
+        if _lower_name in self:
+            return self.status[_lower_name]
+        
+        return None
+
+
+class MySQLSlaveMonitorMixin(object):
+    """
+    实现对 slave 的监控 (show slave status)
+    """
+
+    slave_last_update_time = None
+    logger = logger.getChild("MySQLSlaveMonitorMixin")
+
+    def _query_slave(self):
+        """
+        执行 show slave status 
+        """
+        logger = self.logger.getChild("_query_slave")
+        logger.debug("prepare start query slave")
+        # 获取连接
+        cnx = self.get_cnx()
+        if cnx is None:
+
+            # 没有取到连接
+            self.slaves = {}
+            self.slaves_last_update_time = datetime.now()
+            return
+        
+        # 执行到这里说明有取得连接，但是还是有可能会报错的，比如 MySQL 突然就宕机了，所以还是要 try except
+        try:
+            cursor = cnx.cursor(dictionary=True)
+            cursor.execute("show slave status;")
+
+            
+            data = cursor.fetchone()
+            if data is None:
+                # 有可能没有复制关系，这个时候 data 就是 None
+                self.slaves = {}
+                self.slaves_last_update_time = datetime.now()
+                return
+
+            # 可以会有多个复制通路(channel) 目前只支持一个的情况
+            data,*_ = data
+            self.slaves = {k.lower(): v for k, v in data.items()}
+            self.slaves_last_update_time = datetime.now()
+            logger.info("query slave complete")
+        except Exception as err:
+            self.slaves = {}
+            self.slaves_last_update_time = datetime.now()
+            logger.warning(f"got exception {err}")
+
+    def __contains__(self, name):
+        return name.lower() in self.slaves
+
+    def __getitem__(self, name):
+        """
+        """
+        _lower_name = name.lower()
+        
+        if self.slave_last_update_time is None:
+            # 如果还没有更新过就更新
+            self._query_slave()
+
+        now = datetime.now()
+        seconds_passed = (now - self.variables_last_update_time).second
+        if seconds_passed >= self.expire_seconds:
+            # 如果过期了也更新
+            self._query_slave()
+        
+        # 到这里 self.slaves 要么是 None 要么是已经真正可用
+
+        if _lower_name in self:
+            return self.slaves[_lower_name]
+
+        return None
+
+
+class MySQLMasterMonitorMixin(object):
+    """
+    实现对 master 的监控 show master status
+    """
+    logger = logger.getChild("MySQLMasterMonitorMixin")
+    master_last_update_time = None
+
+    def _query_master(self):
+        """
+        查询 master 的状态信息 show master status
+        """
+        logger = self.logger.getChild("_query_master")
+        logger.debug("prepare start query master")
+        # 获取连接对象
+        cnx = self.get_cnx()
+        if cnx is None:
+            logger.warning("cnx is None")
+            self.masters = {}
+            self.master_last_update_time = datetime.now()
+            logger.warning("set self.masters to None")
+            return
+
+        # 执行到这里说明连接对象是有的
+        try:                 
+            cursor = cnx.cursor(dictionary=True)
+            cursor.execute("show master status;")
+            data = cursor.fetchone()
+            self.masters = {k.lower(): v for k, v in data.items()}
+            self.master_last_update_time = datetime.now()
+            logger.info("query master complete")
+        except Exception as err:
+            self.masters = {}
+            self.master_last_update_time = datetime.now()
+            logger.warning(f"got exception {err}")
+
+    def __contains__(self, name):
+        """
+
+        """
+        return name.lower() in self.masters
+
+
+    def __getitem__(self, name):
+        """
+        """
+        # 如果还没有查询过 master 的信息那么就查一下
+        if self.master_last_update_time is None:
+            self._query_master()
+
+        # 如果过期了，那也要重新查询一下
+        now = datetime.now()
+        seconds_passed = (now - self.variables_last_update_time).second
+        if seconds_passed >= self.expire_seconds:
+            self._query_master()
+
+        # 现在 self.masters 要么是可用的，要么是 None
+        _lower_name = name.lower()
+        if _lower_name in self:
+            return self.masters[_lower_name]
+        
+        return None
+        
+
+class MySQLMGRMonitorMixin(object):
+    """
+    实现对 MGR 的监控
+    """
+
+    logger = logger.getChild("MySQLMGRMonitorMixin")
+    mgrs_last_update_time = None
+
+    def _query_mgr(self):
+        """
+        select * from performance_schema.replication_group_member_stats where member_id = @@server_uuid;
+        select * from performance_schema.replication_group_members where member_id = @@server_uuid; 
+        """
+
+        logger = self.logger.getChild("_query_mgr")
+        logger.debug("prepare start query MGR")
+        cnx = self.get_cnx()
+        if cnx is None:
+            #
+            logger.warning("cnx is None")
+            self.mgrs = {}
+            self.mgrs_last_update_time = datetime.now()
+            logger.warning("set self.mgrs to None")
+            return
+            
+        # 
+        try:
+            cursor = cnx.cursor(dictionary=True)
+            # 故意用的 select * 这样整个监控程序的字典都自适应了
+            cursor.execute("select * from performance_schema.replication_group_member_stats where member_id = @@server_uuid;")
+            data = cursor.fetchone()
+            if data is not None:
+                self.mgrs = {k.lower(): v for k, v in data.items()}
+                self.mgrs_last_update_time = datetime.now()
+            else:
+                # 如果根据 server_uuid 找不到对应的行，说明 MGR 并没有开启
+                self.mgrs = {}
+                self.mgrs_last_update_time = datetime.now()
+                logger.warning("set self.mgr to None")
+                return
+            
+            # 如果执行到这里都没有 return 说明 mgr 是开启的
+            # select * 同上
+            cursor.execute("select * from performance_schema.replication_group_members where member_id = @@server_uuid; ")
+            data = cursor.fetchone()
+            if data is not None:
+                self.mgrs.update({k.lower(): v for k, v in data.items()})
+                self.mgrs_last_update_time = datetime.now()
+            else:
+                # 绝对不应该执行到这里
+                logger.warning("dead code got execution !!!!")
+
+            logger.info("query mgr completed")
+
+        except Exception as err:
+                self.mgrs = {}
+                self.mgrs_last_update_time = datetime.now()
+                logger.warning(f"go execption during query mgr info {err}")
+                return      
+    
+    def __contains__(self,name):
+        """
+        """
+        return name.lower() in self.mgrs
+
+    def __getitem__(self, name):
+        """
+        """
+        # 如果还没有查询过 mgr 的信息那么就查一下
+        if self.mgrs_last_update_time is None:
+            self._query_mgr()
+
+        # 如果过期了，那也要重新查询一下
+        now = datetime.now()
+        seconds_passed = (now - self.variables_last_update_time).second
+        if seconds_passed >= self.expire_seconds:
+            self._query_mgr()
+
+        _lower_name = name.lower()
+        if _lower_name in self:
+            return self.mgrs[_lower_name]
+
+        return None
+        
+
 class HostMonitor(threading.Thread, ItemSenderMixin):
     """
     实现主机级别的监控
@@ -657,76 +1090,220 @@ class HostMonitor(threading.Thread, ItemSenderMixin):
             time.sleep(self.interval)
 
 
-class MySQLMonitor(threading.Thread, ItemSenderMixin):
+class MySQLMonitor(threading.Thread, ItemSenderMixin,MySQLConnectionKeeperMixin,MySQLVariablesMonitorMixin,MySQLStatusMonitorMixin,MySQLSlaveMonitorMixin,MySQLMasterMonitorMixin,MySQLMGRMonitorMixin):
     """
     数据库层面的监控
+
+    In [1]: from dbma import monitor                                                                                          
+    
+    In [2]: m = monitor.MySQLMonitor(host='127.0.0.1',monitor_user='root',monitor_password='',port=3306)                      
+    
+    In [3]: m.start()      # 启动子线程                                                                                                   
+    
+    In [4]: m.stop()       # stop 或 kill 会让线程跳出子循环                                                                                                     
+    
+    In [5]: m.join()       #                                                                                                     
+    
+    In [6]: m = None       # 这样才会触发 __del__ 去关闭连接
     """
     logger = logger.getChild("MySQLMonitor")
 
-    def __init__(self,host="127.0.0.1",port=3306,monitor_user="monitor",monitor_password="dbma@0352"):
+    def __init__(self,host="127.0.0.1",port=3306,monitor_user="monitor",monitor_password="dbma@0352",expire_seconds=7):
         """
         """
-        logger.info("")
+        threading.Thread.__init__(self, name=f"monitor-{port}", daemon=True)
+        #threading.Thread(self,name=f"monitor-{port}",daemon=True)
+        logger.info("__init__")
         self.host = host
         self.port = port
         self.monitor_user = monitor_user
         self.monitor_password = monitor_password
+        # 监控项的过期时间设置了(7秒 expire_seconds 默认等于 7)
+        self.expire_seconds = expire_seconds
+        self.cnx = None
+        self._kill_flag = False
 
-    @property
-    def is_mysql_can_connect(self):
+    def _periodic_monitor(self):
         """
-        MySQL 是否能连接的上
+        周期性的对给定实例进行监制项收集 
         """
-        logger = self.logger.getChild("is_mysql_can_connect")
+        logger = self.logger.getChild("_periodic_monitor")
+        while True:
+            logger.debug("periodic monitor prepare execute")
+            MySQLStatusMonitorMixin._query_status(self)
+            MySQLVariablesMonitorMixin._query_variables(self)
+            MySQLSlaveMonitorMixin._query_slave(self)
+            MySQLMasterMonitorMixin._query_master(self)
+            MySQLMGRMonitorMixin._query_mgr(self)
+            logger.debug("periodic monitor execute complete")
 
-        # 检查 monitor 用户是否可以连接到给定的实例
-        logger.debug(f"prepare checking mysql is can connect or not host='{self.host}' port='{self.port}' user='{self.monitor_user}' password='{self.monitor_password}'    ")
+            # 比过期时间少一秒，尽可以的减少对数据的查询总次数
+            time.sleep(self.expire_seconds - 1)
+
+            if self._kill_flag == True:
+
+                # 这个 return 会导致整个线程结束
+                return
+        
+    def run(self):
+        self._periodic_monitor()
+
+    def __contains__(self, name):
+        _lower_name = name.lower()
+
+        if _lower_name in self.status:
+            return True
+
+        if _lower_name in self.slaves:
+            return True
+
+        if _lower_name in self.mgrs:
+            return True
+
+        if _lower_name in self.masters:
+            return True
+
+        if _lower_name in self.variables:
+            return True
+
+        return False
+
+    def __getitem__(self, name):
+        """
+        """
+        _lower_name = name.lower()
+
+        if _lower_name in self.status:
+            return self.status[_lower_name]
+        
+        if _lower_name in self.mgrs:
+            return self.mgrs[_lower_name]
+
+        if _lower_name in self.slaves:
+            return self.slaves[_lower_name]
+        
+        if _lower_name in self.variables:
+            return self.variables[_lower_name]
+
+        if _lower_name in self.masters:
+            return self.masters[_lower_name]
+        
+        return None
+        
+    def __iter__(self):
+        """
+        支持迭代 key 值
+        """
+        yield from self.status
+        yield from self.slaves
+        yield from self.mgrs
+        yield from self.variables
+        yield from self.masters
+
+    def items(self):
+        """
+        模拟字典的 items 函数
+        """
+        for k in self:
+            yield k, self[k]
+
+    def kill(self):
+        """
+        打开自动退出子线程的开关
+        """
+        self._kill_flag = True
+    
+    stop = kill
+
+
+class Mmps(object):
+    """
+    MySQL-Monitor-Port-Scan
+    """
+
+    logger = logger.getChild("Mmps")
+
+    def __init__(self, monitor_user="monitor", monitor_password="dbma@0352"):
+        self.monitor_user = monitor_user
+        self.monitor_password = monitor_password
+
+    def _query_all_possible_port(self):
+        """
+        查询出所有可能的 MySQL 的监听端口
+        """
+        with common.sudo("mysql-monitor-port-scan"):
+            # 命令返回的是 bytes
+            try:
+                output_bytes = subprocess.check_output(
+                    "netstat -ltnp | grep mysqld", shell=True)
+            except subprocess.CalledProcessError:
+                # 如果没有 mysql 数据库在运行，这里会报异常
+                return []
+
+            # 把 bytes 编码成 str
+            output_str = output_bytes.decode('utf8')
+
+            # 把包含 \n 的 str 转换成数组
+            lines = [_ for _ in output_str.split('\n') if _ != '']
+
+            # 从行中抽取出 ip:port 的部分
+            ip_ports = []
+            for line in lines:
+                _, _, _, ip_port, *_ = line.split()
+                ip_ports.append(ip_port)
+
+            # 抽取出 port
+            ports = []
+            for ip_port in ip_ports:
+                * _, port = ip_port.split(':')
+                ports.append(int(port))
+            return ports
+
+    def _is_sql_port(self, port=3306):
+        """
+        检查给定的端口是不是 sql 端口
+        """
+        logger = self.logger.getChild("_is_sql_port")
+
         cnx = None
         try:
-            cnx = connector.connect(host=self.host, port=self.port, user=self.monitor_user, password=self.monitor_password)
-            cursor = cnx.cursor()
-            cursor.execute("select 1 as ok")
-            logger.info(f"'{self.monitor_user}' can connect to mysqld-{self.port} ")
-            return True
+            cnx = connector.connect(host="127.0.0.1", port=port,
+                                    user=self.monitor_user, password=self.monitor_password)
+            cursor = cnx.cursor(dictionary=True)
+            cursor.execute("select @@port")
+            data = cursor.fetchone()
+
+            # 如果 @@port 等于当前给定的 port 那么就返回 True
+            return data['@@port'] == port
+        except connector.errors.ProgrammingError:
+
+            # monitor 用户连接 admim_port 时会有这个异常
+            return False
+        except connector.errors.DatabaseError:
+
+            # montior 用户连接 x 协议时会报这个错
+            return False
         except Exception as err:
-            logger.warning(f"mysqld-{self.port} cant't connected by '{self.monitor_user}' user")
+            logger.warning(type(err))
+            logger.warning(
+                f"got error '{err}',when checking {port} is a sql port")
             return False
         finally:
             if hasattr(cnx, 'close'):
                 cnx.close()
-    
-        
-    def _get_monitor_items(self):
+
+        # 死代码，永远都不应该执行到这里
+        logger.warning("dead code got execute !!!")
+        return False
+
+    def get_all_sql_port(self):
         """
-        获取 MySQL 层面的监控项
         """
-        cnx = None
-        try:
-            cnx = connector.connect(host=self.host, port=self.port, user=self.monitor_user, password=self.monitor_password)
-            cursor = cnx.cursor(dictionary=True)
+        ports = []
+        for port in self._query_all_possible_port():
+            if self._is_sql_port(port):
+                ports.append(port)
 
-            # 查询出所有的 variable
-            cursor.execute("show global variables;")
-            data = cursor.fetchall()
-            self.variables = {k: v for k, v in data}
-
-            # 查询出所有的 status
-            cursor.execute("show global status;")
-            data = cursor.fetchall()
-            self.status = {k: v for k, v in data}
-
-            # innodb 的状态值
-            cursor.execute('show engine innodb status')
-            * _, data = cursor.fetchone()
-       
-
-        except Exception as err:
-            pass
-
-        finally:
-            if hasattr(cnx, 'close'):
-                cnx.close()
-
-
+        return ports
 
 

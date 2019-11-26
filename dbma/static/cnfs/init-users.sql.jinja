@@ -22,6 +22,7 @@ grant replication slave,replication client,backup_admin,replication_slave_admin,
 -- monitor
 create user monitor@'127.0.0.1' identified by '{{initpwd}}';
 grant replication client,process on *.* to monitor@'127.0.0.1';
+grant select on performance_schema.* to monitor@'127.0.0.1';
 
 -- innodb cluster admin user
 create user innodbclusteradmin@'%' identified by '{{initpwd}}';

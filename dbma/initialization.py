@@ -19,6 +19,7 @@ import uuid
 import time
 import dbma
 import shutil
+import sqlite3
 import logging
 import argparse
 import subprocess
@@ -156,6 +157,40 @@ def render_init_sql(args):
     logging.info(f"init-sql-file render complete")
 
 
+def init_inseption_db(args):
+    """
+    """
+    sql_file = os.path.join(
+        args.base_dir, 'etc/templates/auto-inseption-db.sql')
+    if not os.path.isfile(sql_file):
+        logging.warning(f"init file '{sql_file}' not exists ")
+        return
+
+    # 能执行到这里说明 auto-inseption-db.sql 文件是存在的
+    with open(sql_file) as f_sql:
+
+        # 读取文件中所有的内容
+        sql = f_sql.read()
+
+    # init 阶段 db_file 是不应该存在的，所以这里直接来
+    db_file = os.path.join(args.base_dir, 'logs/auto-inseption.db')
+
+    logging.info(f"inseption data saved to '{db_file}' ")
+    cnx = None
+    try:
+        cnx = sqlite3.connect(db_file)
+        cursor = cnx.cursor()
+        cursor.executescript(sql)
+        cnx.commit()
+
+    except Exception as err:
+        logging.error(f"init auto inmseption db got error '{err}' ")
+
+    finally:
+        if hasattr(cnx, 'close'):
+            cnx.close()
+
+
 def init(args):
     """
     完成所有 dbm-agent 初始化的逻辑
@@ -201,6 +236,7 @@ def init(args):
 
     #
     render_init_sql(args)
+    init_inseption_db(args)
 
     # 修改 /usr/local/dbm-agent 目录的权限
     if is_user_exists(args.user_name):
@@ -226,6 +262,9 @@ def upgrade(args):
                 os.path.join(args.base_dir, f'etc/templates-backup-{now.isoformat()}'))
     logging.info(f"create new etc/templates")
     shutil.copytree(pkg_dir, os.path.join(args.base_dir, 'etc/templates'))
+
+    # 渲染创建用户的文件
+    render_init_sql(args)
     if is_user_exists(args.user_name):
         subprocess.run(
             ["chown", "-R", f"{args.user_name}:{args.user_name}", args.base_dir], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
