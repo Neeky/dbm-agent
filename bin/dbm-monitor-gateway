@@ -235,6 +235,12 @@ def main():
         print(f"diectory '{dir_name}' not exists ")
         sys.exit(3)
 
+    # netsta 命令是否存在
+    if not checkings.is_file_exists("/usr/bin/netstat"):
+        print(
+            "/usr/bin/netstat not exists,please install it 'sudo yum -y install net-tools' ")
+        sys.exit(4)
+
     # 切到守护进程模式
     if args.action == 'stop':
         stop_daemon('/tmp/dbm-monitor-gateway.pid')

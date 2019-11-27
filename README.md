@@ -64,7 +64,7 @@
 
    **4、其它依赖** 如果你打算编译安装 python-3 环境，建议在此之前先安装上如下依赖包
    ```bash
-   yum -y install gcc gcc-c++ libffi libyaml-devel libffi-devel zlib zlib-devel openssl shadow-utils \
+   yum -y install gcc gcc-c++ libffi libyaml-devel libffi-devel zlib zlib-devel openssl shadow-utils net-tools \
    openssl-devel libyaml sqlite-devel libxml2 libxslt-devel libxml2-devel wget vim mysql-devel 
    ```
 
