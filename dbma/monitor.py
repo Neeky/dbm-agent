@@ -1269,29 +1269,30 @@ class Mmps(object):
         """
         logger = self.logger.getChild("_is_sql_port")
         
-        # 先用 socket 进行粗排
-        client_socket = None
-        try:
-            client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-            client_socket.connect(('127.0.0.1',port))
-            client_socket.settimeout(0.1)
-
-            #MySQL协议下是由Server端先发送握手信息到client的
-            message = client_socket.recv(1024)
-            message = message.decode('latin-1').lower()
-            #if 'password' in message:
-            #    return port
-        except Exception as e:
-            return False
-        finally:
-            if hasattr(client_socket,'close'):
-                client_socket.close()
+        ## 阅读 mysql-connector-python 的源代码后发现 connector.connect 支持一个叫 connection_timeout 的参数
+        ## 通过这个参数就不在信赖低层 socket 的 timeout 机制了
+        ## 先用 socket 进行粗排
+        #client_socket = None
+        #try:
+        #    client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        #    client_socket.connect(('127.0.0.1',port))
+        #    client_socket.settimeout(0.1)
+        #    #MySQL协议下是由Server端先发送握手信息到client的
+        #    message = client_socket.recv(1024)
+        #    message = message.decode('latin-1').lower()
+        #    #if 'password' in message:
+        #    #    return port
+        #except Exception as e:
+        #    return False
+        #finally:
+        #    if hasattr(client_socket,'close'):
+        #        client_socket.close()
 
 
         cnx = None
         try:
             cnx = connector.connect(host="127.0.0.1", port=port,
-                                    user=self.monitor_user, password=self.monitor_password)
+                                    user=self.monitor_user, password=self.monitor_password,connection_timeout=1)
             cursor = cnx.cursor(dictionary=True)
             cursor.execute("select @@port")
             data = cursor.fetchone()
@@ -1307,9 +1308,10 @@ class Mmps(object):
             # montior 用户连接 x 协议时会报这个错
             return False
         except Exception as err:
+            # 没有对超时做特别的处理，也就是连接超时的时候会进入到这里
             logger.warning(type(err))
             logger.warning(
-                f"got error '{err}',when checking {port} is a sql port")
+                f"got error '{err}',when checking {port} is a sql port or not")
             return False
         finally:
             if hasattr(cnx, 'close'):
