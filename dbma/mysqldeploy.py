@@ -1871,6 +1871,21 @@ class MySQLBuildMGR(MySQLCloner):
         # 开始安装 primary 结点
         # 因为 self.is_mgr == True 所以 install 会自动配置 MGR 的内容
         self.install()
+
+        # 安装完成之后要等待启动完成
+        wait_counter = 30
+        for _ in range(wait_counter):
+            if checkings.is_port_in_use(ip="127.0.0.1", port=self.port):
+
+                #
+                logger.info("mysql protocol avriable")
+                break
+            
+            logger.info("wait 1 seconds for mysql protocol avriable")
+            time.sleep(1)
+        
+        # 强制 sleep 7 秒
+        time.sleep(7)
         
         # 启动 MGR 
         cnx = None
@@ -1881,10 +1896,25 @@ class MySQLBuildMGR(MySQLCloner):
 
             cnx = connector.connect(host="127.0.0.1", port=self.port, user="dbma", password=cnf.init_pwd)
             cursor = cnx.cursor()
-            mgr_sql = "set @@global.group_replication_bootstrap_group=ON;start group_replication;set @@global.group_replication_bootstrap_group=OFF;"
+            # 直接一步到位有可能会创建 primary 失败(未知的原因)
+            #mgr_sql = "set @@global.group_replication_bootstrap_group=ON;start group_replication;set @@global.group_replication_bootstrap_group=OFF;"
             # 打印出 primary 结点上执行的语句
-            logger.info(mgr_sql)
-            cursor.execute(mgr_sql, multi=True)
+            
+            # 第一步：打开开关
+            sql="set @@global.group_replication_bootstrap_group=ON;"
+            logger.info(sql)
+            cursor.execute(sql)
+
+            # 第二步：启动 MGR
+            sql="start group_replication;"
+            logger.info(sql)
+            cursor.execute(sql)
+
+            # 第三步：关闭开关
+            sql="set @@global.group_replication_bootstrap_group=OFF;"
+            logger.info(sql)
+            cursor.execute(sql)       
+
         except Exception as err:
 
             # 配置 primary 结点遇到了异常
