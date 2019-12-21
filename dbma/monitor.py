@@ -534,7 +534,7 @@ class MySQLStatusMonitorMixin(object):
             self.status = {k.lower():v for k,v in data if k not in('Caching_sha2_password_rsa_public_key','Rsa_public_key')}
             self.status_last_update_time = datetime.now()
 
-            logger.debug("query status complete")
+            logger.info("query status complete")
         except Exception as err:
             #
             self.status = {}
@@ -612,7 +612,7 @@ class MySQLSlaveMonitorMixin(object):
                 return
 
             # 可以会有多个复制通路(channel) 目前只支持一个的情况
-            data,*_ = data
+            #data,*_ = data
             self.slaves = {k.lower(): v for k, v in data.items()}
             self.slaves_last_update_time = datetime.now()
             logger.info("query slave complete")

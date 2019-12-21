@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+
+# (c) 2019, LeXing Jinag <neeky@live.com 1721900707@qq.com https://www.sqlpy.com/>
+# Copyright: (c) 2019, dbm Project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+"""
+安装 zabbix-agent 
+"""
+
+import os
+import sys
+import psutil
+import logging
+import argparse
+import shutil
+from dbma import common
+from dbma import checkings
+from dbma.zabbixdeploy import ZabbixAgentInstaller, ZabbixAgentUninstaller
+
+
+def parser_cmd_args():
+    """
+    实现命令行参数的处理
+    """
+    def empty_to_none(v):
+        if v == "":
+            return None
+        else:
+            return v
+
+    name, *_ = os.path.basename(__file__).split('.')
+    parser = argparse.ArgumentParser(name)
+    parser.add_argument('--pkg', type=str, default="zabbix_agents-4.0.16-linux3.0-amd64-static.tar.gz",
+                        help="zabbix-agent install package")
+    parser.add_argument('--server-ip', type=str,
+                        default="172.16.192.100", help="zabbix server ip")
+    parser.add_argument('--agent-ip', type=str,
+                        default="172.16.192.200", help="zabbix agent ip")
+    parser.add_argument('--host-name', type=empty_to_none, default="",
+                        help="zabbix agent host name")
+    parser.add_argument('--log', type=str, default='info',
+                        choices=['debug', 'info', 'warning', 'error'])
+    parser.add_argument('action', type=str, choices=[
+                        'install', 'uninstall'])
+    args = parser.parse_args()
+    return args
+
+
+def config_log(log_file: str, log_level='info'):
+    """
+    配置日志
+    """
+    logger = logging.getLogger('dbm-agent')
+    if log_level.upper() == 'INFO':
+        logger.setLevel(logging.INFO)
+    elif log_level.upper() == 'DEBUG':
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.ERROR)
+
+    file_handler = logging.handlers.RotatingFileHandler(
+        filename=log_file, maxBytes=1024*1024*20, backupCount=5)
+    file_handler.setLevel(logging.DEBUG)
+
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(message)s')
+
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+
+
+def main():
+    """
+
+    """
+    args = parser_cmd_args()
+
+    # 配置日志
+    level = getattr(logging, args.log.upper())
+    logger = logging.getLogger('dbm-agent')
+    logger.setLevel(level)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(lineno)s  - %(message)s')
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
+
+    if args.action == 'install':
+        # 启动安装线程
+        zai = ZabbixAgentInstaller(
+            server_ip=args.server_ip, agent_ip=args.agent_ip, host_name=args.host_name, pkg=args.pkg)
+        zai.start()
+
+        # 等待其执行完成
+        zai.join()
+    elif args.action == 'uninstall':
+        zau = ZabbixAgentUninstaller()
+        zau.start()
+        zau.join()
+
+
+if __name__ == "__main__":
+    main()

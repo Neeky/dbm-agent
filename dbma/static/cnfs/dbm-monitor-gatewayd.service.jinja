@@ -1,0 +1,17 @@
+[Unit]
+Description=dbm monitor gateway
+After=syslog.target
+After=network.target
+
+[Service]
+User=root
+Restart=on-failure
+PIDFile=/tmp/dbm-monitor-gateway.pid
+KillMode=control-group
+ExecStart={{cmd}} --monitor-user={{user}} --monitor-password={{password}} --bind-ip=127.0.0.1 --bind-port=8080 start 
+ExecStop={{cmd}} stop
+RestartSec=10s
+TimeoutSec=0
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+
+# (c) 2019, LeXing Jinag <neeky@live.com 1721900707@qq.com https://www.sqlpy.com/>
+# Copyright: (c) 2019, dbm Project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+"""
+
+于 zabbix-agent 配套使用的监控项采集脚本
+    1、依赖于 dbm-monitor-gateway
+
+"""
+
+import os
+import requests
+import argparse
+
+
+def parser_cmd_args():
+    """
+    实现命令行参数的处理
+    """
+    def empty_to_3306(v):
+        if v == '':
+            return 3306
+
+        return int(v)
+
+    def empty_to_8080(v):
+        if v == '':
+            return 8080
+        return int(v)
+
+    name, *_ = os.path.basename(__file__).split('.')
+    parser = argparse.ArgumentParser(name)
+    parser.add_argument('--port', type=empty_to_3306, default=3306,
+                        help="mysql listening port")
+    parser.add_argument('--gateway-port', type=empty_to_8080,
+                        default=8080, help="monitor gatewy listening port")
+    parser.add_argument('item', type=str,
+                        default="com_select", help="monitor item name")
+    args = parser.parse_args()
+    return args
+
+
+def main():
+    """
+    """
+    args = parser_cmd_args()
+
+    if args.item == 'zabbix':
+
+        # 如果是 zabbix 的自动发现
+        monitor_url = f"http://127.0.0.1:{args.gateway_port}/instances/"
+        response = requests.get(monitor_url).json()
+
+        # 解析出实例列表
+        instances = []
+        for port in response:
+            instances.append({"{#MYSQLPORT}": port})
+
+        data = {'data': instances}
+        print(data)
+        return
+
+    # 如果执行到这里那么一定是监控项彩信
+
+    monitor_url = f"http://127.0.0.1:{args.gateway_port}/instances/{args.port}/{args.item}"
+    response = requests.get(monitor_url).json()
+    print(response.get(args.item, None))
+
+
+if __name__ == "__main__":
+    main()

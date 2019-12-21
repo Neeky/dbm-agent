@@ -118,3 +118,10 @@ class LocalCloneFaileError(Error):
     本地克隆出错
     """
     pass
+
+
+class NotSupportedZabbixAgentVersionError(Error):
+    """
+    不被支持的 zabbix-agent 包
+    """
+    pass
