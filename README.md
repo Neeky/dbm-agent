@@ -13,6 +13,8 @@
    - [自动安装mysql-shell](#自动安装mysql-shell)
    - [自动化配置innodb-cluster](#自动化配置innodb-cluster)
    - [自动化配置mysql-router](#自动化配置mysql-router)
+   - [MySQL监控项采集dbma-cli-mysql-monitor-item](#MySQL监控项采集dbma-cli-mysql-monitor-item)
+   - [自动化安装zabbix-agent](#自动化安装zabbix-agent)
 - [数据库监控网关dbm-monitor-gateway](#数据库监控网关dbm-monitor-gateway)
 - [启动](#启动)
 - [关闭](#关闭)
@@ -730,143 +732,197 @@
    
    ---
 
+## MySQL监控项采集dbma-cli-mysql-monitor-item
+   dbma-cli-mysql-monitor-item 是一个专门用来采集监控项信息的命令行工具，简单，高效。这一切的背后都依靠 [数据库监控网关dbm-monitor-gateway](#数据库监控网关dbm-monitor-gateway) 还是先来看一下 dbma-cli-mysql-monitor-item 的使用有多无脑吧
 
+   **示例1：** 查询 3306 实例的 com_select 监控项的值
+   ```bash
+   dbma-cli-mysql-monitor-item --port=3306 com_select              
+   1626
 
+   # 由于 --port 的默认值就是 3306 所以可以不指定，那么整个命令都简单了
+   dbma-cli-mysql-monitor-item com_select                          
+   1637
+
+   dbma-cli-mysql-monitor-item version                             
+   8.0.18
+   ```
+   >完整的监控项支持列表请参考 [数据库监控网关dbm-monitor-gateway](#数据库监控网关dbm-monitor-gateway) 示例2
+
+   **示例2：** 用于 zabbix 的自动发功能
+   ```bash
+   dbma-cli-mysql-monitor-item zabbix                              
+   {'data': [{'{#MYSQLPORT}': 3306}, {'{#MYSQLPORT}': 3307}, {'{#MYSQLPORT}': 3308}]}
+   ```
+
+   **更多帮助信息**
+   ```bash
+   dbma-cli-mysql-monitor-item --help                              
+   usage: dbma-cli-mysql-monitor-item [-h] [--port PORT]
+                                      [--gateway-port GATEWAY_PORT]
+                                      item
+   
+   positional arguments:
+     item                  monitor item name
+   
+   optional arguments:
+     -h, --help            show this help message and exit
+     --port PORT           mysql listening port
+     --gateway-port GATEWAY_PORT
+                           monitor gatewy listening port
+   ```
+    
+   ---
+
+## 自动化安装zabbix-agent
+   **由于监控是数据库维护中一个非常重要的部分，dbm-agent 于 0.6.0 版本已经把监控整合进来了、这里采用的解决方案是 zabbix**
+
+   **1、** 下载 zabbix_agent 的官方安装包
+   ```bash
+   cd /usr/local/dbm-agent/pkg/                                    
+   wget https://www.zabbix.com/downloads/4.4.4/zabbix_agents-4.4.4-linux3.0-amd64-static.tar.gz
+   ```
+   
+   **2、** 启动安装zabbix-agent程序
+   ```bash
+   dbma-cli-zabbix-agent --pkg=zabbix_agents-4.4.4-linux3.0-amd64-static.tar.gz --server-ip=172.16.192.10 --agent-ip=172.16.192.100 \
+   --hostname=db-mysql-001 install
+
+   2019-12-21 22:10:19,040 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentInstaller.install - iza - INFO - 286  - prepare install zabbix agent using zabbix_agents-4.4.4-linux3.0-amd64-static.tar.gz
+   2019-12-21 22:10:19,040 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentInstaller._basic_checks - iza - INFO - 97  - all checkings complete
+   2019-12-21 22:10:19,077 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentInstaller._create_user - iza - INFO - 115  - use 'zabbix' create complete
+   2019-12-21 22:10:19,141 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentInstaller._render_zabbix_config - iza - INFO - 163  - render mysql config file /usr/local/zabbix_agents-4.4.4-linux3.0-amd64-static/conf/zabbix_agentd.conf
+   2019-12-21 22:10:19,143 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentInstaller._export_path - iza - INFO - 224  - export path complete
+   2019-12-21 22:10:19,143 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentInstaller._config_user_parameter - iza - INFO - 242  - config UserParameter complete
+   2019-12-21 22:10:19,314 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentInstaller._enable_zabbix_agent - iza - INFO - 271  - config zabbix-agent auto start on boot complete
+   2019-12-21 22:10:19,347 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentInstaller._start_zabbix_agent - iza - INFO - 280  - zabbix-agent start complete
+   ```
+   **3、** 检查是否安装成功
+   ```bash
+   ps -ef | grep zabbix                                             
+   zabbix    13534      1  0 22:10 ?        00:00:00 /usr/local/zabbix/sbin/zabbix_agentd --config=/usr/local/zabbix/etc/zabbix_agentd.conf                                                     
+   zabbix    13535  13534  0 22:10 ?        00:00:00 /usr/local/zabbix/sbin/zabbix_agentd: collector [idle 1 sec]
+   zabbix    13536  13534  0 22:10 ?        00:00:00 /usr/local/zabbix/sbin/zabbix_agentd: listener #1 [waiting for connection]
+   zabbix    13537  13534  0 22:10 ?        00:00:00 /usr/local/zabbix/sbin/zabbix_agentd: listener #2 [waiting for connection]
+   zabbix    13538  13534  0 22:10 ?        00:00:00 /usr/local/zabbix/sbin/zabbix_agentd: listener #3 [waiting for connection]
+   zabbix    13539  13534  0 22:10 ?        00:00:00 /usr/local/zabbix/sbin/zabbix_agentd: active checks #1 [idle 1 sec]
+   zabbix    13540  13534  0 22:10 ?        00:00:00 /usr/local/zabbix/sbin/zabbix_agentd: active checks #2 [idle 1 sec]
+   root      13551   8325  0 22:13 pts/1    00:00:00 grep --color=auto zabbix                       
+   ```
+   **4、** 验证能否成功采集监控项
+   ```bash
+   source /etc/profile
+
+   zabbix_get -s 127.0.0.1 -k dbma[basedir,3306]  
+   /usr/local/mysql-8.0.18-linux-glibc2.12-x86_64/
+
+   zabbix_get -s 127.0.0.1 -k agent.version   
+   4.4.4
+   ```
+   **5、** 停止与卸载zabbix-agent
+   ```bash
+   # 停止 zabbix-agentd 服务
+   systemctl stop zabbix-agentd
+
+   # 卸载 zabbix-agent 
+   dbma-cli-zabbix-agent uninstall                                  
+   2019-12-22 11:09:17,359 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentUninstaller.uninstall - uza - INFO - 402  - enter uninstall zabbix logic
+   2019-12-22 11:09:17,359 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentUninstaller._basic_checks - uza - INFO - 329  - checking zabbix-agentd is runing or not
+   2019-12-22 11:09:17,360 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentUninstaller._basic_checks - uza - INFO - 354  - all chechkings are ok
+   2019-12-22 11:09:17,416 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentUninstaller._delete_user - uza - INFO - 366  - delete user complete
+   2019-12-22 11:09:17,542 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentUninstaller._disable_systemd - uza - INFO - 381  - disable zabbix-agentd complete
+   2019-12-22 11:09:17,542 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentUninstaller._disable_systemd - uza - INFO - 385  - remove zabbix-agentd.service complete
+   2019-12-22 11:09:17,544 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentUninstaller._remove_link - uza - INFO - 395  - remove link file complete
+   2019-12-22 11:09:17,544 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentUninstaller.uninstall - uza - INFO - 416  - uninstall zabbix-agent complete
+   ```
+
+   ---
 
 ## 数据库监控网关dbm-monitor-gateway
-   **1、** 为什么要有监控网关？
-
-   通常为了提高主机资源的使用率，DBA 会在同一台主机上部署多个 MySQL 实例；为了更加方便的发现和预防数据库的各种问题，DBA 还会为每一个实例增加上若干的监控项；
-   由于 MySQL 实例数量的增加，进一步使得监控项数量也同步增加，如果一个实例 100+ 的监控项，那么一个主机 1000+ 的监控项也就不是梦了。
-
-   监控项多了就会消耗更多的主机性能，传统的监控项采集是在主机上安装对应的 agent(如 zabbix-agent)，agent 又通过调用脚本程序来采集监控项；一般来说不会有什么问题，
-   但是当主机上的实例数量增加到一定量时，这就有可能成为问题，请看下面的分析。
-
-   I、为了执行采集监控项的脚本程序，OS 就要为这个脚本程序创建一个单独的进程，而创建进程算大开销；通常采集一个监控项是一个比较小的任务，可以看成马上就能执行完成，这样整个过程就变成了 OS 刚创建完成一个进程，马上就又要销毁这个进程
-
-   II、采集脚本启动后会去连接 MySQL 采集对应的监控项，还是和上面 OS 的场景一样，粗看没有什么问题，量上来了之后问题也比较大；脚本和 MySQL 要完成 TCP 层面的三次握手，权限验证，执行 SQL，断开应用层连接，断开 TCP 连接。 就为了采集一个监控项，就要做这么多的前期准备，和后面的清理工作，事实上这里可以做成一个长连接。
-
-   III、每一个到数据库的连接 MySQL(社区版) 都会为它分配一个线程，在不考虑线程池的情况下，这个线程有可能和 OS 中的进程一样刚创建出来就又要销毁了。
-
-   ---
-   **2、** 要怎么做
-
-   I、创建一个守护进程，它能自动的发现当前主机上的 MySQL 实例，并为每一个 MySQL 实例维护一个长连接，所有的监控项采集都通过这一个连接完成，并且每一个实例的相关操作都在一个独立的线程中完成。
-
-   II、在守护进程内部，它还要实现一个 http-server ，这样就可以通过 WEB API 把监控到的数据供其它程序读取。
-
-   III、监控项也要有一个缓存(失效时间默认为 7 秒)机制。
-
-   ---
-
-   ### dbm-monitor-gateway检验
    
-   **1、** 可以看到当前主机(172.16.192.100)上有两个 MySQL
+   监控网关是安装在主机上的一个守护进程，当 dbm-agent 安装并初始化完成之后会就自动的运行在后台了，这个守护进程有如下特点：
+
+   **1、** 它能自动的感知到当前主机上安装有哪些 MySQL 实例
+
+   **2、** 为每一个实例分配一个线程(用于采集监控项)
+
+   **3、** 监控网关到数据库的连接使用的是长连接，一次查询所有的监控项，并缓存到内存中
+
+   **4、** 以 RESTful-API 的形式暴露出接口，方便其它程序使用
+
+   <img src="./imgs/monitor-gateway.png">
+
+   >192.168.100.100 主机上安装有 3 个 mysql 实例，监控网关采集这三个实例上的所有(几乎是所有)监控项供其它程序查询
+
+   **5、** RESTful API 列表
+
+   **路径**|**备注**
+   |------|-------|
+   |http://127.0.0.1:8080/instances/| 查询当前主机上的所有 MySQL 实例|
+   |http://127.0.0.1:8080/instances/int:port| 查询 port 实例的所有监控项|
+   |http://127.0.0.1:8080/instances/int:port/str:monitorItemName| 查询 port 实例的 monitorItemName 监控项的值|
+
+   **示例1**：查询当前主机上有哪些实例
    ```bash
-   ps -ef | grep mysqld                                                   
-   mysql33+  10913      1  0 13:21 ?        00:00:56 /usr/local/mysql-8.0.18-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3306.cnf                                       
-   mysql33+  10995      1  0 13:25 ?        00:00:54 /usr/local/mysql-8.0.18-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3308.cnf
+   curl http://127.0.0.1:8080/instances/                          
+   [3306, 3307, 3308]
    ```
-
-   **2、** 启动 dbm-monitor-gateway
+   **示例2**：查询 3306 实例的所有监控项的值
    ```bash
-   dbm-monitor-gateway --bind-ip=172.16.192.100 --bind-port=8080 --monitor-user=monitor --monitor-password=dbma@0352 start    
-   Successful start and log file save to '/usr/local/dbm-agent/logs/dbm-monitor-gateway.log'
-   ```
-   **3、** 通过浏览器查询当前被监控的实例列表
-   ```bash
-   curl http://172.16.192.100:8080/instances
-
-   [3306, 3308] # 可以看到 dbm-monitor-gateway 返回了当前主机(172.16.192.100) 上的实例列表
-   ```
-   <img src="./imgs/instances.png">
-
-   ---
-
-   **4、** 查询某一实例的特定监控项(以 com_select 为例)
-   ```bash
-   curl http://172.16.192.100:8080/instances/3306/com_select
-
+   curl http://127.0.0.1:8080/instances/3306/
    {
-    "com_select": "1596"
-   }
-   ```
-   <img src="./imgs/instances-3306-com-select.png">
-
-   ---
-
-   **5、** 查询特定实例的所有监控项
-   ```bash
-   curl http://172.16.192.100:8080/instances/3306/
-
-   {
-       "aborted_clients": "5",
-       "aborted_connects": "155",
+       "aborted_clients": "8",
+       "aborted_connects": "145",
        "acl_cache_items_count": "0",
        "binlog_cache_disk_use": "0",
        "binlog_cache_use": "0",
        "binlog_stmt_cache_disk_use": "0",
        "binlog_stmt_cache_use": "0",
-       "bytes_received": "495062",
-       "bytes_sent": "62005555",
-       .... 
-       ....
-       .... # 监控项太多了，只列出了前面几项
+       "bytes_received": "444873",
+       "bytes_sent": "51774593",
+       "file": "mysql-bin.000001",
+       ... ... ... ...
+       "position": 151,
+       "binlog_do_db": "",
+       "binlog_ignore_db": ""
+   }
+
+   # 支持 1000+ 的监控维度，可以说是非常丰富了
+   ```
+   **示例3**： 查询 3306 实例的 MySQL 版本号
+   ```bash
+   curl http://127.0.0.1:8080/instances/3306/version
+   {
+       "version": "8.0.18"
    }
    ```
-   <img src="./imgs/instances-3306.png"><br>
 
-   ---
-
-   **6、** dbm-monitor-gateway 最值得称道的是它自动发现 MySQL 的能力，下面我们在主机上再安装一个监听在 3307 的实例，你并不需要重启监控网关，一分钟过后它自己会发现这个新增的实例
-
+   **6、** 监控网关的维护操作
    ```bash
-   dbma-cli-single-instance --max-mem=128 --port=3307 install
-   ```
-   一分钟过后 3307 已经被发现了
-   <img src="./imgs/instances-mmps.png">
+   # 方法一 通过检查进程是否存在
+   ps -ef | grep dbm-monitor-gateway
+   dbma      12363      1  0 18:31 ?        00:00:10 /usr/local/python-3.6.0/bin/python3.6 /usr/local/python-3.6.0/bin/dbm-monitor-gateway
+   --monitor-user=monitor --monitor-password=dbma@0352 --bind-ip=127.0.0.1 --bind-port=8080 start
 
-   ---
-
-   **7、** 其它
-
-   I: dbm-monitor-gateway 通过端口扫描的方式来发现主机上存在的 MySQL 实例，这使得它可以独立于 dbm 而单独使用
-
-   II: 全特性支持、支持监控 status，支持监控 variables ，支持监控 slave，支持监控 master ，支持监控 MGR
-
-   III: dbm-monitor-gateway 默认使用 用户：monitor@127.0.0.1 密码：dbma@0352 来连接到对应的实例，所以它要求你主机上的所有实例上的监控用户都应该是**同名，同密码**
+   # 方法二 通过检查服务的状态
+   systemctl status dbm-monitor-gatewayd
+   ● dbm-monitor-gatewayd.service - dbm monitor gateway
+      Loaded: loaded (/usr/lib/systemd/system/dbm-monitor-gatewayd.service; enabled; vendor preset: disabled)
+      Active: active (running) since 六 2019-12-21 17:09:40 CST; 2h 42min ago
+     Process: 12352 ExecStop=/usr/local/python-3.6.0/bin/dbm-monitor-gateway stop (code=exited, status=0/SUCCESS)
+    Main PID: 12363 (dbm-monitor-gat)
+      CGroup: /system.slice/dbm-monitor-gatewayd.service
+              └─12363 /usr/local/python-3.6.0/bin/python3.6 /usr/local/python-3.6.0/bin/dbm-monit...
    
-
+   12月 21 17:09:40 mgr172_16_192_100 systemd[1]: Started dbm monitor gateway.
+   ```
+   由于 dbm-monitor-gateway 是一个服务，所以你按一个服务的标准去操作它就行
    ```bash
-   dbm-monitor-gateway --help
-   usage: dbm-monitor-gateway [-h] [--bind-port BIND_PORT] [--bind-ip BIND_IP]
-                              [--monitor-user MONITOR_USER]
-                              [--monitor-password MONITOR_PASSWORD]
-                              [--log {debug,info,warning,error}]
-                              [--log-file LOG_FILE]
-                              {start,stop}
-   
-   positional arguments:
-     {start,stop}
-   
-   optional arguments:
-     -h, --help            show this help message and exit
-     --bind-port BIND_PORT
-                           http-server listening port
-     --bind-ip BIND_IP     http-server listening ip
-     --monitor-user MONITOR_USER                 # 在这里指定连接进 mysql 的用户名 
-                           mysql monitor user
-     --monitor-password MONITOR_PASSWORD         # 在这里指定密码
-                           password of mysql monitor user
-     --log {debug,info,warning,error}
-     --log-file LOG_FILE
-   ```
-   III: 默认监控用户的权限如下(如果你使用的是 dbm 那么这个用户会自动创建好)
-   ```sql
-   -- monitor
-   create user monitor@'127.0.0.1' identified by 'dbma@0352';
-   grant replication client,process on *.* to monitor@'127.0.0.1';
-   grant select on performance_schema.* to monitor@'127.0.0.1';
+   # 关闭
+   systemctl stop dbm-monitor-gatewayd
+
+   # 启动
+   systemctl start dbm-monitor-gatewayd
    ```
 
    ---

@@ -44,7 +44,7 @@ class ZabbixAgentInstallerMixin(object):
 
     #
     pkg_pattern = re.compile(
-        r"^zabbix_agents-(\d\.\d\.\d\d)-linux3.0-amd64-static.tar.(gz|xz)")
+        r"^zabbix_agents-(\d\.\d\.\d{1,2})-linux3.0-amd64-static.tar.(gz|xz)")
 
     def _basic_checks(self):
         """
