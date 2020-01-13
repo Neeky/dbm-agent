@@ -12,3 +12,16 @@ SYS_USER_NOT_EXISTS = f"system user '{0}' not exists"
 
 # 用户已经存在
 SYS_USER_ALREADY_EXISTS = f"system user '{0}' alread exists"
+
+# 当前的时候是多少
+CURRENT_DATETIME = f"current datetime is '{0}'"
+
+# 备份集的路径是
+
+BACKUPSETS_DIRECTORY = f"backup sets directory is '{0}' "
+
+# 未实现的方法
+NOTIMPLEMENTEDFUNCTION = f"function '{0}' shuld been implemented in sub class"
+
+#
+READ_CONFIG_OPTION_FROM_FILE = f"read config opstion from '{0}' "

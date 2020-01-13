@@ -31,6 +31,7 @@ class DbmCnf(object):
             self.init_pwd = "dbma@0352"
             self.net_if = "ens33"
             self.mysql_install_dir = "/usr/local/"
+            
         else:
             parser = configparser.ConfigParser(
                 allow_no_value=True, inline_comment_prefixes='#')
