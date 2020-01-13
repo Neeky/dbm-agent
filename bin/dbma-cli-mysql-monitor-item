@@ -12,6 +12,7 @@
 """
 
 import os
+import json
 import requests
 import argparse
 
@@ -59,8 +60,9 @@ def main():
         for port in response:
             instances.append({"{#MYSQLPORT}": port})
 
-        data = {'data': instances}
-        print(data)
+        data = {"data": instances}
+        # 格式化成 json 字符串
+        print(json.dumps(data))
         return
 
     # 如果执行到这里那么一定是监控项彩信
