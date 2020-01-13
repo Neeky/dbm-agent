@@ -752,7 +752,7 @@
    **示例2：** 用于 zabbix 的自动发功能
    ```bash
    dbma-cli-mysql-monitor-item zabbix                              
-   {'data': [{'{#MYSQLPORT}': 3306}, {'{#MYSQLPORT}': 3307}, {'{#MYSQLPORT}': 3308}]}
+   {"data": [{"{#MYSQLPORT}": 3306}, {"{#MYSQLPORT}": 3307}, {"{#MYSQLPORT}": 3308}]}
    ```
 
    **更多帮助信息**
