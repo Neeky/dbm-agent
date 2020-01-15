@@ -16,6 +16,7 @@ import argparse
 import shutil
 from dbma import common
 from dbma import checkings
+from dbma import errors
 from dbma.zabbixdeploy import ZabbixAgentInstaller, ZabbixAgentUninstaller
 
 
@@ -35,10 +36,11 @@ def parser_cmd_args():
                         help="zabbix-agent install package")
     parser.add_argument('--server-ip', type=str,
                         default="172.16.192.100", help="zabbix server ip")
-    parser.add_argument('--agent-ip', type=str,
-                        default="172.16.192.200", help="zabbix agent ip")
+    parser.add_argument('--agent-ip', type=empty_to_none, default="",
+                        help="zabbix agent ip")
     parser.add_argument('--host-name', type=empty_to_none, default="",
                         help="zabbix agent host name")
+    parser.add_argument('--net-interface', type=empty_to_none, default='')
     parser.add_argument('--log', type=str, default='info',
                         choices=['debug', 'info', 'warning', 'error'])
     parser.add_argument('action', type=str, choices=[
@@ -71,6 +73,30 @@ def config_log(log_file: str, log_level='info'):
     logger.addHandler(file_handler)
 
 
+def trace_net_interface_ipv4(net_if="ens33"):
+    """
+    从指定的网卡中提取 ipv4 地址
+    """
+    # 提取出所有的网卡信息
+    addres = psutil.net_if_addrs()
+
+    if net_if not in addres:
+
+        # 如果给定的网卡没有在字典里面就报错
+        raise errors.NetInterfaceNotExists(net_if)
+
+    # 如果可以执行到这里，说明给定的网卡是存在的
+
+    net_ip_lst = addres[net_if]
+    for ip in net_ip_lst:
+
+        # 如果是 ipv4
+        if ip.family == 2:
+            return ip.address
+
+    return None
+
+
 def main():
     """
 
@@ -89,6 +115,26 @@ def main():
     logger.addHandler(stream_handler)
 
     if args.action == 'install':
+
+        # 如果 agent-ip 和 --host-name 都没有指定，那么就直接取网卡地址
+        if args.agent_ip is None and args.host_name is None:
+
+            # 提取网卡 IP
+            try:
+                net_ip = trace_net_interface_ipv4(args.net_interface)
+            except errors.Error as err:
+                logger.error(str(err))
+                sys.exit(1)
+
+            if net_ip is None:
+
+                # 如果提取到的 ip 是 None 应该是没有给定的网卡直接退出
+                sys.exit(2)
+
+            #
+            args.agent_ip = net_ip
+            args.host_name = net_ip
+
         # 启动安装线程
         zai = ZabbixAgentInstaller(
             server_ip=args.server_ip, agent_ip=args.agent_ip, host_name=args.host_name, pkg=args.pkg)

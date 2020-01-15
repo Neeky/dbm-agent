@@ -125,3 +125,9 @@ class NotSupportedZabbixAgentVersionError(Error):
     不被支持的 zabbix-agent 包
     """
     pass
+
+
+class NetInterfaceNotExists(Error):
+    """
+    给定的网卡不存在
+    """
