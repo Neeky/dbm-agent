@@ -1043,3 +1043,27 @@
    openssl-devel libyaml sqlite-devel libxml2 libxslt-devel libxml2-devel wget vim mysql-devel 
    ```
    ---
+
+   **2、** 找不到模板文件
+   ```bash
+   dbma-cli-single-instance --port=3306 --max-mem=128 install                  
+   2020-01-15 10:48:35,172 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller.install - im - INFO - 1115 - execute checkings for install mysql
+   2020-01-15 10:48:35,176 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller.basic_checks - im - ERROR - 795 - config file template '/usr/local/dbm-agent/etc/templates/mysql-8.0.19.cnf.jinja' not exists
+   2020-01-15 10:48:35,176 - dbm-agent.dbma.mysqldeploy.SingleInstanceInstaller.install - im - ERROR - 1119 - /usr/local/dbm-agent/etc/templates/mysql-8.0.19.cnf.jinja
+   ```
+   比如 dbm-agent-0.6.7 开始支持 mysql-8.0.19 ，如果你只是把 dbm-agent 软件包更新到了 0.6.7 而不执行 `dbm-agent upgrade` 它是不会导出模板的；所以为了解决这个问题我们要执行 upgrade 操作。
+
+   ```bash
+   dbm-agent upgrade  
+                                                            
+   2020-01-15 10:48:43,823 INFO going to upgrade dbm-agent
+   2020-01-15 10:48:43,823 INFO backup etc/templates
+   2020-01-15 10:48:43,824 INFO create new etc/templates
+   2020-01-15 10:48:43,835 INFO prepare rende init-sql-file /usr/local/dbm-agent/etc/init-users.sql
+   2020-01-15 10:48:43,836 INFO init-sql-file render complete
+   2020-01-15 10:48:43,836 DEBUG sudo context config dbm-monitor-gateway
+   2020-01-15 10:48:44,035 INFO monitor-gateway render complete
+   2020-01-15 10:48:44,053 INFO upgrade complete
+   ```
+
+   ---
