@@ -785,8 +785,7 @@
    
    **2、** 启动安装zabbix-agent程序
    ```bash
-   dbma-cli-zabbix-agent --pkg=zabbix_agents-4.4.4-linux3.0-amd64-static.tar.gz --server-ip=172.16.192.10 --agent-ip=172.16.192.100 \
-   --hostname=db-mysql-001 install
+   dbma-cli-zabbix-agent --pkg=zabbix_agents-4.4.4-linux3.0-amd64-static.tar.gz --server-ip=172.16.192.10 --agent-ip=172.16.192.100 install
 
    2019-12-21 22:10:19,040 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentInstaller.install - iza - INFO - 286  - prepare install zabbix agent using zabbix_agents-4.4.4-linux3.0-amd64-static.tar.gz
    2019-12-21 22:10:19,040 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentInstaller._basic_checks - iza - INFO - 97  - all checkings complete
@@ -797,6 +796,8 @@
    2019-12-21 22:10:19,314 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentInstaller._enable_zabbix_agent - iza - INFO - 271  - config zabbix-agent auto start on boot complete
    2019-12-21 22:10:19,347 - dbm-agent.dbma.zabbixdeploy.ZabbixAgentInstaller._start_zabbix_agent - iza - INFO - 280  - zabbix-agent start complete
    ```
+   >不想每次都指定 IP 地址？那么统一指定网卡名就行 dbma-cli-zabbix-agent --pkg=zabbix_agents-4.4.4-linux3.0-amd64-static.tar.gz --server-ip=172.16.192.10 --net-interface=ens33 install
+
    **3、** 检查是否安装成功
    ```bash
    ps -ef | grep zabbix                                             
