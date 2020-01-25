@@ -16,6 +16,7 @@
    - [MySQL监控项采集dbma-cli-mysql-monitor-item](#MySQL监控项采集dbma-cli-mysql-monitor-item)
    - [自动化安装zabbix-agent](#自动化安装zabbix-agent)
 - [数据库监控网关dbm-monitor-gateway](#数据库监控网关dbm-monitor-gateway)
+- [数据库备份代理dbm-backup-proxy](#数据库备份代理dbm-backup-proxy)
 - [启动](#启动)
 - [关闭](#关闭)
 - [升级](#升级)
@@ -925,6 +926,18 @@
    # 启动
    systemctl start dbm-monitor-gatewayd
    ```
+
+   ---
+
+## 数据库备份代理dbm-backup-proxy
+   在 dbm-agent-0.7.0 版本的时候我们把备份任务独立到了一个单独的守护进程当中；并且会自动运行在后台
+   ```bash
+   ps -ef | grep dbm-backup-proxy                                           
+   dbma       4698      1  0 00:00 ?        00:00:00 /usr/local/python-3.8.1/bin/python3.8 /usr/local/python/bin/dbm-backup-proxy start 
+   ```
+
+
+
 
    ---
 
