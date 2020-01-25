@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+
+"""
+实现自动发现实例、自动备份、自动清理的相关功能
+"""
+
+import re
+import os
+import sys
+import time
+import json
+import shutil
+import psutil
+import logging
+import argparse
+from datetime import datetime
+
+from dbma import checkings
+from dbma.initialization import is_root, get_uid_gid
+from dbma.daemon import start_daemon, stop_daemon
+from dbma.dbmacnf import cnf
+from dbma import monitor
+from dbma import backup
+
+
+def parser_cmd_args():
+    """
+    实现命令行参数的处理
+    """
+    name, *_ = os.path.basename(__file__).split('.')
+    parser = argparse.ArgumentParser(name)
+    parser.add_argument('--log', type=str, default='info',
+                        choices=['debug', 'info', 'warning', 'error'])
+    parser.add_argument('--log-file', type=str,
+                        default="/usr/local/dbm-agent/logs/dbm-bacukp-proxy.log")
+    parser.add_argument('action', type=str, choices=['start', 'stop'])
+    args = parser.parse_args()
+    return args
+
+
+def config_log(log_file: str, log_level='info'):
+    """
+    配置日志
+    """
+    logger = logging.getLogger('dbm-agent')
+    if log_level.upper() == 'INFO':
+        logger.setLevel(logging.INFO)
+    elif log_level.upper() == 'DEBUG':
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.ERROR)
+
+    file_handler = logging.handlers.RotatingFileHandler(
+        filename=log_file, maxBytes=1024*1024*20, backupCount=5)
+    file_handler.setLevel(logging.DEBUG)
+
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(message)s')
+
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+
+
+def main():
+    """
+    # 监控网关的主程序
+    """
+    args = parser_cmd_args()
+
+    # 程序要求以 root 身份运行
+    if is_root() == False:
+
+        print(f"must use root user to execute this program.", file=sys.stderr)
+        sys.exit(1)
+
+    # dbma 用户是否存在
+    if not checkings.is_user_exists('dbma'):
+        print("user 'dbma' not exists,use this fix it 'dbm-agent init' ")
+        sys.exit(2)
+
+    # 切换到普通用户 dbma
+    #uid, gid = get_uid_gid('dbma')
+    # os.setegid(gid)
+    # os.seteuid(uid)
+
+    # 查询用于保存日志文件的目录是否存在
+    dir_name = os.path.dirname(args.log_file)
+    if not checkings.is_directory_exists(dir_name):
+
+        # 如果目录不存在就退出程序
+        print(f"diectory '{dir_name}' not exists ")
+        sys.exit(3)
+
+    # 切到守护进程模式
+    if args.action == 'stop':
+        stop_daemon('/tmp/dbm-backup-proxy.pid')
+    elif args.action == 'start':
+        start_daemon('/tmp/dbm-backup-proxy.pid')
+    else:
+        print("not suported action")
+        exit(4)
+
+    # 程序运行到这里说明可以配置日志了
+    config_log(log_file=args.log_file, log_level=args.log)
+
+    # 拿到日志对象
+    logger = logging.getLogger('dbm-agent')
+    logger.info("dbm-backup-proxy start")
+    print(f"Successful start and log file save to '{args.log_file}' ")
+
+    # 在这里死循环内实现所有的功能
+    while True:
+
+        # 自动发现当前主机上的实例
+        logger.info(
+            f"mmps use user='mysqldump' passwrod='{cnf.init_pwd}' to find instnaces")
+        mmps = monitor.Mmps(monitor_user="mysqldump",
+                            monitor_password=cnf.init_pwd)
+        # 这样 ports 里就记录了当前主机上所有的实例
+        ports = mmps.get_all_sql_port()
+        tools = backup.usable_backup_tools(user="mysqldump")
+        first, *_ = tools
+        # 只在没有可用备份的情况下才备份
+        if tools is None or len(tools) == 0:
+            logger.info(f"tools = {tools}")
+            logger.error(
+                "there are not any available backup tools dbm-backup-proxy exits")
+            return
+
+        # 1、全量备份
+        # 检查实例是否用全量备份，如果没有就给它来一个全量备份
+        for port in ports:
+
+            sts = backup.get_current_backup_sets(port)
+            if os.path.isdir(sts):
+
+                # 如果备份集存在就跳过全量备份
+                continue
+
+            if first == 'mysqlbackup':
+                dump = backup.MySQLBackupFullBackup(
+                    user="mysqlbackup", password=cnf.init_pwd, port=port)
+                dump.backup()
+            else:
+                dump = backup.MySQLDumpFullBackup(
+                    user="mysqldump", password=cnf.init_pwd, port=port)
+                dump.backup()
+
+        # 能执行到这里说明备份集中一定有了全量备份
+        # 那么在今天还没有差异备份的情况就备份一下
+
+        # 2、差异备份
+        for port in ports:
+            if not backup.today_has_backup(port):
+
+                # 执行到这里说明今天还没有差异备份
+                if first == "mysqldump":
+
+                    # 只能全备
+                    dump = backup.MySQLDumpFullBackup(
+                        user="mysqldump", password=cnf.init_pwd, port=port)
+                    dump.backup()
+                else:
+                    # 用 mysqlbackup 执行差异备份
+                    dump = backup.MySQLBackupDiffBackup(
+                        user="mysqlbackup", password=cnf.init_pwd, port=port)
+                    dump.backup()
+
+        # 5 分钟检查一下
+        time.sleep(300)
+
+
+if __name__ == "__main__":
+    main()

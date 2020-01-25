@@ -14,6 +14,10 @@ from dbma import common
 from dbma import checkings
 from dbma.mysqldeploy import MySQLCloner
 
+from dbma.backup import (MySQLDumpFullBackup, MySQLDumpNoDataBackup,    # mysqldump 备份
+                         MySQLBackupFullBackup, MySQLBackupDiffBackup,  # mysqlbackup 备份
+                         usable_backup_tools)
+
 
 def parser_cmd_args():
     """
@@ -29,7 +33,8 @@ def parser_cmd_args():
                         default="dbma@0352", help="backup user")
     parser.add_argument('--log', type=str, default='info',
                         choices=['debug', 'info', 'warning', 'error'])
-    parser.add_argument('tool', type=str, choices=['clone'])
+    parser.add_argument('action', type=str, choices=[
+                        'full-backup', 'diff-backup', 'only-schema'])
     args = parser.parse_args()
     return args
 
@@ -49,33 +54,68 @@ def main():
         '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(lineno)s  - %(message)s')
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
-
     args = parser_cmd_args()
 
-    cores = psutil.cpu_count()
-    #backupdir = f"/backup/mysql/backup/{args.port}"
-    # if not checkings.is_directory_exists(backupdir):
-    #    logger.warning(
-    #        f"direcotry '{backupdir}' not exists dbm-agent going to create it")
-    #    common.create_directory(backupdir)
-    #    common.recursive_change_owner(
-    #        backupdir, user=f"mysql{args.port}", group="mysql")
-    # else:
-    #    shutil.chown(backupdir, user=f"mysql{args.port}", group="mysql")
-    #
-    # if not checkings.is_port_in_use(args.host, args.port):
-    #    logger.error(f"can't connect to {args.host}:{args.port} backup fail.")
-    #    sys.exit(1)
+    # 查询出所有可用的备份工具
+    tools = usable_backup_tools(
+        host=args.host, port=args.port, user=args.user, password=args.password)
 
-    if args.tool == 'clone':
-        # backuper = backups.LocalClone(
-        #    host=args.host, port=args.port, user=args.user, password=args.password)
-        # backuper.backup()
-        cloner = MySQLCloner(host=args.host, port=args.port, user=args.user,
-                             password=args.password, coroes=cores)
-        cloner.start()
-    else:
-        logger.error(f"not suported backup tool {args.tool}")
+    if len(tools) == 0:
+        logger.error("there are not usable backup tool exists! backup fail.")
+        return
+
+    logger.info(f"prepare execute {args.action} backup")
+
+    if args.action == 'only-schema':
+
+        # only-schema 备份
+        if 'mysqldump' not in tools:
+
+            # 由于 mysqldump 不存在所以备份不了
+            logger.error("mysqldump not exists backup schema fail !")
+        else:
+            dump = MySQLDumpNoDataBackup(
+                host=args.host, port=args.port, user=args.user, password=args.password)
+            dump.backup()
+
+    elif args.action == 'full-backup':
+
+        # 全量备份
+        first, *_ = tools
+        if first == 'mysqlbackup':
+
+            # mysqlbackup 全量
+            dump = MySQLBackupFullBackup(
+                host=args.host, port=args.port, user=args.user, password=args.password)
+            dump.backup()
+        else:
+
+            # mysqldump 作为一个保底工具
+            if 'mysqldump' not in tools:
+                logger.error(
+                    "There are no backup tools available in current computer.")
+                return
+
+            # mysqldump 全量
+            dump = MySQLDumpFullBackup(
+                host=args.host, port=args.port, user=args.user, password=args.password)
+            dump.backup()
+    elif args.action == 'diff-backup':
+
+        # 差异备份
+        if 'mysqlbackup' in tools:
+
+            # 使用 mysqlbackup 进行差异备份
+            dump = MySQLBackupDiffBackup(
+                host=args.host, port=args.port, user=args.user, password=args.password)
+            dump.backup()
+
+            return
+
+        # 如果可以执行到这里说明主机上不存在 mysqlbackup
+        logger.error(
+            f"There are no backup tools available in current computer.")
+        return
 
 
 if __name__ == "__main__":

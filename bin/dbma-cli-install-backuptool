@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+
+"""
+实例 mysqlbackup & extrabackup 这两个备份工具的安装
+"""
+
+import re
+import os
+import sys
+import psutil
+import logging
+import argparse
+
+from dbma.backuptools import MySQLBackupInstall, XtraBackupInstall
+
+
+def parser_cmd_args():
+    """
+    实现命令行参数的处理
+    """
+    name, *_ = os.path.basename(__file__).split('.')
+    parser = argparse.ArgumentParser(name)
+    parser.add_argument(
+        '--pkg', type=str, default="mysql-commercial-backup-8.0.19-linux-glibc2.12-x86_64.tar.xz", help="backp tool pkg name")
+    parser.add_argument('--log', type=str, default='info',
+                        choices=['debug', 'info', 'warning', 'error'])
+    parser.add_argument('action', type=str, choices=[
+                        'install'])
+    args = parser.parse_args()
+    return args
+
+
+def main():
+    """
+    完成备份相关的功能
+    """
+    # 配置日志
+    args = parser_cmd_args()
+    level = getattr(logging, args.log.upper())
+    logger = logging.getLogger('dbm-agent')
+    logger.setLevel(level)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(lineno)s  - %(message)s')
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
+    args = parser_cmd_args()
+
+    meb_pattern = r"mysql-commercial-backup-8.0.\d{1,2}-linux-glibc2.12-x86_64.tar.xz"
+    extrabackup_pattern = r"percona-xtrabackup-8.0.\d{1,2}-Linux-x86_64.libgcrypt\d{2,3}.tar.gz"
+
+    if re.match(meb_pattern, args.pkg):
+        logger.info("prepare install meb")
+        ist = MySQLBackupInstall(pkg=args.pkg)
+        ist.install()
+        logger.info("complete")
+    elif re.match(extrabackup_pattern, args.pkg):
+        logger.info("prepare install xtrabackup")
+        ist = XtraBackupInstall(pkg=args.pkg)
+        ist.install()
+        logger.info("complete")
+    else:
+        logger.warn("not supported package")
+
+
+if __name__ == "__main__":
+    main()

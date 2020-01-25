@@ -25,3 +25,8 @@ NOTIMPLEMENTEDFUNCTION = f"function '{0}' shuld been implemented in sub class"
 
 #
 READ_CONFIG_OPTION_FROM_FILE = f"read config opstion from '{0}' "
+
+# 使用 xxx 作为备份工具
+USING_XX_AS_BACKUP_TOOL = f"using {0} as backup tools"
+GET_BACKUP_TOOL_ECURE_ERROR = f"get backup tool trigger an exception {0}"
+DURING_BACKUP_GET_EXCEPTION = f"during backup got this exception {0}"

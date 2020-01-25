@@ -1,0 +1,17 @@
+[Unit]
+Description=dbm backup proxy
+After=syslog.target
+After=network.target
+
+[Service]
+User=root
+Restart=on-failure
+PIDFile=/tmp/dbm-backup-proxy.pid
+KillMode=control-group
+ExecStart={{cmd}} start 
+ExecStop={{cmd}} stop
+RestartSec=10s
+TimeoutSec=0
+
+[Install]
+WantedBy=multi-user.target

@@ -235,6 +235,49 @@ def config_monitor_gateway(args):
     logging.info(f"monitor-gateway render complete")
 
 
+def config_backup_proxy(args):
+    """
+    """
+    # 第一步查询出监控网关的全路径，密码
+    cmd = shutil.which("dbm-backup-proxy")
+
+    # 切换到 root 权限
+    with dbma.common.sudo("config dbm-backup-proxy"):
+
+        # 删除已经存在的 systemd 配置文件
+        config_file = "/usr/lib/systemd/system/dbm-backup-proxyd.service"
+        if os.path.isfile(config_file):
+            os.remove(config_file)
+
+        # 执行到这里说明 config_file 一定已经不存在了
+
+        # 配置模板
+        tmpl_dir = os.path.join(args.base_dir, 'etc/templates')
+        tmpl_file = f"dbm-backup-proxyd.service.jinja"
+        env = Environment(loader=FileSystemLoader(searchpath=tmpl_dir))
+        tmpl = env.get_template(tmpl_file)
+        tmpl.globals = {'cmd': cmd}
+
+        # 渲染模板
+        with open(config_file, 'w') as f_config:
+            f_config.write(tmpl.render())
+        try:
+            subprocess.run(['systemctl daemon-reload'], shell=True,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            subprocess.run(['systemctl enable dbm-monitor-gatewayd'], shell=True,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            subprocess.run(['systemctl start dbm-monitor-gatewayd'], shell=True,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except Exception:
+
+            # 不管遇到什么情况都当没有发生
+            pass
+
+    logging.info(f"monitor-gateway render complete")
+
+
 def init(args):
     """
     完成所有 dbm-agent 初始化的逻辑
@@ -282,6 +325,7 @@ def init(args):
     render_init_sql(args)
     init_inseption_db(args)
     config_monitor_gateway(args)
+    config_backup_proxy(args)
 
     # 修改 /usr/local/dbm-agent 目录的权限
     if is_user_exists(args.user_name):
@@ -311,6 +355,7 @@ def upgrade(args):
     # 渲染创建用户的文件
     render_init_sql(args)
     config_monitor_gateway(args)
+    config_backup_proxy(args)
     if is_user_exists(args.user_name):
         subprocess.run(
             ["chown", "-R", f"{args.user_name}:{args.user_name}", args.base_dir], stdout=subprocess.PIPE, stderr=subprocess.PIPE)

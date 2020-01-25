@@ -69,6 +69,12 @@ class NotSupportedMySQLVersionError(Error):
     pass
 
 
+class NotSupportedPackageError(Error):
+    """
+    """
+    pass
+
+
 class DBMAIsRuningError(Error):
     """
     dbm-agent 正在运行
