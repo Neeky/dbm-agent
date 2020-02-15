@@ -176,7 +176,6 @@ class BaseBackup(object):
             logger.info("prepare execute mysqlbackup commond")
             subprocess.run(
                 self.args, check=True, stderr=self.stderr, stdout=self.stdout)
-
             # 备份完成之后改一下文件的权限
             # 本来是要用 mysql{self.port} 这个用户备份数据库的，但是遇到 linux 上的一个错误目前还没有解决！！！
             common.recursive_change_owner(sts, f"mysql{self.port}", "mysql")
@@ -592,12 +591,14 @@ def usable_backup_tools(host="127.0.0.1", port=3306, user="mysqldump", password=
     """
     解析出当前实例下所有可用的备份工具
     """
-    lgr = logger.getChild("aviable_backup_tools")
+    lgr = logger.getChild("usable_backup_tools")
 
     # 连接上实例，用于确认版本号和 basedir
     cnx = None
     tools = []
     try:
+        lgr.info(
+            f"prepare connect to host={host} port={port} user={user} password={password}")
         cnx = connector.connect(host=host, port=port,
                                 user=user, password=password)
         cursor = cnx.cursor()

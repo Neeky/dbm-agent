@@ -80,19 +80,30 @@ def backup_policy(logger):
     logger.info(f"instances in current host {ports}")
 
     # 找到当前主机上所有可用的备份工具
-    tools = backup.usable_backup_tools(user="mysqldump")
-    if tools is None or len(tools) == 0:
-        logger.info(f"tools = {tools}")
-        logger.error(
-            "there are not any available backup tools dbm-backup-proxy exits")
-        return
+    #tools = backup.usable_backup_tools(user="mysqldump")
+    # if tools is None or len(tools) == 0:
+    #    logger.info(f"tools = {tools}")
+    #    logger.error(
+    #        "there are not any available backup tools dbm-backup-proxy exits")
+    #    return
 
-    first, *_ = tools
+    #first, *_ = tools
     # 只在没有可用备份的情况下才备份
 
     # 1、全量备份
     # 检查实例是否用全量备份，如果没有就给它来一个全量备份
     for port in ports:
+
+        # 检查当前实例的可用备份工具
+        tools = backup.usable_backup_tools(
+            user="mysqldump", password=cnf.init_pwd, port=port, host="127.0.0.1")
+        if tools is None or len(tools) == 0:
+            logger.warning(
+                f"there are not any available backup tools dbm-backup-proxy exits for mysqld-{port}")
+            continue
+
+        first, *_ = tools
+
         sts = backup.get_current_backup_sets(port)
         if os.path.isdir(sts):
             # 如果备份集存在就跳过全量备份
@@ -142,10 +153,10 @@ def main():
         print("user 'dbma' not exists,use this fix it 'dbm-agent init' ")
         sys.exit(2)
 
-    # 切换到普通用户 dbma
-    uid, gid = get_uid_gid('dbma')
-    os.setegid(gid)
-    os.seteuid(uid)
+    # 切换到普通用户 dbma # 切到 dbma 会引发一个 linux 上的一个 bug 导致备份不成功
+    # uid, gid = get_uid_gid('dbma')
+    # os.setegid(gid)
+    # os.seteuid(uid)
 
     # 查询用于保存日志文件的目录是否存在
     dir_name = os.path.dirname(args.log_file)
@@ -175,7 +186,12 @@ def main():
     # 在这里死循环内实现所有的功能
     while True:
         with common.sudo("execute backup policy"):
-            backup_policy(logger)
+            try:
+                logger.warning(f"euid = {os.geteuid()}")
+                backup_policy(logger)
+                logger.warning(f"euid = {os.geteuid()}")
+            except Exception as err:
+                logger.error(str(err))
 
         time.sleep(args.spin_time)
 
