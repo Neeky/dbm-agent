@@ -154,9 +154,9 @@ def main():
         sys.exit(2)
 
     # 切换到普通用户 dbma # 切到 dbma 会引发一个 linux 上的一个 bug 导致备份不成功
-    # uid, gid = get_uid_gid('dbma')
-    # os.setegid(gid)
-    # os.seteuid(uid)
+    uid, gid = get_uid_gid('dbma')
+    os.setegid(gid)
+    os.seteuid(uid)
 
     # 查询用于保存日志文件的目录是否存在
     dir_name = os.path.dirname(args.log_file)
