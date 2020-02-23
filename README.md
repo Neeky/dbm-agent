@@ -930,14 +930,59 @@
    ---
 
 ## 数据库备份代理dbm-backup-proxy
-   在 dbm-agent-0.7.0 版本的时候我们把备份任务独立到了一个单独的守护进程当中；并且会自动运行在后台
+   备份作为一个直接关系到 dba 饭碗的事，dbm-agent 把它放到了一个单独的进程当中去实现；就目前来讲它封装了 `mysqldump` 这个逻辑备份工具和 `mysqlbackup` 这个官方的企业级的物理备份工具。
+
+   为了尽可能不要让 dba 操心，dbm-backup-proxy 备份计划都自己定了。 1、优先使用 mysqlbackup 做物理备份 2、每周一次全备+每天一次差异备份(有全备的那天不执行差异备份) 3、在 `mysqlbackup` 不存在的情况下降级到 `mysqldump` 备份(这种情况下每天都有一次全备)
+
+   ---
+
+   **1、** 启动备份服务
+
+   想把备份任务全权交给 dbm-backup-proxy 了吗？做法非常的简单把这个进程启动就行了
    ```bash
-   ps -ef | grep dbm-backup-proxy                                           
-   dbma       4698      1  0 00:00 ?        00:00:00 /usr/local/python-3.8.1/bin/python3.8 /usr/local/python/bin/dbm-backup-proxy start 
+   # 初始化完成之后 dbm-agent 会自动创建 dbm-backup-proxyd 这个服务的
+   systemctl start dbm-backup-proxyd
    ```
+   当然你手工启动这个进程也是可以的
+   ```bash
+   dbm-backup-proxy start
 
+   Successful start and log file save to '/usr/local/dbm-agent/logs/dbm-bacukp-proxy.log'
+   ```
+   检查进程是否运行
+   ```bash
+   ps -ef | grep dbm                                                           
+   dbma       3023      1  0 16:51 ?        00:00:00 /usr/local/python-3.8.1/bin/python3.8 /usr/local/python/bin/dbm-backup-proxy start
 
+   # 虽然 dbm-backup-proxy 要求以 root 身份启动，但是它的绝大多数时间还是以  dbma 这个身份运行，注意它也是一个守护进程
+   ```
+   **当这个进程运行起来之后，对主机上所有 mysql 数据库进行备份这个事就它就会自动的去完成了，dba 喝咖啡去吧。**
 
+   ---
+
+   **2、** 检查备份是否成功
+
+   默认备份的文件会保存在 `/backup/mysql/backup/{port}/` 目录下
+
+   我当前的主机上运行着 3306 & 3307 两个实例
+   ```
+   ps -ef | grep mysql                                                      
+   mysql33+   1037      1  0 14:36 ?        00:01:13 /usr/local/mysql-8.0.19-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3306.cnf                                                      
+   mysql33+   1040      1  0 14:36 ?        00:01:15 /usr/local/mysql-8.0.19-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3307.cnf
+   ```
+   那么 3306 实例的备份文件就应该在 `/backup/mysql/backup/3306/` 目录下
+   ```bash
+   tree /backup/mysql/backup/3306/
+
+   /backup/mysql/backup/3306/
+   └── 2020-7
+       ├── 2020-02-16T16:49:04.894522-full-backup.mbi
+       ├── 2020-02-16T16:49:04.894522.log
+       ├── binlog-position.log
+       └── mysqlbackup-progress.log
+   
+   1 directory, 4 files
+   ```
 
    ---
 

@@ -639,6 +639,184 @@ def get_current_backup_sets(port=3306):
     return sts
 
 
+class BackupChecker(object):
+    """检查备份是否存在于是否成功
+    """
+    logger = logger.getChild("BackupChecker")
+
+    def __init__(self, port=3306):
+        """
+        """
+        logger = self.logger.getChild("__init__")
+        logger.info("start")
+
+        self.port = port
+        # 当前时间的前缀 2020-02-22
+        self.todaystr = datetime.now().isoformat()[:10]
+        year, week, *_ = datetime.now().isocalendar()
+        self.backup_set_dir = os.path.join(
+            f"/backup/mysql/backup/{port}/", f"{year}-{week}")
+
+        logger.info("complete")
+
+    @property
+    def has_backup_set(self):
+        """检查是否有备份集
+        """
+        logger = self.logger.getChild("has_backup_set")
+        logger.info("start")
+
+        # 如果备份集的目录不存在那么就是没有
+        if not os.path.exists(self.backup_set_dir):
+            logger.info("complete")
+            return False
+        else:
+            logger.info("complete")
+            return True
+
+    @property
+    def has_mbi_full_backup(self):
+        """检查是否有 mysqlbackup 做的全备
+        """
+        logger = self.logger.getChild("has_mbi_full_backup")
+        logger.info("start")
+
+        #
+        if self.has_backup_set == False:
+
+            # 备份集都没有就不可能有基于 mysqlbackup 的全备文件
+            logger.debug("backup set not exists")
+            logger.info("complete")
+            return False
+
+        # 执行到这里说明备份集存在于是检查是否有全备文件
+
+        backups = [backup for backup in os.listdir(
+            self.backup_set_dir) if backup.endswith("full-backup.mbi")]
+        logger.info(f"{backups}")
+
+        if len(backups) == 0:
+
+            # 空列表说明没有全备
+            logger.info("complete")
+            return False
+
+        # 执行到这里说明 全备文件是存在的，那么就要检查它是否成功了
+        * _, lastbackup = backups
+        logfile = lastbackup[:26] + '.log'
+        log_file_path = os.path.join(self.backup_set_dir, logfile)
+
+        # 如果文件这个时候被删除了，那么就有可能不存在，所以先检查一下
+        if not os.path.isfile(log_file_path):
+            logger.warning(f"log file '{log_file_path}' not exists")
+            logger.info("complete")
+            return False
+
+        # 执行到这里说明文件是有的
+        log_file_size = os.stat(log_file_path).st_size
+        logger.info(f"prepare open {log_file_path}")
+        with open(log_file_path) as logfile:
+
+            # 指向最后 100 个字节
+            logfile.seek(log_file_size - 100)
+            for line in logfile:
+
+                # 能找到成功的标志就说明成功了，不然说说明没有成功
+                if 'mysqlbackup completed OK!' in line:
+                    logger.info("complete")
+                    return True
+
+        logger.info("complete")
+        return False
+
+    @property
+    def has_mbi_diff_backup(self):
+        """检查增量备份是否成功
+        """
+        logger = self.logger.getChild("has_mbi_diff_backup")
+        logger.info("start")
+
+        # 如果备份集都没有那么就认为 diff 备份也没有
+        if self.has_backup_set == False:
+            logger.warning("backup set dir not exists")
+            logger.info("complete")
+            return False
+
+        # 执行到这里说明备份集是有的，那么准备找今天有没有 diff 备份,full 也看成是 diff
+        backups = [backup for backup in os.listdir(self.backup_set_dir) if backup.startswith(
+            self.todaystr) and backup.endswith(".log")]
+        if len(backups) == 0:
+
+            #
+            logger.warning("cant find any backup file ")
+            logger.info("complete")
+            return False
+
+        # 执行到这里说明是有日志文件的、那么就看一下最后一个备份日志文件中有没有记录成功
+        * _, logfile = backups
+        log_file_path = os.path.join(self.backup_set_dir, logfile)
+        log_file_size = os.stat(log_file_path).st_size
+
+        with open(log_file_path) as logfile:
+
+            #
+            logger.info("")
+            logfile.seek(log_file_size - 100)
+            for line in logfile:
+
+                # 如果有成功的标示就说明成功了
+                if 'mysqlbackup completed OK!' in line:
+                    logger.info("complete")
+                    return True
+
+        logger.info("complete")
+        return False
+
+    @property
+    def has_sql_backup(self):
+        """检查今天 mysqldump 的备份有没有成功
+        """
+        logger = self.logger.getChild("has_sql_backup")
+        logger.info("start")
+
+        if self.has_backup_set == False:
+
+            logger.warning("backup set not exits")
+            logger.info("complete")
+            return False
+
+        #
+        backups = [backup for backup in os.listdir(
+            self.backup_set_dir) if backup.endswith("full-backup.sql")]
+
+        # 检查备份集是否存在
+        if len(backups) == 0:
+
+            #
+            logger.warning("backup set is empty")
+            logger.info("complete")
+            return False
+
+        #
+        * _, lastbackup = backups
+        last_backup_file_path = os.path.join(self.backup_set_dir, lastbackup)
+        last_backup_file_size = os.stat(last_backup_file_path).st_size
+
+        with open(last_backup_file_path) as backupfile:
+            backupfile.seek(last_backup_file_size - 100)
+            for line in backupfile:
+                if '-- Dump completed on' in line:
+
+                    #
+                    logger.info(
+                        f"has available backup '{last_backup_file_path}' ")
+                    logger.info("complete")
+                    return True
+
+        logger.info("complete")
+        return False
+
+
 def today_has_backup(port=3306):
     """
     检查今天是否已经备份过
@@ -685,6 +863,34 @@ def today_has_backup(port=3306):
 
     lgr.info("backup file validate fail we need a new one")
     return False
+
+
+def has_full_backup(port=3306):
+    """检查是否有可用的全备
+    """
+    lgr = logger.getChild("has_full_backup")
+    lgr.info("start")
+
+    # 如果备份集的目录不存在那么一定是没有的
+    today = datetime.now().isoformat()[:10]
+    year, week, *_ = datetime.now().isocalendar()
+    sts = os.path.join(
+        f"/backup/mysql/backup/{port}/", f"{year}-{week}")
+    if not os.path.isdir(sts):
+        # 如果备份集都没有，那么是一定没有备份的
+        lgr.info("backup sets not exists.")
+        return False
+
+    # 目录已经存在就要检查全备是否成功
+    # 使用 mysqldump 的情况
+    lgr.debug("prepare checking has *full-backup.sql file or not")
+    mysqldumps = [dump for dump in os.listdir(
+        sts) if dump.endswith("full-backup.sql")]
+    lgr.debug(f"find dump files {mysqldumps}")
+
+    if len(mysqldumps) == 0:
+        lgr.debug("full backup not exists")
+        return False
 
 
 def clean_backup_sets(port=3306, sets_count=2):
