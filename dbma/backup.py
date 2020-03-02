@@ -92,9 +92,28 @@ class BaseBackup(object):
 
     def clear(self):
         """
-        定义备份完成之后的一些清理工作,交由其它 Mixin 实现
+        定义备份完成之后的一些清理工作
+        只保留两个备份集
         """
-        pass
+        logger = self.logger.getChild("clear")
+        logger.info("start")
+
+        # 取得所有的备份集目录
+        backup_base_dir = f"/backup/mysql/backup/{self.port}"
+        dir_pattern = re.compile("[0-9]{4}-[0-9]{1,2}")
+        dirs = [item for item in os.listdir(
+            backup_base_dir) if os.path.isdir(item) and dir_pattern.match(item)]
+
+        if len(dirs) >= 3:
+
+            # 如果备份集目录超过三个
+            olderest_dir, *_ = dirs
+            logger.info(f"prepare remove {olderest_dir}")
+            sts = os.path.join(backup_base_dir, olderest_dir)
+            shutil.rmtree(sts)
+            logger.info(f"done remove {olderest_dir}")
+
+        logger.info("complete")
 
     def save_binlog_position(self):
         """
@@ -302,15 +321,6 @@ class MySQLBackupMixin(object):
         'write-threads': 1,
         'limit-memory': 128,
     }
-
-    def clear(self):
-        """
-        实现备份完成之后的清理工作(清理 backup-dir)
-        """
-        logger = self.logger.getChild("clear")
-        if os.path.isdir(self.backup_dir):
-            logger.info(f"prepare remove backup-dir {self.backup_dir}")
-            shutil.rmtree(self.backup_dir)
 
     def get_mysqlbackup_cmd(self):
         """
