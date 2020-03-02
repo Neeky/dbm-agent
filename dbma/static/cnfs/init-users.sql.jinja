@@ -57,6 +57,8 @@ grant trigger on *.* to mysqldump@'localhost';
 grant super,replication client on *.* to 'mysqldump'@'localhost';
 grant reload,event on *.* to 'mysqldump'@'localhost';
 
+-- for mysql-8.0.19
+grant system_variables_admin,persist_ro_variables_admin on *.* to innodbclusteradmin@'%';
 
 -- mysqlbackup
 create user mysqlbackup@'127.0.0.1' identified by '{{initpwd}}';
@@ -104,6 +106,8 @@ grant create, insert, drop, update on mysql.backup_sbt_history to 'mysqlbackup'@
 grant encryption_key_admin on *.* to 'mysqlbackup'@'localhost';
 -- grant seelct on non-InnoDB_tbl to 'mysqlbackup'@'localhost';
 grant innodb_redo_log_archive on *.* to 'mysqlbackup'@'localhost';
+
+-- 
 
 set @@sql_log_bin=1;
 
