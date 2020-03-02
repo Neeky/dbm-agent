@@ -101,17 +101,19 @@ class BaseBackup(object):
         # 取得所有的备份集目录
         backup_base_dir = f"/backup/mysql/backup/{self.port}"
         dir_pattern = re.compile("[0-9]{4}-[0-9]{1,2}")
-        dirs = [item for item in os.listdir(
+        dirs = [os.path.join(backup_base_dir, item) for item in os.listdir(
             backup_base_dir) if os.path.isdir(item) and dir_pattern.match(item)]
+
+        # 构建创建时间与目录的元组
+        create_time_dirs = [(os.stat(item).st_ctime, item) for item in dirs]
 
         if len(dirs) >= 3:
 
-            # 如果备份集目录超过三个
-            olderest_dir, *_ = dirs
-            logger.info(f"prepare remove {olderest_dir}")
-            sts = os.path.join(backup_base_dir, olderest_dir)
-            shutil.rmtree(sts)
-            logger.info(f"done remove {olderest_dir}")
+            # 如果备份集目录超过三个、找到最老的那个
+            _, dir = min(create_time_dirs)
+            logger.info(f"prepare remove {dir}")
+            shutil.rmtree(dir)
+            logger.info(f"done remove {dir}")
 
         logger.info("complete")
 
