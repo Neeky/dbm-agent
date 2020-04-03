@@ -416,6 +416,13 @@ class MyCnfRender(object):
             self.innodb_log_file_size = '256M'
             self.innodb_log_buffer_size = '2G'
 
+        # 设置最大连接数
+        self.max_connections = chunk * 8
+        if self.max_connections <= 128:
+            self.max_connections = 128
+        elif self.max_connections >= 2048:
+            self.max_connections = 2048
+
     def _config_disk(self):
         """
         磁盘目前还不做配置
