@@ -12,7 +12,7 @@ def get_version():
     with open(version_file) as f:
         line = f.readline()
 
-    m = re.search(r'\d\.\d\.\d*', line)
+    m = re.search(r'\d*\.\d*\.\d*', line)
 
     if m:
         return m.group(0)
