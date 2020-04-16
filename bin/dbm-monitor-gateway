@@ -41,6 +41,8 @@ def parser_cmd_args():
                         default='monitor', help="mysql monitor user")
     parser.add_argument('--monitor-password', type=str,
                         default="dbma@0352", help="password of mysql monitor user")
+    parser.add_argument('--expire-seconds', type=int,
+                        default=7, help="expire secondes")
     parser.add_argument('--log', type=str, default='info',
                         choices=['debug', 'info', 'warning', 'error'])
     parser.add_argument('--log-file', type=str,
@@ -273,7 +275,8 @@ def main():
         logger.info(f"create a monitor thread for mysqld-{port}")
         instances[str(port)] = monitor.MySQLMonitor(host='127.0.0.1', port=port,
                                                     monitor_user=args.monitor_user,
-                                                    monitor_password=args.monitor_password)
+                                                    monitor_password=args.monitor_password,
+                                                    expire_seconds=args.expire_seconds)
         # 启动监控线程
         instances[str(port)].start()
         logger.info(f"monitor thread of mysqld-{port} started")
