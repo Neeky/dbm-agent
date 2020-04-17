@@ -23,6 +23,8 @@
 - [卸载](#卸载)
 - [交流与赞助](#交流与赞助)
 - [常见问题解答](#常见问题解答)
+- [开发文档](#开发文档)
+
 ---
 
 ## dbm-agent
@@ -1133,3 +1135,45 @@
    ```
 
    ---
+
+
+## 开发文档
+合并代码前请确保你有给你的代码编写测试代码，并保证测试是通过的。目前 dbm-agent 的测试可以在 docker 中完成。
+
+第一步：启动 docker 镜像
+```bash
+cd dbm-agent
+bash dev-docker.sh
+
+
+Sending build context to Docker daemon  5.369MB
+Step 1/4 : FROM 1721900707/dbma:0.0.1.0
+ ---> 8621ee54295a
+Step 2/4 : MAINTAINER neeky@live.com
+ ---> Running in fb35177fdc23
+Removing intermediate container fb35177fdc23
+ ---> 43fc72e2424a
+Step 3/4 : ADD . /tmp/
+ ---> 73e5a4c84b2d
+Step 4/4 : CMD python3 --version
+ ---> Running in 4a5af95857c7
+Removing intermediate container 4a5af95857c7
+ ---> 918f74aa72df
+Successfully built 918f74aa72df
+Successfully tagged 1721900707/dbma:0.0.1.0
+[root@d5cae0c6edf3 tmp]# 
+```
+
+第二步：运行自动化测试用例
+```bash
+bash autotest.sh -v
+
+----------------------------------------------------------------------
+Ran 30 tests in 0.407s
+
+OK
+```
+
+
+
+---
