@@ -7,6 +7,8 @@ import logging
 import shutil
 from . import privileges as prv
 from . import errors
+from .usermanage import LinuxUsers as lus
+from .ldconfig import ldconfig
 
 
 logger = logging.getLogger('dbm-agent').getChild(__name__)
@@ -19,6 +21,7 @@ class BaseSoftInstall(object):
 
     pkgs_dir = "/usr/local/dbm-agent/pkg/"
     usr_local_dir = "/usr/local/"
+    ld_so_dir = "/etc/ld.so.conf.d"
 
     def __init__(self, pkg, *args, **kwargs):
         """
@@ -80,13 +83,48 @@ class BaseSoftInstall(object):
     def export_sofile(self):
         """导出库文件到 /etc/ld.so.conf.d
         """
-        raise NotImplementedError("请在子类当中实现，导出 so 文件到 /etc/ld.so.conf.d 的逻辑")
+        logger = self.logger.getChild("export_sofile")
+        logger.info("start.")
+
+        so_lib_full_path, version = self.sopath
+        with prv.sudo("export os file"):
+            so_export_file = os.path.join(self.ld_so_dir, f"{version}.conf")
+            with open(so_export_file, 'w') as soconfig_obj:
+                soconfig_obj.write(so_lib_full_path)
+
+        # 导出
+        ldconfig()
+        logger.info("complete.")
+
+    def pre_checks(self):
+        """安装前要执行的检查
+        """
+        # 默认什么都不检查
+        pass
+
+    def is_pkg_exists(self):
+        """检查包是不否存在
+        """
+        logger = self.logger.getChild("is_pkg_exists")
+        logger.info("start.")
+
+        # 检查文件是否存在
+        is_exists = os.path.isfile(os.path.join(self.pkgs_dir, self.pkg))
+        if is_exists == False:
+            logger.warning(f"pkg '{self.pkg}' not exists.")
+
+        logger.info("complete.")
+        return is_exists
 
 
 class MySQLBinaryInstall(BaseSoftInstall):
     """实现用二进制包安装 MySQL 相关的工作
     """
     logger = logger.getChild("MySQLBinaryInstall")
+    group_name = "mysql"
+    user_name = "mysql"
+    mysql_57_re = r"mysql-.*5\.7\.\d*-linux-glibc2.12-x86_64"
+    mysql_80_re = r"mysql-.*8\.0\.\d*-linux-glibc2.12-x86_64"
 
     def __init__(self, pkg="mysql-8.0.19-linux-glibc2.12-x86_64.tar.xz", *args, **kwargs):
         """
@@ -112,6 +150,7 @@ class MySQLBinaryInstall(BaseSoftInstall):
         self.mysql_base_dir = mysql_base_dir
         self.mysql_lib_dir = mysql_lib_dir
         self.mysql_bin_dir = mysql_bin_dir
+        self.mysql_version = version
 
         # 设定公共的属性
         BaseSoftInstall.__init__(self, pkg, *args, **kwargs)
@@ -123,13 +162,25 @@ class MySQLBinaryInstall(BaseSoftInstall):
 
     @property
     def sopath(self):
-        return self.mysql_lib_dir
+        return (self.mysql_lib_dir, self.mysql_version)
 
     @property
     def is_has_been_installed(self):
         """之前是否就已经安装过了
         """
         return os.path.isdir(self.mysql_base_dir)
+
+    @property
+    def is_an_supported_mysql_version(self):
+        """
+        """
+        return re.search(self.mysql_57_re, self.mysql_version) or re.search(self.mysql_80_re, self.mysql_version)
+
+    def pre_checks(self):
+        """
+        """
+        # 要满足父类的要求
+        BaseSoftInstall.pre_checks(self)
 
     def decompression(self):
         """解压安装包到 /usr/local/
@@ -142,4 +193,67 @@ class MySQLBinaryInstall(BaseSoftInstall):
 
         logger.info("complete")
 
-    
+    def install_mysql(self):
+        """实现 MySQL 的自动化安装
+        """
+        logger = self.logger.getChild("install_mysql")
+        logger.info("start")
+
+        if self.is_an_supported_mysql_version:
+            # 如果是一个不支持的 MySQL 版本就直接报错
+            raise errors.NotSupportedMySQLVersionError(self.mysql_version)
+
+        if self.is_has_been_installed:
+            # 如果已经安装过了那么就直接退出。
+            logger.info("has been installed")
+            return
+        # 如果执行到这里说明，当前版本的 MySQL 还没有安装过。
+
+        # 第一步 检查 mysql 用户是否存在，不存在就创建
+        logger.info(f"step 0 create user {self.user_name}.")
+        if lus.is_group_exists(self.group_name) == False:
+            lus.create_group(self.group_name)
+
+        if lus.is_user_exists(self.user_name) == False:
+            lus.create_user(self.user_name)
+
+        # 第二步 检查包是否存在
+        logger.info("step 1 check pkg exists or not.")
+        if self.is_pkg_exists == False:
+            logger.error(f"pkg file not exists '{self.pkg}'.")
+            raise errors.FileNotExistsError(self.pkg_full_path)
+
+        # 第三步 解压
+        logger.info("step 2 decompression.")
+        self.decompression()
+
+        # 第四步 导出 PATH 环境变量
+        logger.info("setp 3 export path.")
+        self.export_path()
+
+        # 第五步 导出 os 文件
+        logger.info('step 4 export so file.')
+        self.export_sofile()
+
+        # 第六步 chown
+        logger.info(f"step 5 chwon {self.mysql_base_dir}")
+        prv.chown(self.mysql_version, self.user_name,
+                  self.group_name, recusive=True)
+
+    def install(self):
+        """实现软件包的安装
+        """
+        logger = self.logger.getChild("install")
+        logger.info("start.")
+
+        try:
+            self.install_mysql()
+            logger.info("mysql install successful.")
+        except errors.Error as err:
+            logger.error("mysql install fail.")
+            logger.exception(err)
+        except Exception as err:
+            logger.error("unexcepted Exception.")
+            logger.exception(err)
+
+        logger.info("complete.")
