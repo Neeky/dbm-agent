@@ -96,6 +96,9 @@ class MonitorItemHttpRequestHandler(BaseHTTPRequestHandler):
     # /3306/com_select/ 返回给定监控项的值
     pattern_get_item = re.compile(r"^/instances/(\d*)/(\S*)/{0,1}$")
 
+    # /metrics  返回 prometheus 的采集项
+    prometheus_metrics = re.compile(r"^/metrics")
+
     logger = logging.getLogger(
         'dbm-agent').getChild("MonitorItemHttpRequestHandler")
 
@@ -128,6 +131,9 @@ class MonitorItemHttpRequestHandler(BaseHTTPRequestHandler):
             # /instances/3306/com_select/
             # 查询出 3306 实例上的 com_select 的值
             return self._get_item
+        elif self.prometheus_metrics.search(self.path):
+            #
+            pass
         else:
 
             # 404
@@ -191,11 +197,27 @@ class MonitorItemHttpRequestHandler(BaseHTTPRequestHandler):
     def _get_404(self):
         """
         """
-        self.send_response(200)
+        self.send_response(404)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
         message = {'error-msg': f'404 not found'}
         self.wfile.write(json.dumps(message).encode("utf8"))
+
+    def _prometheus(self):
+        """
+        """
+        logger = self.logger.getChild("_prometheus")
+        logger.info("start.")
+        self.send_response(200)
+        self.send_header('Content-type', 'text/plain')
+        self.end_headers()
+        #
+        if os.path.isfile("/tmp/data.txt"):
+            with open("/tmp/data.txt") as f:
+                content = f.read()
+        else:
+            content = "com_select 100\n"
+        self.wfile.write(content)
 
     def do_GET(self):
         """
