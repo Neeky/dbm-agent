@@ -132,10 +132,9 @@ class MonitorItemHttpRequestHandler(BaseHTTPRequestHandler):
             # 查询出 3306 实例上的 com_select 的值
             return self._get_item
         elif self.prometheus_metrics.search(self.path):
-            #
-            pass
+            # prometheus
+            return self._prometheus
         else:
-
             # 404
             return self._get_404
 
@@ -217,7 +216,7 @@ class MonitorItemHttpRequestHandler(BaseHTTPRequestHandler):
                 content = f.read()
         else:
             content = "com_select 100\n"
-        self.wfile.write(content)
+        self.wfile.write(content.encode("utf8"))
 
     def do_GET(self):
         """
