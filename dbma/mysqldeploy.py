@@ -128,6 +128,7 @@ class MyCnfRender(object):
         self.sync_binlog = 1
         self.binlog_stmt_cache_size = '32K'
         self.log_slave_updates = 'ON'
+        self.binlog_transaction_compression = 'ON'
         self.binlog_group_commit_sync_delay = 0
         self.binlog_group_commit_sync_no_delay_count = 0
         self.binlog_cache_size = '96K'
