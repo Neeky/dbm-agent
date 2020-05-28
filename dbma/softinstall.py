@@ -9,15 +9,18 @@ from . import privileges as prv
 from . import errors
 from .usermanage import LinuxUsers as lus
 from .ldconfig import ldconfig
+from .dbmaconfig import ConfigMixin
 
 
 logger = logging.getLogger('dbm-agent').getChild(__name__)
 
 
-class BaseSoftInstall(object):
+class BaseSoftInstall(ConfigMixin):
     """所有软件安装的基类
     """
     logger = logger.getChild("BaseSoftInstall")
+    group_name = "dbma"
+    user_name = "dbma"
 
     pkgs_dir = "/usr/local/dbm-agent/pkg/"
     usr_local_dir = "/usr/local/"
@@ -28,6 +31,8 @@ class BaseSoftInstall(object):
         """
         self.pkg = pkg
         self.profile = "/etc/profile"
+        self.version = pkg.replace('.tar.gz', '').replace('.tar.xz', '')
+        self.pkg_full_path = os.path.join(self.usr_local_dir, self.pkgs_dir)
 
     @property
     def path(self):
@@ -102,6 +107,22 @@ class BaseSoftInstall(object):
         # 默认什么都不检查
         pass
 
+    def create_user(self):
+        """创建用户和组
+        """
+        logger = self.logger.getChild("create_user")
+        logger.info("start")
+
+        if lus.is_group_exists(self.group_name) == False:
+            logger.debug(f"create group '{self.group_name}'")
+            lus.create_group(self.group_name)
+
+        if lus.is_user_exists(self.user_name) == False:
+            logger.debug(f"create group '{self.user_name}'")
+            lus.create_user(self.user_name, self.group_name)
+
+        logger.info("complete")
+
     def is_pkg_exists(self):
         """检查包是不否存在
         """
@@ -115,6 +136,25 @@ class BaseSoftInstall(object):
 
         logger.info("complete.")
         return is_exists
+
+    def is_has_been_installed(self):
+        """
+        """
+        return os.path.isdir(self.usr_local_dir, self.version)
+
+    def decompression(self):
+        """解压安装包到 /usr/local/
+        """
+        logger = self.logger.getChild("decompression")
+        logger.info("start")
+
+        with prv.sudo("decompression mysql pkg to /usr/local/"):
+            shutil.unpack_archive(self.pkg_full_path, self.usr_local_dir)
+
+        logger.info("complete")
+
+    def install(self):
+        pass
 
 
 class MySQLBinaryInstall(BaseSoftInstall):
@@ -182,17 +222,6 @@ class MySQLBinaryInstall(BaseSoftInstall):
         # 要满足父类的要求
         BaseSoftInstall.pre_checks(self)
 
-    def decompression(self):
-        """解压安装包到 /usr/local/
-        """
-        logger = self.logger.getChild("decompression")
-        logger.info("start")
-
-        with prv.sudo("decompression mysql pkg to /usr/local/"):
-            shutil.unpack_archive(self.pkg_full_path, self.usr_local_dir)
-
-        logger.info("complete")
-
     def install_mysql(self):
         """实现 MySQL 的自动化安装
         """
@@ -210,12 +239,7 @@ class MySQLBinaryInstall(BaseSoftInstall):
         # 如果执行到这里说明，当前版本的 MySQL 还没有安装过。
 
         # 第一步 检查 mysql 用户是否存在，不存在就创建
-        logger.info(f"step 0 create user {self.user_name}.")
-        if lus.is_group_exists(self.group_name) == False:
-            lus.create_group(self.group_name)
-
-        if lus.is_user_exists(self.user_name) == False:
-            lus.create_user(self.user_name)
+        self.create_user()
 
         # 第二步 检查包是否存在
         logger.info("step 1 check pkg exists or not.")
@@ -257,3 +281,72 @@ class MySQLBinaryInstall(BaseSoftInstall):
             logger.exception(err)
 
         logger.info("complete.")
+
+
+class PrometheusBinaryInstall(BaseSoftInstall):
+    """prometheus 二进制包安装
+    """
+    logger = logger.getChild("PrometheusBinaryInstall")
+    prometheus_re = r"prometheus-2.\d+.\d+.linux-amd64.tar.gz"
+    user_name = "prometheus"
+    group_name = "prometheus"
+
+    def __init__(self, pkg="prometheus-2.17.2.linux-amd64.tar.gz", *args, **kwargs):
+        """
+        """
+        logger = self.logger.getChild("__init__")
+        logger.info("start.")
+
+        self.pkg = pkg
+        self.version = pkg.replace('.tar.gz', '').replace('.tar.xz', '')
+        self.pkg_full_path = os.path.join(self.pkgs_dir, self.version)
+
+        logger.info("complete.")
+
+    @property
+    def path(self):
+        """
+        """
+        return os.path.join(self.usr_local_dir, self.version)
+
+    def export_sofile(self):
+        """没有 so 要导出
+        """
+        pass
+
+    @property
+    def is_pkg_exists(self):
+        """检查软件包是否存在
+        """
+        return os.path.isfile(self.pkg_full_path)
+
+    @property
+    def is_has_been_installed(self):
+        return os.path.isdir(self.usr_local_dir, self.version)
+
+    def install_prometheus(self):
+        """
+        """
+        logger = self.logger.getChild("install_prometheus")
+        logger.info("start.")
+
+        if self.is_has_been_installed is True:
+            # 如果已经安装过了就直接退出
+            logger.info(f"'{self.version}' has been installd.")
+            logger.info("complete.")
+            return
+
+        # 执行到这里说明之前还没有安装过
+        if self.is_pkg_exists is False:
+            logger.error(f"pkg '{self.pkg_full_path}' not exists.")
+            raise errors.FileNotExistsError(self.pkg_full_path)
+
+        # 执行常规的安装程序
+
+        # 第一步：创建用户
+        self.create_user()
+
+        # 第二步：解压
+        self.decompression()
+
+        # 第三步：
