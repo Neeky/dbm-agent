@@ -43,7 +43,7 @@ class MyCnfRender(object):
         """
         """
         self.max_mem = max_mem
-        self.cores = cores
+        self.cores = int(cores)
         self.binlogdir = binlogdir
         # basic
         self.user = user
@@ -771,7 +771,7 @@ class MySQLInstallerMixin(object):
         if checkings.is_directory_exists(mysql_binlog_dir):
 
             # binlog 目录已经存在
-            logger.erorr(
+            logger.error(
                 f"mysql binlog  directory '{mysql_binlog_dir}' exists")
             raise errors.DirecotryAlreadyExistsError(mysql_binlog_dir)
 
