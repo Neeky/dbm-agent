@@ -25,7 +25,7 @@ def parser_cmd_args():
                         default="192.168.100.10,192.168.100.20,192.168.100.30", help="mgr member list")
     parser.add_argument('--max-mem', type=int,
                         default=128, help="max memory")
-    parser.add_argument('--cores', type=str,
+    parser.add_argument('--cores', type=int,
                         default=cores, help="cpu cores")
     parser.add_argument('--pkg', type=str, default="mysql-8.0.20-linux-glibc2.12-x86_64.tar.xz",
                         help="mysql install package")
