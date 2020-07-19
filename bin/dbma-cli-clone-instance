@@ -26,7 +26,7 @@ def parser_cmd_args():
                         default="127.0.0.1", help="host ip")
     parser.add_argument('--clone-password', type=str,
                         default="dbma@0352", help="backup user")
-    parser.add_argument('--pkg', type=str, default="mysql-8.0.20-linux-glibc2.12-x86_64.tar.xz",
+    parser.add_argument('--pkg', type=str, default="mysql-8.0.21-linux-glibc2.12-x86_64.tar.xz",
                         help="mysql install package")
     parser.add_argument('--log', type=str, default='info',
                         choices=['debug', 'info', 'warning', 'error'])

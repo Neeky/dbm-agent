@@ -30,7 +30,7 @@ def parser_cmd_args():
     parser.add_argument('--clone-password', type=str,
                         default="dbma@0352", help="the password for clone user")
     parser.add_argument(
-        '--pkg', type=str, default="mysql-8.0.20-linux-glibc2.12-x86_64.tar.xz", help="mysql install package")
+        '--pkg', type=str, default="mysql-8.0.21-linux-glibc2.12-x86_64.tar.xz", help="mysql install package")
     parser.add_argument('--max-mem', type=int, default=128,
                         help="max memory for instacne(MB)")
     parser.add_argument('--cores', type=int, default=cores,

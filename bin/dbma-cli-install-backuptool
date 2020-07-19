@@ -21,7 +21,7 @@ def parser_cmd_args():
     name, *_ = os.path.basename(__file__).split('.')
     parser = argparse.ArgumentParser(name)
     parser.add_argument(
-        '--pkg', type=str, default="mysql-commercial-backup-8.0.20-linux-glibc2.12-x86_64.tar.xz", help="backp tool pkg name")
+        '--pkg', type=str, default="mysql-commercial-backup-8.0.21-linux-glibc2.12-x86_64.tar.xz", help="backp tool pkg name")
     parser.add_argument('--log', type=str, default='info',
                         choices=['debug', 'info', 'warning', 'error'])
     parser.add_argument('action', type=str, choices=[

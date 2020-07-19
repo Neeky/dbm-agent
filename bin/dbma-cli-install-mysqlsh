@@ -21,7 +21,7 @@ def parser_cmd_args():
     """
     name, *_ = os.path.basename(__file__).split('.')
     parser = argparse.ArgumentParser(name)
-    parser.add_argument('--pkg', type=str, default="mysql-shell-8.0.20-linux-glibc2.12-x86-64bit.tar.gz",
+    parser.add_argument('--pkg', type=str, default="mysql-shell-8.0.21-linux-glibc2.12-x86-64bit.tar.gz",
                         help="mysql-shell install package")
     parser.add_argument('--log', type=str, default='info',
                         choices=['debug', 'info', 'warning', 'error'])
