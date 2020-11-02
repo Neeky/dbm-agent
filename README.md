@@ -79,6 +79,10 @@
    yum -y install gcc gcc-c++ libffi libyaml-devel libffi-devel zlib zlib-devel openssl shadow-utils net-tools \
    openssl-devel libyaml sqlite-devel libxml2 libxslt-devel libxml2-devel wget vim mysql-devel 
    ```
+   Centos-8.x 的话还要多安装一个包
+   ```bash
+   yum -y install ncurses-compat-libs
+   ```
 
    ---
 

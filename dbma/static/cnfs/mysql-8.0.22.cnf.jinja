@@ -1,0 +1,286 @@
+[mysqld]
+#### for basic
+user                                     = {{user}}
+basedir                                  = {{basedir}}
+datadir                                  = {{datadir}}
+server_id                                = {{server_id}}
+port                                     = {{port}}
+bind_address                             = {{bind_address}}
+admin_address                            = {{admin_address}}
+mysqlx_port                              = {{mysqlx_port}}
+admin_port                               = {{admin_port}}
+socket                                   = {{socket}}
+mysqlx_socket                            = {{mysqlx_socket}}
+pid_file                                 = {{pid_file}}  
+character_set_server                     = {{character_set_server}}
+open_files_limit                         = {{open_files_limit}}
+max_prepared_stmt_count                  = {{max_prepared_stmt_count}}  
+skip_name_resolve                        = {{skip_name_resolve}}     
+super_read_only                          = {{super_read_only}}
+log_timestamps                           = {{log_timestamps}}
+event_scheduler                          = {{event_scheduler}}
+auto_generate_certs                      = {{auto_generate_certs}}
+activate_all_roles_on_login              = {{activate_all_roles_on_login}}
+end_markers_in_json                      = {{end_markers_in_json}}
+tmpdir                                   = {{tmpdir}}
+max_connections                          = {{max_connections}}
+autocommit                               = {{autocommit}}
+sort_buffer_size                         = {{sort_buffer_size}}
+join_buffer_size                         = {{join_buffer_size}}
+eq_range_index_dive_limit                = {{eq_range_index_dive_limit}}
+
+#### for table 
+big_tables                               = {{big_tables}}
+sql_require_primary_key                  = {{sql_require_primary_key}}
+lower_case_table_names                   = {{lower_case_table_names}}
+auto_increment_increment                 = {{auto_increment_increment}}
+auto_increment_offset                    = {{auto_increment_offset}}
+table_open_cache                         = {{table_open_cache}}
+table_definition_cache                   = {{table_definition_cache}}
+table_open_cache_instances               = {{table_open_cache_instances}}
+
+#### for net 
+max_allowed_packet                       = {{max_allowed_packet}}
+connect_timeout                          = {{connect_timeout}}
+interactive_timeout                      = {{interactive_timeout}}
+net_read_timeout                         = {{net_read_timeout}}
+net_retry_count                          = {{net_retry_count}}
+net_write_timeout                        = {{net_write_timeout}}
+net_buffer_length                        = {{net_buffer_length}}
+
+#### for logs 
+log_output                               = {{log_output}}
+general_log                              = {{general_log}}
+general_log_file                         = {{general_log_file}}
+## error
+log_error                                = {{log_error}}
+log_statements_unsafe_for_binlog         = {{log_statements_unsafe_for_binlog}}
+## slow
+slow_query_log                           = {{slow_query_log}}
+slow_query_log_file                      = {{slow_query_log_file}}
+long_query_time                          = {{long_query_time}}
+log_queries_not_using_indexes            = {{log_queries_not_using_indexes}}
+log_slow_admin_statements                = {{log_slow_admin_statements}}
+log_slow_slave_statements                = {{log_slow_slave_statements}}
+## binlog
+log_bin                                  = {{log_bin }}
+binlog_checksum                          = {{binlog_checksum}}
+log_bin_trust_function_creators          = {{log_bin_trust_function_creators}}
+binlog_direct_non_transactional_updates  = {{binlog_direct_non_transactional_updates}}
+binlog_expire_logs_seconds               = {{binlog_expire_logs_seconds}}
+binlog_error_action                      = {{binlog_error_action}}
+binlog_format                            = {{binlog_format}}
+max_binlog_stmt_cache_size               = {{max_binlog_stmt_cache_size}}
+max_binlog_cache_size                    = {{max_binlog_cache_size}}
+max_binlog_size                          = {{max_binlog_size}}
+binlog_order_commits                     = {{binlog_order_commits}}
+binlog_row_image                         = {{binlog_row_image}}
+binlog_row_metadata                      = {{binlog_row_metadata}}
+binlog_rows_query_log_events             = {{binlog_rows_query_log_events}}
+binlog_stmt_cache_size                   = {{binlog_stmt_cache_size}}
+log_slave_updates                        = {{log_slave_updates}}
+binlog_transaction_compression           = {{binlog_transaction_compression}}
+binlog_transaction_dependency_history_size ={{binlog_transaction_dependency_history_size}}
+binlog_transaction_dependency_tracking   = {{binlog_transaction_dependency_tracking}}
+sync_binlog                              = {{sync_binlog}}
+binlog_cache_size                        = {{binlog_cache_size}}
+binlog_group_commit_sync_delay           = {{binlog_group_commit_sync_delay}}
+binlog_group_commit_sync_no_delay_count  = {{binlog_group_commit_sync_no_delay_count}}
+
+#### for replication
+rpl_semi_sync_master_enabled             = {{rpl_semi_sync_master_enabled}}
+rpl_semi_sync_slave_enabled              = {{rpl_semi_sync_slave_enabled}}
+rpl_semi_sync_master_timeout             = {{rpl_semi_sync_master_timeout}}
+rpl_semi_sync_master_wait_point          = {{rpl_semi_sync_master_wait_point}}
+rpl_semi_sync_master_wait_no_slave       = {{rpl_semi_sync_master_wait_no_slave}}
+rpl_semi_sync_master_wait_for_slave_count = {{rpl_semi_sync_master_wait_for_slave_count}}
+master_info_repository                   = {{master_info_repository}}
+sync_master_info                         = {{sync_master_info}}
+skip_slave_start                         = {{skip_slave_start}}
+slave_load_tmpdir                        = {{slave_load_tmpdir}}
+plugin_load_add                          = semisync_master.so
+plugin_load_add                          = semisync_slave.so
+relay_log                                = {{relay_log}}
+sync_relay_log                           = {{sync_relay_log}}
+sync_relay_log_info                      = {{sync_relay_log_info}}
+relay_log_info_repository                = {{relay_log_info_repository}}
+slave_preserve_commit_order              = {{slave_preserve_commit_order}}
+slave_parallel_type                      = {{slave_parallel_type}}
+slave_parallel_workers                   = {{slave_parallel_workers}}
+slave_max_allowed_packet                 = {{slave_max_allowed_packet}}
+
+
+
+#### for gtid
+gtid_mode                                = {{gtid_mode}}
+binlog_gtid_simple_recovery              = {{binlog_gtid_simple_recovery}}
+enforce_gtid_consistency                 = {{enforce_gtid_consistency}}
+gtid_executed_compression_period         = {{gtid_executed_compression_period}}
+
+#### for clone 
+plugin-load-add                          = mysql_clone.so
+clone                                    = FORCE_PLUS_PERMANEN
+
+#### for engines 
+default_storage_engine                   = {{default_storage_engine}}
+default_tmp_storage_engine               = {{default_tmp_storage_engine}}
+internal_tmp_mem_storage_engine          = {{internal_tmp_mem_storage_engine}}
+
+#### for innodb
+innodb_data_home_dir                     = {{innodb_data_home_dir}}
+innodb_data_file_path                    = {{innodb_data_file_path}}
+innodb_page_size                         = {{innodb_page_size}}
+innodb_default_row_format                = {{innodb_default_row_format}}
+innodb_log_group_home_dir                = {{innodb_log_group_home_dir}}
+innodb_redo_log_encrypt                  = {{innodb_redo_log_encrypt}}
+innodb_online_alter_log_max_size         = {{innodb_online_alter_log_max_size}}
+innodb_undo_directory                    = {{innodb_undo_directory}}
+innodb_undo_log_encrypt                  = {{innodb_undo_log_encrypt}}
+innodb_undo_log_truncate                 = {{innodb_undo_log_truncate}}
+innodb_max_undo_log_size                 = {{innodb_max_undo_log_size}}
+innodb_rollback_on_timeout               = {{innodb_rollback_on_timeout}}
+innodb_rollback_segments                 = {{innodb_rollback_segments}}
+innodb_log_checksums                     = {{innodb_log_checksums}}
+innodb_checksum_algorithm                = {{innodb_checksum_algorithm}}
+innodb_log_compressed_pages              = {{innodb_log_compressed_pages}}
+innodb_doublewrite                       = {{innodb_doublewrite}}
+innodb_commit_concurrency                = {{innodb_commit_concurrency}}
+innodb_read_only                         = {{innodb_read_only}}
+innodb_dedicated_server                  = {{innodb_dedicated_server}}
+innodb_old_blocks_pct                    = {{innodb_old_blocks_pct}}
+innodb_old_blocks_time                   = {{innodb_old_blocks_time}}
+innodb_random_read_ahead                 = {{innodb_random_read_ahead}}
+innodb_read_ahead_threshold              = {{innodb_read_ahead_threshold}}
+innodb_max_dirty_pages_pct_lwm           = {{innodb_max_dirty_pages_pct_lwm}}
+innodb_max_dirty_pages_pct               = {{innodb_max_dirty_pages_pct}}
+innodb_lru_scan_depth                    = {{innodb_lru_scan_depth}}
+innodb_adaptive_flushing                 = {{innodb_adaptive_flushing}}
+innodb_adaptive_flushing_lwm             = {{innodb_adaptive_flushing_lwm}}
+innodb_flushing_avg_loops                = {{innodb_flushing_avg_loops}}
+innodb_buffer_pool_dump_pct              = {{innodb_buffer_pool_dump_pct}}
+innodb_buffer_pool_dump_at_shutdown      = {{innodb_buffer_pool_dump_at_shutdown}}
+innodb_buffer_pool_load_at_startup       = {{innodb_buffer_pool_load_at_startup}}
+innodb_buffer_pool_filename              = {{innodb_buffer_pool_filename}}
+innodb_stats_persistent                  = {{innodb_stats_persistent}}
+innodb_stats_on_metadata                 = {{innodb_stats_on_metadata}}
+innodb_stats_method                      = {{innodb_stats_method}}
+innodb_stats_auto_recalc                 = {{innodb_stats_auto_recalc}}
+innodb_stats_include_delete_marked       = {{innodb_stats_include_delete_marked}}
+innodb_stats_persistent_sample_pages     = {{innodb_stats_persistent_sample_pages}}
+innodb_stats_transient_sample_pages      = {{innodb_stats_transient_sample_pages}}
+innodb_status_output                     = {{innodb_status_output}}
+innodb_status_output_locks               = {{innodb_status_output_locks}}
+innodb_buffer_pool_dump_now              = {{innodb_buffer_pool_dump_now}}
+innodb_buffer_pool_load_abort            = {{innodb_buffer_pool_load_abort}}
+innodb_buffer_pool_load_now              = {{innodb_buffer_pool_load_now}}
+innodb_thread_concurrency                = {{innodb_thread_concurrency}}
+innodb_concurrency_tickets               = {{innodb_concurrency_tickets}}
+innodb_thread_sleep_delay                = {{innodb_thread_sleep_delay}}
+innodb_adaptive_max_sleep_delay          = {{innodb_adaptive_max_sleep_delay}}
+innodb_read_io_threads                   = {{innodb_read_io_threads}}
+innodb_write_io_threads                  = {{innodb_write_io_threads}}
+innodb_use_native_aio                    = {{innodb_use_native_aio}}
+innodb_flush_sync                        = {{innodb_flush_sync}}
+innodb_spin_wait_delay                   = {{innodb_spin_wait_delay}}
+innodb_purge_threads                     = {{innodb_purge_threads }}
+innodb_purge_batch_size                  = {{innodb_purge_batch_size}}
+innodb_purge_rseg_truncate_frequency     = {{innodb_purge_rseg_truncate_frequency}}
+innodb_deadlock_detect                   = {{innodb_deadlock_detect}}
+innodb_print_all_deadlocks               = {{innodb_print_all_deadlocks}}
+innodb_lock_wait_timeout                 = {{innodb_lock_wait_timeout}}
+innodb_table_locks                       = {{innodb_table_locks}}
+innodb_sync_array_size                   = {{innodb_sync_array_size}}
+innodb_sync_spin_loops                   = {{innodb_sync_spin_loops}}
+innodb_print_ddl_logs                    = {{innodb_print_ddl_logs}}
+innodb_replication_delay                 = {{innodb_replication_delay}}
+innodb_cmp_per_index_enabled             = {{innodb_cmp_per_index_enabled}}
+innodb_disable_sort_file_cache           = {{innodb_disable_sort_file_cache}}
+innodb_numa_interleave                   = {{innodb_numa_interleave}}
+innodb_strict_mode                       = {{innodb_strict_mode}}
+innodb_sort_buffer_size                  = {{innodb_sort_buffer_size}}
+innodb_fast_shutdown                     = {{innodb_fast_shutdown}}
+innodb_force_load_corrupted              = {{innodb_force_load_corrupted}}
+innodb_force_recovery                    = {{innodb_force_recovery}}
+innodb_temp_tablespaces_dir              = {{innodb_temp_tablespaces_dir}}
+innodb_tmpdir                            = {{innodb_tmpdir}}
+innodb_temp_data_file_path               = {{innodb_temp_data_file_path}}
+innodb_page_cleaners                     = {{innodb_page_cleaners}}
+innodb_adaptive_hash_index               = {{innodb_adaptive_hash_index}}
+innodb_adaptive_hash_index_parts         = {{innodb_adaptive_hash_index_parts}}
+innodb_flush_log_at_timeout              = {{innodb_flush_log_at_timeout}}
+innodb_fsync_threshold                   = {{innodb_fsync_threshold}}
+innodb_fill_factor                       = {{innodb_fill_factor}}
+innodb_file_per_table                    = {{innodb_file_per_table}}
+innodb_autoextend_increment              = {{innodb_autoextend_increment}}
+innodb_open_files                        = {{innodb_open_files}}
+innodb_buffer_pool_chunk_size            = {{innodb_buffer_pool_chunk_size}}
+innodb_buffer_pool_instances             = {{innodb_buffer_pool_instances}}
+innodb_log_files_in_group                = {{innodb_log_files_in_group}}
+innodb_log_file_size                     = {{innodb_log_file_size}}
+innodb_flush_neighbors                   = {{innodb_flush_neighbors}}
+innodb_io_capacity                       = {{innodb_io_capacity}}
+innodb_io_capacity_max                   = {{innodb_io_capacity_max}}
+innodb_autoinc_lock_mode                 = {{innodb_autoinc_lock_mode}}
+innodb_change_buffer_max_size            = {{innodb_change_buffer_max_size}}
+innodb_flush_method                      = {{innodb_flush_method}}
+innodb_log_buffer_size                   = {{innodb_log_buffer_size}}
+innodb_flush_log_at_trx_commit           = {{innodb_flush_log_at_trx_commit}}
+innodb_buffer_pool_size                  = {{innodb_buffer_pool_size}}
+
+
+{% if is_mgr %}
+#### for group replication
+plugin_load_add                                    = group_replication.so
+group_replication_recovery_use_ssl                 = {{group_replication_recovery_use_ssl}}
+group_replication_ssl_mode                         = {{group_replication_ssl_mode}}
+group_replication_single_primary_mode              = {{group_replication_single_primary_mode}}
+group_replication_group_name                       = {{group_replication_group_name}}
+group_replication_start_on_boot                    = {{group_replication_start_on_boot}}
+group_replication_bootstrap_group                  = {{group_replication_bootstrap_group}}
+group_replication_local_address                    = {{group_replication_local_address}}
+group_replication_group_seeds                      = {{group_replication_group_seeds}}
+group_replication_consistency                      = {{group_replication_consistency}}
+group_replication_poll_spin_loops                  = {{group_replication_poll_spin_loops}}
+group_replication_compression_threshold            = {{group_replication_compression_threshold}}
+group_replication_communication_max_message_size   = {{group_replication_communication_max_message_size}}
+group_replication_message_cache_size               = {{group_replication_message_cache_size}}
+group_replication_flow_control_applier_threshold   = {{group_replication_flow_control_applier_threshold}}
+group_replication_flow_control_certifier_threshold = {{group_replication_flow_control_certifier_threshold}}
+group_replication_flow_control_hold_percent        = {{group_replication_flow_control_hold_percent}}
+group_replication_flow_control_mode                = {{group_replication_flow_control_mode}}
+group_replication_flow_control_period              = {{group_replication_flow_control_period}}
+group_replication_flow_control_release_percent     = {{group_replication_flow_control_release_percent}}
+{% endif %}
+
+
+####  for performance_schema
+performance_schema                                                      ={{performance_schema}}  
+performance_schema_consumer_global_instrumentation                      =ON  
+performance_schema_consumer_thread_instrumentation                      =ON  
+performance_schema_consumer_events_stages_current                       =ON  
+performance_schema_consumer_events_stages_history                       =ON  
+performance_schema_consumer_events_stages_history_long                  =OFF 
+performance_schema_consumer_statements_digest                           =ON  
+performance_schema_consumer_events_statements_current                   =ON  
+performance_schema_consumer_events_statements_history                   =ON  
+performance_schema_consumer_events_statements_history_long              =OFF 
+performance_schema_consumer_events_waits_current                        =ON  
+performance_schema_consumer_events_waits_history                        =ON  
+performance_schema_consumer_events_waits_history_long                   =OFF 
+performance-schema-instrument                                           ='memory/%=COUNTED'
+
+
+
+
+
+
+
+
+# -- ~ _ ~    ~ _ ~     ~ _ ~ -- 
+# base on mysql-8.0.22
+# generated by https://www.sqlpy.com 2020年11月02日 10:32
+# wechat: jianglegege
+# email: 1721900707@qq.com
+# -- ~ _ ~ --   
+
+
