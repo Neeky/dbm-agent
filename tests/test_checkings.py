@@ -12,6 +12,12 @@ class CheckingsTeestCase(unittest.TestCase):
     """
     @classmethod
     def setUpClass(cls):
+        """
+        Sets up the class
+
+        Args:
+            cls: (todo): write your description
+        """
         super().setUpClass()
         # create a socket server
         cls.ip = '127.0.0.1'
@@ -34,6 +40,12 @@ class CheckingsTeestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        """
+        Closes the subprocessor.
+
+        Args:
+            cls: (todo): write your description
+        """
         super().tearDownClass()
         if cls.sock and hasattr(cls.sock,'close'):
             cls.sock.close()
@@ -41,21 +53,57 @@ class CheckingsTeestCase(unittest.TestCase):
         os.remove(cls.t_file)
 
     def test_01_is_port_in_use(self):
+        """
+        Check if the port is in a port.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertTrue(checkings.is_port_in_use(self.ip,self.port))
     
     def test_02_is_user_exists(self):
+        """
+        Check if the user exists.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertTrue(checkings.is_user_exists('unittest'))
     
     def test_03_is_file_exists(self):
+        """
+        Check if a file exists.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertTrue(checkings.is_file_exists(self.t_file))
     
     def test_04_is_group_exists(self):
+        """
+        Returns true if the group exists.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertTrue(checkings.is_group_exists('unittest'))
     
     def test_05_is_directory_exists(self):
+        """
+        Check if a directory exists.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertTrue(checkings.is_directory_exists('/tmp/'))
     
     def test_06_is_an_supported_mysql_version(self):
+        """
+        Check if the supported supported version is supported.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertTrue(checkings.is_an_supported_mysql_version('mysql-8.0.17-linux-glibc2.12-x86_64.tar.xz'))
         self.assertFalse(checkings.is_an_supported_mysql_version('mysql-8.0.16-linux-glibc2.12-x86_64.tar.xz'))
         self.assertFalse(checkings.is_an_supported_mysql_version('mysql-5.7.26-linux-glibc2.12-x86_64.tar.gz'))

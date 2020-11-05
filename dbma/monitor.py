@@ -627,6 +627,13 @@ class MySQLSlaveMonitorMixin(object):
             logger.warning(f"got exception {err}")
 
     def __contains__(self, name):
+        """
+        Return true if the given name exists.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         return name.lower() in self.slaves
 
     def __getitem__(self, name):
@@ -836,6 +843,12 @@ class NetInterfacesGather(ExpireTimeMixin):
     logger = logger.getChild("NetInterfacesGather")
 
     def __init__(self):
+        """
+        Initialize the last n times.
+
+        Args:
+            self: (todo): write your description
+        """
         self._nifs = None
         self._last_update_time = None
 
@@ -888,12 +901,25 @@ class NetInterfacesGather(ExpireTimeMixin):
         return name in self._nifs
 
     def __getitem__(self, name):
+        """
+        Returns the value of the named attribute.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         if name in self:
             return self._nifs[name]
 
         return None
 
     def __iter__(self):
+        """
+        Iterate over the n - th element.
+
+        Args:
+            self: (todo): write your description
+        """
         if self._nifs is None:
             self._nifs = self.get_nifs()
 
@@ -934,6 +960,13 @@ class HostMonitorGather(ExpireTimeMixin):
         return name in self._host_data
 
     def __getitem__(self, name):
+        """
+        Returns the host item associated with the given name.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
 
         if self.expired(self._host_last_update_time) == True:
             self._query_host()
@@ -1304,9 +1337,22 @@ class MySQLMonitor(threading.Thread, ItemSenderMixin, MySQLConnectionKeeperMixin
                 return
 
     def run(self):
+        """
+        Run the monitor.
+
+        Args:
+            self: (todo): write your description
+        """
         self._periodic_monitor()
 
     def __contains__(self, name):
+        """
+        Returns true if the given name is contained in the given name.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         _lower_name = name.lower()
 
         if _lower_name in self.status:
@@ -1382,6 +1428,14 @@ class Mmps(object):
     logger = logger.getChild("Mmps")
 
     def __init__(self, monitor_user="monitor", monitor_password="dbma@0352"):
+        """
+        Initialize the monitor.
+
+        Args:
+            self: (todo): write your description
+            monitor_user: (todo): write your description
+            monitor_password: (str): write your description
+        """
         self.monitor_user = monitor_user
         self.monitor_password = monitor_password
 

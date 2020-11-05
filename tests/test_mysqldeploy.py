@@ -24,10 +24,28 @@ class MyCnfRenderTestCase(unittest.TestCase):
         pass
 
     def test_01_auto_config(self):
+        """
+        : return : attr_01_01_config.
+
+        Args:
+            self: (todo): write your description
+        """
         pass
 
     def test_02_innodb_buffer_pool_size(self):
+        """
+        Test buffer buffer buffer buffer buffer.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertEqual(self.render.innodb_buffer_pool_size, "128M")
 
     def test_03_user(self):
+        """
+        Test if user as a user.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertEqual(self.render.user, "mysql3306")

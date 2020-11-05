@@ -9,6 +9,12 @@ class VersionTestCase(unittest.TestCase):
     """
     @unittest.skip
     def test_01_version(self):
+        """
+        Check if the agent version is a agent.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertIsInstance(agent_version, str)
 
         m = re.search(r'\d.\d.\d', agent_version)

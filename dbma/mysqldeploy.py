@@ -1680,6 +1680,23 @@ class MySQLBuildSlave(MySQLCloner):
                  host="127.0.0.1", port=3306, clone_user="cloneuser", clone_password="dbma@0352",
                  replication_user="repluser", replication_password="dbma@0352",
                  max_mem=128, cores=1, name='cm', daemon=True):
+        """
+        Initialize a replication session.
+
+        Args:
+            self: (todo): write your description
+            pkg: (int): write your description
+            host: (str): write your description
+            port: (int): write your description
+            clone_user: (todo): write your description
+            clone_password: (str): write your description
+            replication_user: (todo): write your description
+            replication_password: (str): write your description
+            max_mem: (int): write your description
+            cores: (todo): write your description
+            name: (str): write your description
+            daemon: (todo): write your description
+        """
 
         MySQLCloner.__init__(self, pkg=pkg, host=host, port=port, clone_user=clone_user, clone_password=clone_password,
                              max_mem=max_mem, cores=cores, name=name, daemon=daemon)

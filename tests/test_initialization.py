@@ -10,6 +10,12 @@ class InitializationTestCase(unittest.TestCase):
     
     """
     def setUp(self):
+        """
+        Sets the user to the user.
+
+        Args:
+            self: (todo): write your description
+        """
         self.user = "unittest"
 
     def test_01_sudo(self):
@@ -55,6 +61,12 @@ class InitializationTestCase(unittest.TestCase):
         self.assertEqual(gid,0)
     
     def tearDown(self):
+        """
+        Tear down the next callable.
+
+        Args:
+            self: (todo): write your description
+        """
         pass
         
 

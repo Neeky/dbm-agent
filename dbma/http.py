@@ -169,6 +169,11 @@ class HostMonitorMixin(object):
         data['os_version'] = ' '.join(distro.linux_distribution()).strip()
 
         def get_manager_ip():
+            """
+            Returns the ip address of the manager.
+
+            Args:
+            """
             addresss = psutil.net_if_addrs()
             if cnf.net_if in addresss:
                 # 给定网卡存在

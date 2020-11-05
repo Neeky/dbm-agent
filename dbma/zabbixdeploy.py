@@ -385,6 +385,12 @@ class ZabbixAgentUninstallerMixin(object):
                 logger.info("remove zabbix-agentd.service complete")
 
     def _remove_link(self):
+        """
+        Remove link
+
+        Args:
+            self: (todo): write your description
+        """
         logger = self.logger.getChild("_remove_link")
 
         logger.debug("prepare remove link file '/usr/local/zabbix' ")
@@ -482,4 +488,10 @@ class ZabbixAgentUninstaller(threading.Thread, ZabbixAgentUninstallerMixin):
         threading.Thread.__init__(self, name='uza', daemon=True)
 
     def run(self):
+        """
+        Run the install.
+
+        Args:
+            self: (todo): write your description
+        """
         self.uninstall()
