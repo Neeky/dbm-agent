@@ -36,6 +36,12 @@ class BaseSoftInstall(ConfigMixin):
 
     @property
     def path(self):
+        """
+        Return the absolute path.
+
+        Args:
+            self: (todo): write your description
+        """
         raise NotImplementedError("请在子类当中实现，返回 PATH 路径的功能")
 
     @property
@@ -154,6 +160,12 @@ class BaseSoftInstall(ConfigMixin):
         logger.info("complete")
 
     def install(self):
+        """
+        Install the package
+
+        Args:
+            self: (todo): write your description
+        """
         pass
 
 
@@ -198,10 +210,22 @@ class MySQLBinaryInstall(BaseSoftInstall):
 
     @property
     def path(self):
+        """
+        The path : the path toil_bindir
+
+        Args:
+            self: (todo): write your description
+        """
         return self.mysql_bin_dir
 
     @property
     def sopath(self):
+        """
+        Returns the transcript sopath_dir.
+
+        Args:
+            self: (todo): write your description
+        """
         return (self.mysql_lib_dir, self.mysql_version)
 
     @property
@@ -322,6 +346,12 @@ class PrometheusBinaryInstall(BaseSoftInstall):
 
     @property
     def is_has_been_installed(self):
+        """
+        Return true if the given packages are installed.
+
+        Args:
+            self: (todo): write your description
+        """
         return os.path.isdir(self.usr_local_dir, self.version)
 
     def install_prometheus(self):

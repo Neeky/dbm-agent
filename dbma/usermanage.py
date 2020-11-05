@@ -203,6 +203,12 @@ class LinuxUsers(object):
 
     @staticmethod
     def delete_user(user_name=''):
+        """
+        Delete a user.
+
+        Args:
+            user_name: (str): write your description
+        """
         return LinuxUsers.drop_user(user_name)
 
     @staticmethod
@@ -246,4 +252,10 @@ class LinuxUsers(object):
 
     @staticmethod
     def delete_group(group_name):
+        """
+        Deletes a group
+
+        Args:
+            group_name: (str): write your description
+        """
         return LinuxUsers.drop_group(group_name)

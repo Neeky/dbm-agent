@@ -24,14 +24,32 @@ class TestMySQLBinaryInstallTestCase(unittest.TestCase):
         self.assertEqual(version, "mysql-8.0.19-linux-glibc2.12-x86_64")
 
     def test_02_path(self):
+        """
+        Test if the environment paths to install_dir
+
+        Args:
+            self: (todo): write your description
+        """
         bin_dir = self.mysql_installer.mysql_bin_dir
         self.assertEqual(
             bin_dir, "/usr/local/mysql-8.0.19-linux-glibc2.12-x86_64/bin")
 
     def test_03_is_has_been_installed(self):
+        """
+        Check if the test is installed.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertFalse(self.mysql_installer.is_has_been_installed)
 
     def test_04_is_an_supported_mysql_version(self):
+        """
+        Check if this environment is supported.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertTrue(self.mysql_installer.is_an_supported_mysql_version)
 
     def test_05_install(self):

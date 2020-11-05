@@ -18,6 +18,13 @@ class BaseInstall(object):
     logger = logger.getChild("BaseInstall")
 
     def __init__(self, pkg=None):
+        """
+        Initialize this package.
+
+        Args:
+            self: (todo): write your description
+            pkg: (int): write your description
+        """
         self.pkg = pkg
 
     def pre_checks(self):
@@ -113,6 +120,13 @@ class MySQLBackupInstall(BaseInstall):
     logger = logger.getChild("MySQLBackupInstall")
 
     def __init__(self, pkg="mysql-commercial-backup-8.0.19-linux-glibc2.12-x86_64.tar.xz"):
+        """
+        Initialize the package.
+
+        Args:
+            self: (todo): write your description
+            pkg: (int): write your description
+        """
         logger = self.logger.getChild("__init__")
 
         BaseInstall.__init__(self, pkg)
@@ -188,6 +202,12 @@ class XtraBackupInstall(BaseInstall):
             return os.path.join("/usr/local/", f"{dirname}")
 
     def extract_pkg(self):
+        """
+        Extract pkg_base.
+
+        Args:
+            self: (todo): write your description
+        """
         BaseInstall.extract_pkg(self)
 
         # 如果连接文件存在，那么就删除它并且重新建设

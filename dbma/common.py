@@ -232,6 +232,12 @@ def wait_until_tcp_ready(ip:str="127.0.0.1",port:int=3306,timeout=3600):
         wait_seconds = wait_seconds + 1
 
 def config_hostname(name):
+    """
+    Configure the hostname.
+
+    Args:
+        name: (str): write your description
+    """
     with sudo('config host name'):
         subprocess.run(f"hostnamectl set-hostname {name} ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
