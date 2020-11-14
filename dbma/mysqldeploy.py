@@ -846,8 +846,15 @@ class MySQLInstallerMixin(object):
             shutil.unpack_archive(pkg_full_path, self.dbma.mysql_install_dir)
             common.recursive_change_owner(
                 path=self.basedir, user='root', group='mysql')
+            
 
         logger.info("extract mysql package completed")
+
+    def _recursive_change_mysq_basedir_mode(self):
+        """
+        """
+        with common.sudo("change file mode"):
+            common.recursive_change_mode(self.basedir)
 
     def _create_mysql_user(self):
         """
@@ -1136,6 +1143,9 @@ class MySQLInstallerMixin(object):
 
         # 解压安装包
         self._extract_install_pgk()
+
+        # chmode -R 770 /usr/local/mysql-8.0.22-linux-glibc2.12-x86_64
+        self._recursive_change_mysq_basedir_mode()
 
         # 创建数据目录、binlog目录、备份目录
         self._create_data_dir()

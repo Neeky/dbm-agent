@@ -6,6 +6,7 @@
 import os
 import pwd
 import time
+import stat
 import psutil
 import shutil
 import socket
@@ -173,6 +174,25 @@ def recursive_change_owner(path:str="/usr/local/mysql/",user:str="root",group:st
                 recursive_change_owner(os.path.join(path,item),user,group)
         else:
             shutil.chown(path,user,group)
+
+def recursive_change_mode(path:str):
+    """
+    Parameter:
+    ----------
+    path: str
+        basedir  /usr/local/mysql-8.0.22-linux-glibc2.12-x86_64
+
+    Returns
+    None
+    """
+    if os.path.isdir(path):
+        os.chmod(path,stat.S_IRWXU|stat.S_IRWXG|stat.S_IXOTH)
+        for sub_path in os.listdir(path):
+            sub_path = os.path.join(path,sub_path)
+            recursive_change_mode(sub_path)
+    else:
+        os.chmod(path,stat.S_IRWXU|stat.S_IRWXG)
+    
 
 def get_all_local_ip()->set:
     """
