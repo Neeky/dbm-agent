@@ -1,20 +1,21 @@
 ## 目录
 ---
+- [## 目录](#-目录)
 - [dbm-agent](#dbm-agent)
 - [依赖](#依赖)
 - [安装](#安装)
 - [初始化](#初始化)
 - [dbm-agent集成的命令行工具](#dbm-agent集成的命令行工具)
-   - [自动化安装单实例](#自动化安装单实例)
-   - [自动化卸载](#自动化卸载)
-   - [自动备份](#自动备份)
-   - [自动增加Slave](#自动增加Slave)
-   - [自动搭建MGR](#自动搭建MGR)
-   - [自动安装mysql-shell](#自动安装mysql-shell)
-   - [自动化配置innodb-cluster](#自动化配置innodb-cluster)
-   - [自动化配置mysql-router](#自动化配置mysql-router)
-   - [MySQL监控项采集dbma-cli-mysql-monitor-item](#MySQL监控项采集dbma-cli-mysql-monitor-item)
-   - [自动化安装zabbix-agent](#自动化安装zabbix-agent)
+- [自动化安装单实例](#自动化安装单实例)
+- [自动化卸载](#自动化卸载)
+- [自动备份](#自动备份)
+- [自动增加Slave](#自动增加slave)
+- [自动搭建MGR](#自动搭建mgr)
+- [自动安装mysql-shell](#自动安装mysql-shell)
+- [自动化配置innodb-cluster](#自动化配置innodb-cluster)
+- [自动化配置mysql-router](#自动化配置mysql-router)
+- [MySQL监控项采集dbma-cli-mysql-monitor-item](#mysql监控项采集dbma-cli-mysql-monitor-item)
+- [自动化安装zabbix-agent](#自动化安装zabbix-agent)
 - [数据库监控网关dbm-monitor-gateway](#数据库监控网关dbm-monitor-gateway)
 - [数据库备份代理dbm-backup-proxy](#数据库备份代理dbm-backup-proxy)
 - [启动](#启动)
@@ -624,6 +625,8 @@
    ---
 
 ## 自动化配置mysql-router
+   > mysql-8.0.20-linux-glibc2.12-x86_64 以后的版本中已经不再包含 mysql-router ，关于 router 的功能我之后安排时间重写。
+
    **由于官方推荐 mysql-router 和应用程序安装在同一台主机上，从这个角度来说 mysql-router 已经不是数据库管理系统要操心的事了，所以 dbm-agent 不实现对 mysql-router的安装。不过有一个惊喜要告诉你，就是 mysql-router 已经被官方打包到了 mysql-server ，也就是说你只要安装好了 mysql-server 就那你就已经有了 mysql-router**
 
    **第一步：** 配置 mysql-router
