@@ -1141,6 +1141,12 @@
    2020-01-15 10:48:44,053 INFO upgrade complete
    ```
 
+   **3、** 日志级别
+   通过设置环境变量来设置 dbm-agent 的日志级别
+   ```bash
+   export DBMA_LOGGER_LEVEL=DEBUG
+   ```
+
    ---
 
 
