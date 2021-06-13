@@ -1,3 +1,11 @@
+"""
+实现一个统一的日志入口
+
+# (c) 2019, LeXing Jinag <neeky@live.com 1721900707@qq.com https://www.sqlpy.com/>
+# Copyright: (c) 2019, dbm Project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+"""
+
 import os
 import logging
 
@@ -30,6 +38,9 @@ else:
 # 为不同的模块创建日志对象
 install_softwares_logger = root_logger.getChild("installsoftwares")
 unix_logger = root_logger.getChild("unix")
+loggers_logger = root_logger.getChild("loggers")
+
+# 为方便使用实现函数装饰器、方法装饰器
 
 
 
