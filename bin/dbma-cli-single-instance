@@ -9,6 +9,7 @@ import logging
 import argparse
 #from dbma.mysqlops import MySQLInstaller, MySQLUninstaller
 #from dbma.gather import cpu_cores
+from dbma.unix.version import DEFAULT_MYSQL_VERSION
 from dbma.mysqldeploy import MySQLInstaller, MySQLUninstaller
 
 
@@ -21,7 +22,7 @@ def parser_cmd_args():
     parser = argparse.ArgumentParser(__name__)
     parser.add_argument('--port', type=int, default=3306, help="instance port")
     parser.add_argument(
-        '--pkg', type=str, default="mysql-8.0.25-linux-glibc2.12-x86_64.tar.xz", help="mysql install package")
+        '--pkg', type=str, default=DEFAULT_MYSQL_VERSION, help="mysql install package")
     parser.add_argument('--max-mem', type=int, default=1024,
                         help="the max memory mysql instances can use")
     parser.add_argument('--cores', type=int,

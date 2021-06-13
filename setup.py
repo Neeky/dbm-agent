@@ -5,19 +5,18 @@ from setuptools import setup
 
 def get_version():
     """
-    提取出 dbma/version.py 中的 agent_version 
+    动态获取 dbm-agent 的版本号
     """
-    base = os.path.dirname(__file__)
-    version_file = os.path.join(base, 'dbma/version.py')
-    with open(version_file) as f:
-        line = f.readline()
 
-    m = re.search(r'\d*\.\d*\.\d*', line)
+    project_dir_name = os.path.dirname(__file__)
+    version_file_path = os.path.join(project_dir_name,"dbma/unix/version.py")
+    with open(version_file_path) as version_file_obj:
+        content = version_file_obj.read()
 
-    if m:
-        return m.group(0)
-    else:
-        return '0.0.0'
+    g = {}
+
+    exec(content,g,g)
+    return g['VERSION']
 
 
 agent_version = get_version()
@@ -33,7 +32,7 @@ setup(name='dbm-agent',
                'bin/dbma-cli-build-slave', 'bin/dbma-cli-build-mgr', 'bin/dbma-cli-clone-instance',
                'bin/dbm-monitor-gateway', 'bin/dbma-cli-zabbix-agent', 'bin/dbma-cli-mysql-monitor-item',
                'bin/dbma-cli-backup-instance', 'bin/dbma-cli-install-backuptool', 'bin/dbm-backup-proxy'],
-      packages=['dbma'],
+      packages=['dbma','dbma/unix'],
       package_data={'dbma': ['static/cnfs/*', 'static/sql-scripts/*']},
       url='https://github.com/Neeky/dbm-agent',
       install_requires=['Jinja2>=2.10.1', 'mysql-connector-python>=8.0.18',

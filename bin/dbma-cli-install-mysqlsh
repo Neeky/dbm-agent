@@ -13,6 +13,7 @@ import shutil
 from dbma import common
 from dbma import checkings
 from dbma.mysqldeploy import MySQLShellInstaller
+from dbma.unix.version import DEFAULT_MYSQL_VERSION
 
 
 def parser_cmd_args():
@@ -21,7 +22,7 @@ def parser_cmd_args():
     """
     name, *_ = os.path.basename(__file__).split('.')
     parser = argparse.ArgumentParser(name)
-    parser.add_argument('--pkg', type=str, default="mysql-shell-8.0.25-linux-glibc2.12-x86-64bit.tar.gz",
+    parser.add_argument('--pkg', type=str, default=DEFAULT_MYSQL_VERSION,
                         help="mysql-shell install package")
     parser.add_argument('--log', type=str, default='info',
                         choices=['debug', 'info', 'warning', 'error'])

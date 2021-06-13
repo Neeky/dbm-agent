@@ -9,12 +9,12 @@ import sys
 import argparse
 from dbma.daemon import start_daemon, stop_daemon
 from dbma import server
-from dbma.version import agent_version
+from dbma.unix.version import DBM_AGENT_VESION,DEFAULT_MYSQL_VERSION
 from dbma import initialization
 
 
 def parser_cmd_args():
-    parser = argparse.ArgumentParser(f'dbma-agent {agent_version}')
+    parser = argparse.ArgumentParser(f'dbma-agent {DBM_AGENT_VESION}')
     parser.add_argument('--dbmc-site', type=str,
                         default="https://192.168.100.100", help='dbm-center url')
     parser.add_argument('--base-dir', type=str,
@@ -52,7 +52,7 @@ def main():
     elif args.action == 'start':
         server.start(args)
     elif args.action == 'version':
-        print(f'dbma-agent {agent_version}')
+        print(f'dbma-agent {DBM_AGENT_VESION}')
     elif args.action == 'stop':
         stop_daemon(args.pid)
     elif args.action == 'uninit':
