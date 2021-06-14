@@ -8,6 +8,8 @@
 
 import os
 import logging
+from functools import wraps
+
 
 root_logger = logging.getLogger("dbm-agent")
 
@@ -41,6 +43,46 @@ unix_logger = root_logger.getChild("unix")
 loggers_logger = root_logger.getChild("loggers")
 
 # 为方便使用实现函数装饰器、方法装饰器
+
+def desc_instance_method(logger_level=logging.DEBUG):
+    """
+    实现实例方法的日志装饰器
+
+    
+    logger_level:
+    ------------
+        日志级别
+
+    result:
+    -------
+        方法装饰器
+    """
+    def logger_instance_method(fun):
+        """
+        fun:
+        ----
+            要被装饰的实例方法
+
+        returns:
+        --------
+            装饰之后的实例方法
+        """
+        @wraps(fun)
+        def inner(*args,**kwargs):
+            """
+            """
+            self,*_ = args
+            self.logger.setLevel(logger_level)
+            self.logger.debug(f"enter bound method {self.__class__.__name__}.{fun.__name__} with args self = {self} args = {args} kwargs = {kwargs} .")
+            result = fun(*args,**kwargs)
+            self.logger.debug(f"leave bound method {self.__class__.__name__}.{fun.__name__} with args self = {self}.")
+            return result
+
+        return inner
+
+    return logger_instance_method
+
+
 
 
 
