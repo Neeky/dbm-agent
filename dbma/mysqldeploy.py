@@ -143,8 +143,10 @@ class MyCnfRender(object):
         self.relay_log_info_repository = 'table'
         self.skip_slave_start = 'OFF'
         self.slave_parallel_type = 'logical_clock'
-        self.slave_parallel_workers = 2
-        self.slave_max_allowed_packet = '1G'
+        self.slave_parallel_workers = 2     # deprecated
+        self.replica_parallel_workers = 2
+        self.slave_max_allowed_packet = '1G' # deprecated
+        self.replica_max_allowed_packet = '1G'
         self.slave_load_tmpdir = '/tmp/'
         self.relay_log = 'relay'
         self.sync_relay_log = 10000
