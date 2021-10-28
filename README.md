@@ -28,6 +28,11 @@
 
 ---
 
+官方微信公众平台 
+![官方微信公众平台](imgs/mp-wechat.jpg)
+
+---
+
 ## dbm-agent
   dbm 是一个软件套件，包含有 dbm-center 和 dbm-agent 两大组成部分；其中 dbm-center 可以看成一个 web 站点，DBA 通过它可以查看监控、告警、部署各种 MySQL 环境。
   dbm-agent 是 dbm-center 的助手，负责环境的部署、监控的采集与上报、数据库的备份与监控。总的来讲接活的 dbm-center 真正干活的是 dbm-agent。另外 dbm-agent 也集成了若干命令行工具，这使得它也可以单独使用。
