@@ -10,7 +10,20 @@ from dbma.bil import osuser
 class OsUserTestCase(unittest.TestCase):
     """
     """
+    EXIST_USER = "root"
+    NOT_EXIST_USER = "not_exist_user_"
+
     def test_when_user_not_exists_then_false(self):
         """
         """
-        self.assertFalse(osuser.is_user_exists("not_exist_user_"))
+        self.assertFalse(osuser.is_user_exists(self.NOT_EXIST_USER))
+
+    def test_when_name_not_str_then_false(self):
+        """
+        """
+        self.assertFalse(osuser.is_user_exists(None))
+            
+    def test_when_user_exists_then_true(self):
+        """
+        """
+        self.assertTrue(osuser.is_user_exists(self.EXIST_USER))

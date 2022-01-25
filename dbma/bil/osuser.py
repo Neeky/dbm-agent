@@ -24,5 +24,8 @@ def is_user_exists(user:str)->bool:
         return True
     except KeyError as err:
         return False
-    except Exception as err:
+    except TypeError as err:
         return False
+
+
+
