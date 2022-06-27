@@ -28,6 +28,7 @@ from .initialization import is_user_exists, get_uid_gid, is_root
 from .monitor import HostMonitor
 #from . import pusher
 from . dbmacnf import cnf
+from dbma.core.httpserver import start_http_server
 
 
 def config_log(log_file: str, log_level='info'):
@@ -102,6 +103,8 @@ def start(args):
     hostmonitor = HostMonitor()
     hostmonitor.start()
 
+    start_http_server()
+    print("dbm agent http server started.")
     #
     # 以下是主进程的逻辑、一个死循环
     # 这样守护进程就永远不会退出了
