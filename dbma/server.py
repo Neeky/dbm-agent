@@ -30,38 +30,12 @@ from .monitor import HostMonitor
 from . dbmacnf import cnf
 from dbma.core.httpserver import start_http_server
 
-
-def config_log(log_file: str, log_level='info'):
-    """
-    配置日志
-    """
-    logger = logging.getLogger('dbm-agent')
-    if log_level.upper() == 'INFO':
-        logger.setLevel(logging.INFO)
-    elif log_level.upper() == 'DEBUG':
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.ERROR)
-
-    file_handler = logging.handlers.RotatingFileHandler(
-        filename=log_file, maxBytes=1024*1024*20, backupCount=5)
-    file_handler.setLevel(logging.DEBUG)
-
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(message)s')
-
-    file_handler.setFormatter(formatter)
-
-    logger.addHandler(file_handler)
-
-
 def start(args):
     """
     1、检查当前用户是不是 root
-    2、解析配置文件
-    3、切换到普通用户状态
-    4、以守护进程方式运行
-    5、配置日志(logging)
+    2、切换到普通用户状态
+    3、以守护进程方式运行
+    4、启动内置的 http 服务器
     """
     # 检查当前的用户是不是 root 如果不是直接退出
     if not is_root():
@@ -82,31 +56,11 @@ def start(args):
     start_daemon(cnf.pid)
 
     # ~~ v ~~ 以下代码都在守护进程状态下运行
+    print(f"Successful start and log file save to '/tmp/dbm-agent.log' ")
 
-    # 配置日志
-    log_file = os.path.join(cnf.base_dir, cnf.log_file)
-    config_log(log_file, cnf.log_level)
-    logger = logging.getLogger('dbm-agent').getChild(__name__)
-
-    logger.info('dbm-agent start')
-    print(f"Successful start and log file save to '{log_file}' ")
-    #
-    #
     # 所有的核心逻辑请在这里实现
     #
+    # the cores .... 
     #
-    # 1 、 主机信息上报
-    # system_monitor_thread = threading.Thread(
-    #    target=pusher.push_system_monitor_item, daemon=True)
-    # system_monitor_thread.start()
-    # 1、为主机层面的监控单开一个线程
-    hostmonitor = HostMonitor()
-    hostmonitor.start()
-
+    # 最后一步启动 dbm-agent 内置的 http 服务器
     start_http_server()
-    print("dbm agent http server started.")
-    #
-    # 以下是主进程的逻辑、一个死循环
-    # 这样守护进程就永远不会退出了
-    while True:
-        time.sleep(300)

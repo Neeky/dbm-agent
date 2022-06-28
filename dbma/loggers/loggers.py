@@ -2,6 +2,8 @@
 
 """
 统一的日志入口
+    1、创建日志对象
+    1、如果配置文件存在就使用配置文件中配置的日志级别 TODO
 """
 
 import os
@@ -42,3 +44,15 @@ def get_logger_name(file_name: str):
     else:
       return os.path.basename(file_name)
 
+def get_logger(file_name: str):
+  """
+  Paramater:
+  ----------
+  file_name: str
+
+  Return:
+  ------
+    logging.Logger
+  """
+
+  return dbm_agent_logger.getChild(get_logger_name(file_name))
