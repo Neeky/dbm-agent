@@ -139,3 +139,59 @@ class IdentifyTestCase(unittest.TestCase):
         identify.drop_shell_str.assert_called_once()
         osuser.exe_shell_cmd.assert_called_once()
         osuser.exe_shell_cmd.assert_called_once_with("groupdel mysql")
+
+
+class RootGroupTestCase(unittest.TestCase):
+    """
+    针对 root 组的行为进行检查
+    """
+
+    def test_given_group_is_root_when_checke_is_exists_then_return_true(self):
+        """
+        give: 给定要检查的组名是 root
+        when: 要检查组是否存在
+        then: 我们认为这个组一定存在于操作系统中、所以这个一定会返回 true
+        """
+        from dbma.bil.osuser import RootGroup
+        from dbma.bil import osuser
+
+        root_group = RootGroup()
+        self.assertTrue(root_group.is_exists())
+
+    def test_given_group_is_root_when_create_then_do_nothing(self):
+        """
+        given: 给定要创建的组名是 root
+        when: 调用 create 方法
+        then: 不执行任何操作
+        """
+        from dbma.bil.osuser import RootGroup
+        from dbma.bil import osuser
+
+        osuser.exe_shell_cmd = MagicMock()
+        root_group = RootGroup()
+        root_group.is_exists = MagicMock(return_value=True)
+        root_group.create_shell_str = MagicMock(return_value="groupadd root")
+        root_group.create()
+
+        root_group.is_exists.assert_called_once()
+        root_group.create_shell_str.assert_not_called()
+        osuser.exe_shell_cmd.assert_not_called()
+
+    def test_given_group_is_root_when_drop_then_do_nothing(self):
+        """
+        given: 给定要删除的组名是 root
+        when: 调用 drop 方法
+        then: 不执行任何操作(RootGroup 重写了 drop 方法，这个方法是空的不会做任何事)
+        """
+        from dbma.bil.osuser import RootGroup
+        from dbma.bil import osuser
+
+        osuser.exe_shell_cmd = MagicMock()
+        root_group = RootGroup()
+        root_group.is_exists = MagicMock(return_value=True)
+        root_group.drop_shell_str = MagicMock(return_value="groupdel root")
+        root_group.drop()
+
+        root_group.is_exists.assert_not_called()
+        root_group.drop_shell_str.assert_not_called()
+        osuser.exe_shell_cmd.assert_not_called()

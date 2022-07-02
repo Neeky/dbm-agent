@@ -215,6 +215,12 @@ class RootGroup(BaseGroup):
     def __init__(self, name="root"):
         BaseGroup.__init__(self,name)
 
+    def drop(self):
+        """
+        root 组是不能删除的、所以这里不做任何实现
+        """
+        pass
+
 class RootUser(BaseUser):
     logger = logger.getChild("RootUser")
     
