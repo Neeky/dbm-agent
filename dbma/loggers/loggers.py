@@ -32,7 +32,7 @@ def get_logger_name(file_name: str):
 
     Exsample:
     ---------
-    /usr/local/python3/lib/xxx/dbma/core/httpserver.py ==> core.httpserver
+    /usr/local/python3/lib/xxx/dbma/core/httpserver.py ==> dbma.core.httpserver
     """
     if "dbma/" in file_name and ".py" in file_name:
       s = file_name.split(os.path.sep)
@@ -45,14 +45,12 @@ def get_logger_name(file_name: str):
       return os.path.basename(file_name)
 
 def get_logger(file_name: str):
-  """
-  Paramater:
-  ----------
-  file_name: str
-
-  Return:
-  ------
-    logging.Logger
-  """
-
-  return dbm_agent_logger.getChild(get_logger_name(file_name))
+    """
+    Paramater:
+    ----------
+        file_name: str
+    Return:
+    ------
+      logging.Logger
+    """
+    return dbm_agent_logger.getChild(get_logger_name(file_name))
