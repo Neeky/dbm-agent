@@ -5,8 +5,6 @@
 
 import pwd
 import grp
-from webbrowser import get
-
 from dbma.bil.cmdexecutor import exe_shell_cmd
 from dbma.loggers.loggers import get_logger
 
@@ -186,6 +184,7 @@ class MySQLUser(BaseUser):
     """
     # MySQL 端口
     port = 3306
+    group = MySQLGroup()
 
     def __init__(self,port:int=3306):
         """根据 MySQL 监听的端口创建用户
@@ -194,9 +193,9 @@ class MySQLUser(BaseUser):
         ---------
             port: int
         """
-        name = f"mysql{port}"
-        group = MySQLGroup()
-        BaseUser.__init__(self,name,group=group)
+        self.name = f"mysql{port}"
+        self.port = port
+        BaseUser.__init__(self,self.name,group=self.group)
     
     def create(self):
         """创建 MySQL 实例用户(如果属组不存在就先创建属组)
@@ -219,6 +218,8 @@ class RootGroup(BaseGroup):
         """
         root 组是不能删除的、所以这里不做任何实现
         """
+        logger = self.logger.getChild("drop")
+        logger.warning("root group can't be droped, skip it")
         pass
 
 class RootUser(BaseUser):
