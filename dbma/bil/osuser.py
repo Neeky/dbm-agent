@@ -212,6 +212,9 @@ class MySQLUser(BaseUser):
         
         BaseUser.create(self)
 
+    def __str__(self):
+        return f"{self.name}:{self.group}"
+
 
 class RootGroup(BaseGroup):
     """
@@ -237,6 +240,9 @@ class RootUser(BaseUser):
         BaseGroup.__init__(self,"root")
 
     def drop(self):
+        """
+        root 组是不能删除的、所以这里不做任何实现
+        """
         logger = self.logger.getChild("drop")
         logger.warning("root group can't be droped, skip it")
         
