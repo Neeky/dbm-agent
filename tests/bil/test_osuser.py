@@ -53,6 +53,7 @@ class UserGroupExistsCheckerTestCase(unittest.TestCase):
         from dbma.bil import osuser
         self.assertFalse(osuser.is_group_exists(None))
 
+
 class IdentifyTestCase(unittest.TestCase):
     """
     检查整个创建的流程是否正常
@@ -194,4 +195,55 @@ class RootGroupTestCase(unittest.TestCase):
 
         root_group.is_exists.assert_not_called()
         root_group.drop_shell_str.assert_not_called()
+        osuser.exe_shell_cmd.assert_not_called()
+
+
+class RootUserTestCase(unittest.TestCase):
+    """
+    """
+    def test_given_user_is_root_when_drop_then_do_nothing(self):
+        """
+        given: 给定的用户是 root
+        when: 调用 drop 操作
+        then: 什么操作也不做
+        """
+        from dbma.bil.osuser import RootUser
+        from dbma.bil import osuser
+
+        osuser.exe_shell_cmd = MagicMock()
+        root_user = RootUser()
+        root_user.is_exists = MagicMock(return_value=True)
+        root_user.drop_shell_str = MagicMock(return_value="userdel root")
+        root_user.drop()
+
+        root_user.is_exists.assert_not_called()
+        root_user.drop_shell_str.assert_not_called()
+        osuser.exe_shell_cmd.assert_not_called()
+
+    def test_given_user_is_root_when_check_is_user_exists_then_return_true(self):
+        """
+        given: 给定的用户是 root
+        when: 检查用户是否存在
+        then: 返回 true ，我们认为 linux 中一定存在 root 用户
+        """
+        from dbma.bil.osuser import RootUser
+        self.assertTrue(RootUser().is_exists())
+
+    def test_given_user_is_root_when_create_then_do_nothing(self):
+        """
+        given: 给定的用户是 root
+        when: 调用 create 方法
+        then: 不执行任何操作
+        """
+        from dbma.bil.osuser import RootUser
+        from dbma.bil import osuser
+
+        osuser.exe_shell_cmd = MagicMock()
+        root_user = RootUser()
+        root_user.is_exists = MagicMock(return_value=True)
+        root_user.create_shell_str = MagicMock(return_value="useradd root")
+        root_user.create()
+
+        root_user.is_exists.assert_called_once()
+        root_user.create_shell_str.assert_not_called()
         osuser.exe_shell_cmd.assert_not_called()

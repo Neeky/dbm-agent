@@ -159,7 +159,6 @@ class BaseUser(Identify):
         
         # 添加定制 home-dir 的支持
         self.home = home
-        self.name = name
 
     def create_shell_str(self) -> str:
         if self.home == '':
@@ -184,6 +183,7 @@ class MySQLUser(BaseUser):
     """
     # MySQL 端口
     port = 3306
+    # 所有的 MySQL 都共用一个 MySQL 组
     group = MySQLGroup()
 
     def __init__(self,port:int=3306):
@@ -226,4 +226,7 @@ class RootUser(BaseUser):
     logger = logger.getChild("RootUser")
     
     def __init__(self):
+        BaseGroup.__init__(self,"root")
+
+    def drop(self):
         pass
