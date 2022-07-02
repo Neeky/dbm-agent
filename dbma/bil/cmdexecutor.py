@@ -19,5 +19,5 @@ def exe_shell_cmd(cmd:str):
         None
     """
     with sudo():
-        subprocess.run(cmd,shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
