@@ -173,6 +173,12 @@ class BaseUser(Identify):
     def is_exists(self):
         return is_user_exists(self.name)
 
+    def __str__(self):
+        """
+        返回 user:group 的形式
+        """
+        return f"{self.name}:{self.group}"
+
 
 class MySQLGroup(BaseGroup):
     def __init__(self,name="mysql"):
@@ -221,13 +227,16 @@ class RootGroup(BaseGroup):
         """
         logger = self.logger.getChild("drop")
         logger.warning("root group can't be droped, skip it")
-        pass
+        
 
 class RootUser(BaseUser):
     logger = logger.getChild("RootUser")
+    group = RootGroup()
     
     def __init__(self):
         BaseGroup.__init__(self,"root")
 
     def drop(self):
-        pass
+        logger = self.logger.getChild("drop")
+        logger.warning("root group can't be droped, skip it")
+        

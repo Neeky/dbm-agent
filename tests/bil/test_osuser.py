@@ -257,3 +257,12 @@ class RootUserTestCase(unittest.TestCase):
         root_user.is_exists.assert_called_once()
         root_user.create_shell_str.assert_not_called()
         osuser.exe_shell_cmd.assert_not_called()
+
+    def test_given_user_is_root_when_convert_to_string_then_return_root_sep_root(self):
+        """
+        given: 给定的用户是 root
+        when: 调用 __str__ 方法
+        then: 返回的字符串应该是 root:root
+        """
+        from dbma.bil.osuser import RootUser
+        self.assertEqual(str(RootUser()), "root:root")
