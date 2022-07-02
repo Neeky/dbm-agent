@@ -5,8 +5,12 @@
 
 import pwd
 import grp
+from webbrowser import get
 
 from dbma.bil.cmdexecutor import exe_shell_cmd
+from dbma.loggers.loggers import get_logger
+
+logger = get_logger(__file__)
 
 
 def is_user_exists(user: str) -> bool:
@@ -53,7 +57,7 @@ def is_group_exists(group: str) -> bool:
 class Identify(object):
     """
     """
-    #
+    logger = logger.getChild("Identify")
     _not_implement_message = "please impolement it in sub class ."
 
     # 标识名(用户名 | 组名)
@@ -98,10 +102,14 @@ class Identify(object):
         ------
             None
         """
-        #raise NotImplementedError(self._not_implement_message)
+        logger = self.logger.getChild("create")
+        logger.info(f"go to create os user {self.name}")
+
         if self.is_exists():
             return
-        exe_shell_cmd(self.create_shell_str)
+        exe_shell_cmd(self.create_shell_str())
+
+        logger.info(f"os user {self.name} created")
 
     def drop(self):
         """删除用户|属组
@@ -111,7 +119,7 @@ class Identify(object):
             None
         """
         if self.is_exists():
-            exe_shell_cmd(self.drop_shell_str)
+            exe_shell_cmd(self.drop_shell_str())
 
 
 class BaseGroup(Identify):
@@ -153,6 +161,7 @@ class BaseUser(Identify):
         
         # 添加定制 home-dir 的支持
         self.home = home
+        self.name = name
 
     def create_shell_str(self) -> str:
         if self.home == '':
@@ -197,3 +206,17 @@ class MySQLUser(BaseUser):
         
         BaseUser.create(self)
 
+
+class RootGroup(BaseGroup):
+    """
+    """
+    logger = logger.getChild("RootGroup")
+    
+    def __init__(self, name="root"):
+        BaseGroup.__init__(self,name)
+
+class RootUser(BaseUser):
+    logger = logger.getChild("RootUser")
+    
+    def __init__(self):
+        pass
