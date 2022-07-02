@@ -37,7 +37,7 @@ setup(name='dbm-agent',
       url='https://github.com/Neeky/dbm-agent',
       install_requires=['Jinja2>=2.10.1', 'mysql-connector-python>=8.0.18',
                         'psutil>=5.6.6', 'requests>=2.22.0', 'distro>=1.4.0',
-                        'aiohttp', 'cchardet', 'aiodns'],
+                        'aiohttp==3.8.1', 'cchardet==2.1.7', 'aiodns==3.0.0'],
       python_requires='>=3.6.*',
       classifiers=[
           'Development Status :: 4 - Beta',
