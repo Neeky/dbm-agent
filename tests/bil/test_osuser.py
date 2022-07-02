@@ -197,6 +197,16 @@ class RootGroupTestCase(unittest.TestCase):
         root_group.drop_shell_str.assert_not_called()
         osuser.exe_shell_cmd.assert_not_called()
 
+    def test_given_group_is_root_when_convert_to_string_then_return_root(self):
+        """
+        given: 给定要转换的组名是 root
+        when: 调用 __str__ 方法
+        then: 返回的字符串应该是 root
+        """
+        from dbma.bil.osuser import RootGroup
+        root_group = RootGroup()
+        self.assertEqual(str(root_group), "root")
+
 
 class RootUserTestCase(unittest.TestCase):
     """

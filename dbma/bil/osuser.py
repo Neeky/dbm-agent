@@ -139,7 +139,8 @@ class BaseGroup(Identify):
     def __repr__(self):
         return f"BaseGroup{{name={self.name}}}"
 
-    __str__ = __repr__
+    def __str__(self):
+        return f"{self.name}"
 
 
 class BaseUser(Identify):
