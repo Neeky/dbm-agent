@@ -52,16 +52,38 @@ class JavaInstall(BinaryInstall):
         pass
 
     @classmethod
-    def maker(cls, jdk_version=17):
+    def is_version_supportted(cls, version):
         """
-        根据 jdk 版本创建实例
+        根据版本号来确认是不是一个被支持的版本
+
+        Parameters:
+        ----------
+        version: int | str
+            jkd 版本号
         """
-        # 第一步确认一下 jkd_version 参数的类型，如果是 int 要转成 str
-        if isinstance(jdk_version, int):
-            jdk_version = str(jdk_version)
+        if isinstance(version, int):
+            version = str(version)
         
-        if jdk_version not in ["8", "11", "17"]:
-            raise ValueError(f"jdk_version must be 8, 11 or 17, but got {jdk_version}")
+        return version in ['8', '11', '17']
+
+    @classmethod
+    def find_java_pkg(cls, version):
+        """
+        根据 version 中给定的版本号在 /usr/local/dbm-agent/pkg/ 中找到最高的子版本
+
+        Parameters:
+        -----------
+        version: int|str
+            jdk 大版本号(8, 11, 17)
+
+        Return:
+        -------
+            str
+        """
+        cls_logger = cls.logger.getChild("find_java_pkg")
+        # 第一步，统一转成 str
+        if isinstance(version, int):
+            version = str(version)
         
         # 第二步，根据 jdk_version 检查满足条件的包
         import re
@@ -70,18 +92,32 @@ class JavaInstall(BinaryInstall):
         pkgs = []
         import os
         for item in os.listdir(cls._pkg_repo_dir):
-            if pattern.match(item) and item.startswith(f"TencentKona-{jdk_version}"):
+            if pattern.match(item) and item.startswith(f"TencentKona-{version}"):
+                cls_logger.info(f"find pkg {item} in pkg repo dir .")
                 pkgs.append(item)
 
-        # 第三步，如果有包就取最高版本的
-        if len(pkgs) > 0:
-            pkg = pkgs[-1]
-        else:
-            raise ValueError(f"no jdk {jdk_version} package found")
-        
-        # 第四步，创建实例
-        ji = JavaInstall(pkg)
-        return ji
-                
+        # 第三步，如果有包就取最高版本的安装包
+        return pkgs[-1] if len(pkgs) > 0 else None
 
-    
+    @classmethod
+    def maker(cls, jdk_version=17):
+        """
+        根据 jdk 版本创建实例
+        """
+        cls_logger = cls.logger.getChild("maker")
+
+        # 第一步，确认当前给定的版本 dbm-agent 是否支持
+        if not cls.is_version_supportted(jdk_version):
+            message = f"{jdk_version} is not supported ."
+            cls_logger.error(message)
+            raise ValueError(message)
+        
+        # 第二步，如果支持、就去找安装包,如果 pkg 是 None 说明没有找到包
+        pkg = cls.find_java_pkg(jdk_version)
+        if pkg is None:
+            message = "pkg not find in pkg repo dir ."
+            cls_logger.error(message)
+            raise ValueError(message)
+        
+        # 第三步，到这里说明所有的准备工作都没有问题、开始准备安装器
+        return JavaInstall(pkg)
