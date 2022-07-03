@@ -47,6 +47,7 @@ def get_tar_file_name(tar_file_path):
     """
     tar = tarfile.open(tar_file_path)
     name = tar.getnames()[0]
+    tar.close()
     return name
 
 def link(src, dest):
