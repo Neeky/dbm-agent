@@ -20,4 +20,3 @@ def exe_shell_cmd(cmd:str):
     """
     with sudo():
         subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-

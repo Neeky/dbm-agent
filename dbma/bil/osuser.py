@@ -1,4 +1,5 @@
 # -*- coding: utf8 -*-
+
 """
 实现操作系统用户的相关操作
 """
@@ -245,4 +246,4 @@ class RootUser(BaseUser):
         """
         logger = self.logger.getChild("drop")
         logger.warning("root group can't be droped, skip it")
-        
+   
