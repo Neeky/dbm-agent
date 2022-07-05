@@ -7,3 +7,4 @@ logs
 *__pycache__
 dbm_agent.egg-info
 *build
+.coverage
