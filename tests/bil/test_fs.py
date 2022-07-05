@@ -26,4 +26,34 @@ class TarFileTestCase(unittest.TestCase):
         fs.tarfile.open.assert_called_once_with("/tmp/1.tar.gz")
         tar_object.extractall.assert_called_once_with("/tmp/")
         tar_object.close.assert_called_once()
+
+    def test_given_line_exists_in_profile_when_call_fs_is_line_in_etc_profile_then_return_true(self):
+        """
+        given: 给定的行存在于 /etc/profile 中
+        when:  检查行是否存在 is_line_in_etc_profile
+        then:  返回 True
+        """
+        from dbma.bil import fs
+        import os
+        lines = ['export JAVA_HOME=/usr/local/java', 'export PATH=/usr/local/java/bin/:$PATH']
+        os.open = MagicMock(return_value=lines)
+        self.assertTrue(fs.is_line_in_etc_profile("export JAVA_HOME=/usr/local/java"))
+
+    def test_given_line_not_exists_in_profile_when_call_fs_is_line_in_etc_profile_then_return_false(self):
+        """
+        given: 给定的行不存在于 /etc/profile 中
+        when:  检查行是否存在 is_line_in_etc_profile
+        then:  返回 False
+        """
+        from dbma.bil import fs
+        import os
+        lines = ['export JAVA_HOME=/usr/local/java', 'export PATH=/usr/local/java/bin/:$PATH']
+        os.open = MagicMock(return_value=lines)
+        self.assertFalse(fs.is_line_in_etc_profile("export JAVA_HOME=/usr/local/java2"))
+
+
+
+    
+
+
         
