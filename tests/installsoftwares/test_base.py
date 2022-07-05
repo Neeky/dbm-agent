@@ -53,6 +53,7 @@ class BinaryInstallTestCase(unittest.TestCase):
         bi.extract_pkg = MagicMock(return_value=None)
         bi.make_link = MagicMock(return_value=None)
         bi.chown = MagicMock(return_value=None)
+        bi.exports = MagicMock(return_value=None)
 
         bi.install()
 
@@ -61,3 +62,20 @@ class BinaryInstallTestCase(unittest.TestCase):
         bi.extract_pkg.assert_called_once()
         bi.make_link.assert_called_once()
         bi.chown.assert_called_once()
+        bi.exports.assert_called_once()
+
+    def test_given_env_not_exists_when_call_export_env_then_write_it_to_etc_profile(self):
+        """
+        """
+        from dbma.bil import fs
+        fs.is_line_in_etc_profile = MagicMock(return_value=False)
+        fs.append_new_line_to_etc_profile = MagicMock(return_value=None)
+
+        from dbma.installsoftwares.java import JavaInstall
+        bi = JavaInstall()
+        bi.export_env("JAVA_HOME", "/usr/local/java")
+
+        fs.is_line_in_etc_profile.assert_called_once()
+        fs.append_new_line_to_etc_profile.assert_called_once()
+
+    
