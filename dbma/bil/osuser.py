@@ -101,14 +101,9 @@ class Identify(object):
         ------
             None
         """
-        logger = self.logger.getChild("create")
-        logger.info(f"go to create os user {self.name}")
-
         if self.is_exists():
             return
         exe_shell_cmd(self.create_shell_str())
-
-        logger.info(f"os user {self.name} created")
 
     def drop(self):
         """删除用户|属组
@@ -124,7 +119,6 @@ class Identify(object):
 class BaseGroup(Identify):
     """所有操作系统用户属组的基类
     """
-
     def __init__(self, name):
         Identify.__init__(self, name)
 
@@ -142,7 +136,7 @@ class BaseGroup(Identify):
 
     def __str__(self):
         return f"{self.name}"
-
+    
 
 class BaseUser(Identify):
     """所有用户的基类
@@ -150,15 +144,9 @@ class BaseUser(Identify):
     group = None
     home = ''
 
-    def __init__(self, name, group='nobody', home=''):
+    def __init__(self, name, home=''):
         Identify.__init__(self,name)
 
-        # 把 group 设置为 BaseGroup 的对象
-        if isinstance(group,str):
-            self.group = BaseGroup(group)
-        else:
-            self.group = group
-        
         # 添加定制 home-dir 的支持
         self.home = home
 
@@ -174,6 +162,17 @@ class BaseUser(Identify):
     def is_exists(self):
         return is_user_exists(self.name)
 
+    def create(self):
+        """
+        在创建用户的时候如果组不存在，要去创建组
+        """
+        logger = self.logger.getChild("create")
+        if (self.group is not None) and (not self.group.is_exists()):
+            logger.info("group not eixsts.")
+            self.group.create()
+        logger.info("going to create user")
+        Identify.create(self)
+        
     def __str__(self):
         """
         返回 user:group 的形式
@@ -232,7 +231,14 @@ class RootGroup(BaseGroup):
         logger = self.logger.getChild("drop")
         logger.warning("root group can't be droped, skip it")
         
+class ZookeeperGroup(BaseGroup):
+    """
+    """
+    logger = logger.getChild("ZookeeperGroup")
 
+    def __init__(self, name="zookeeper"):
+        BaseGroup.__init__(self,name)
+        
 class RootUser(BaseUser):
     logger = logger.getChild("RootUser")
     group = RootGroup()
@@ -246,4 +252,12 @@ class RootUser(BaseUser):
         """
         logger = self.logger.getChild("drop")
         logger.warning("root group can't be droped, skip it")
+
+
+class ZookeeperUser(BaseUser):
+    logger = logger.getChild("ZookeeperUser")
+    group = ZookeeperGroup()
+    
+    def __init__(self):
+        BaseUser.__init__(self,"zookeeper")
    
