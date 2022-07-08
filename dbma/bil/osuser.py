@@ -230,7 +230,8 @@ class RootGroup(BaseGroup):
         """
         logger = self.logger.getChild("drop")
         logger.warning("root group can't be droped, skip it")
-        
+
+
 class ZookeeperGroup(BaseGroup):
     """
     """
@@ -238,7 +239,8 @@ class ZookeeperGroup(BaseGroup):
 
     def __init__(self, name="zookeeper"):
         BaseGroup.__init__(self,name)
-        
+
+
 class RootUser(BaseUser):
     logger = logger.getChild("RootUser")
     group = RootGroup()
