@@ -202,7 +202,7 @@ class MySQLUser(BaseUser):
         """
         self.name = f"mysql{port}"
         self.port = port
-        BaseUser.__init__(self,self.name,group=self.group)
+        BaseUser.__init__(self,self.name)
     
     def create(self):
         """创建 MySQL 实例用户(如果属组不存在就先创建属组)

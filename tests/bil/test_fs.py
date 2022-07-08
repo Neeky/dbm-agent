@@ -30,8 +30,7 @@ class TarFileTestCase(unittest.TestCase):
 
 
 class EtcProfileEditTestCase(unittest.TestCase):
-    """
-    编辑 /etc/profile 功能的测试
+    """ 编辑 /etc/profile 功能的测试
     """
     def test_given_line_exists_in_profile_when_call_fs_is_line_in_etc_profile_then_return_true(self):
         """
@@ -56,37 +55,6 @@ class EtcProfileEditTestCase(unittest.TestCase):
         lines = ['export JAVA_HOME=/usr/local/java', 'export PATH=/usr/local/java/bin/:$PATH']
         os.open = MagicMock(return_value=lines)
         self.assertFalse(fs.is_line_in_etc_profile("export JAVA_HOME=/usr/local/java2"))
-
-    def test_given_tar_file_exists_call_get_tar_file_name_then_get_parent_dir_name(self):
-        """
-        given: 给定的 tar 文件存在
-        when:  调用 get_tar_file_name 的时候
-        then:  返回解压后得到的目录名
-        """
-        from dbma.bil import fs
-
-        # names = ['mysql-8.0.28', 'mysql-8.0.28/bin', 'mysql-8.0.28/lib']
-        # get_names_object = MagicMock()
-        # get_names_object.getnames = MagicMock(return_value = names)
-        # get_names_object.close = MagicMock()
-
-        # fs.tarfile = MagicMock()
-        # fs.tarfile.open = MagicMock()
-        # fs.tarfile.open.return_value = MagicMock(get_names_object)
-
-
-        # #self.assertEqual(fs.get_tar_file_name(''), 'mysql-8.0.28')
-
-        # print(fs.tarfile.open(),get_names_object)
-
-        # from dbma.bil import fs
-        # mock_tarfile = MagicMock()
-        # mock_get_names_funn = MagicMock(return_value=names)
-        # mock_tarfile.open = MagicMock(return_value=MagicMock().)
-
-        # fs.tarfile = MagicMock(return_value=mock_tarfile)
-
-        # self.assertEqual(fs.get_tar_file_name(''), 'mysql-8.0.28')
 
 
 class FileExistsTestCase(unittest.TestCase):
@@ -114,10 +82,3 @@ class FileExistsTestCase(unittest.TestCase):
         exists_file = "/etc/profile"
         self.assertTrue(fs.is_file_exists(exists_file))
 
-
-
-
-
-
-
-        
