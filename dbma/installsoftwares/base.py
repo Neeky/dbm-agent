@@ -70,6 +70,12 @@ class BaseInstall(object):
         raise NotImplemented("this function not implemented 'BaseInstall.install'")
 
 
+class TarbalInstall(BaseInstall):
+    """
+    源码安装方式的基类
+    """
+    pass
+
 class BinaryInstall(BaseInstall):
     """
     实现二进行包的安装
