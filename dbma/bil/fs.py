@@ -106,4 +106,6 @@ def append_new_line_to_etc_profile(line):
 
 join = os.path.join
 
-readlink = os.readlink 
+readlink = os.readlink
+
+listdir = os.listdir

@@ -1,91 +1,35 @@
+# -*- encoding: utf-8 -*-
 """
-实现 linux 系统上的 java jdk 安装。
+实现 linux 系统上的 java jdk 安装(Binary 方式安装).
 """
 
-from dbma.bil import fs, sudos
+from dbma.bil import fs
 from dbma.loggers.loggers import get_logger
 from dbma.installsoftwares.base import BinaryInstall
 
 logger = get_logger(__file__)
 
+
 class JavaInstall(BinaryInstall):
+    """
+    实现 java-jdk 的安装
+    """
     logger = logger.getChild("JavaInstall")
 
+    target_link = "/usr/local/java"
+
     def __init__(self, pkg="TencentKona-17.0.3.b1-jdk_linux-x86_64.tar.gz"):
-        logger = self.logger.getChild("__init__")
-        logger.info(f"install java using {pkg}")
-
-        BinaryInstall.__init__(self,"root", pkg)
-
-    def make_link(self):
-        """
-        创建 java 的链接文件
-        """
-        logger = self.logger.getChild("make_link")
-        
-        # 创建链接
-        src = fs.join(self._install_dir, fs.get_tar_file_name(fs.join(self._pkg_repo_dir, self._pkg)))
-        dest = fs.join(self._install_dir, "java")
-        if fs.is_file_exists(dest):
-            return
-
-        fs.link(src, dest)
-    
-    def exports(self):
-        # 导出环境变量
-        with sudos.sudo():
-            self.export_env("PATH", "/usr/local/java/bin/")
-            self.export_env("JAVA_HOME", "/usr/local/java")
-
-    def install(self):
-        """
-        """
-        logger = self.logger.getChild("install")
-        logger.info(f"going to install java ")
-
-        # 安装 java
-        BinaryInstall.install(self)
-
-        logger.info(f"done ")
-
-    def chown(self):
-        pass
+        BinaryInstall.__init__(self, pkg)
 
     @classmethod
-    def is_installed(cls):
+    def pkgs(cls):
         """
+        只返回 java 的安装包
         """
-        logger = cls.logger.getChild("is_installed")
-        logger.info("start")
-        if fs.is_file_exists("/usr/local/java"):
-            return True
-        return False
+        return [_ for _ in BinaryInstall.pkgs() if _.startswith("TencentKona")]
 
     @classmethod
-    def current_installed_version(cls):
-        """
-        """
-        logger = cls.logger.getChild("current_installed_version")
-        logger.info("start")
-        return fs.readlink("/usr/local/java")
-
-    @classmethod
-    def is_version_supportted(cls, version):
-        """
-        根据版本号来确认是不是一个被支持的版本
-
-        Parameters:
-        ----------
-        version: int | str
-            jkd 版本号
-        """
-        if isinstance(version, int):
-            version = str(version)
-        
-        return version in ['8', '11', '17']
-
-    @classmethod
-    def find_java_pkg(cls, version):
+    def find_newest_pkg(cls, version):
         """
         根据 version 中给定的版本号在 /usr/local/dbm-agent/pkg/ 中找到最高的子版本
 
@@ -98,7 +42,7 @@ class JavaInstall(BinaryInstall):
         -------
             str
         """
-        cls_logger = cls.logger.getChild("find_java_pkg")
+        cls_logger = cls.logger.getChild("find_newest_pkg")
         # 第一步，统一转成 str
         if isinstance(version, int):
             version = str(version)
@@ -108,8 +52,7 @@ class JavaInstall(BinaryInstall):
         pattern = re.compile(r"^TencentKona-.*linux-x86_64.*.tar.gz$")
 
         pkgs = []
-        import os
-        for item in os.listdir(cls._pkg_repo_dir):
+        for item in cls.pkgs():
             if pattern.match(item) and item.startswith(f"TencentKona-{version}"):
                 cls_logger.info(f"find pkg {item} in pkg repo dir .")
                 pkgs.append(item)
@@ -123,15 +66,9 @@ class JavaInstall(BinaryInstall):
         根据 jdk 版本创建实例
         """
         cls_logger = cls.logger.getChild("maker")
-
-        # 第一步，确认当前给定的版本 dbm-agent 是否支持
-        if not cls.is_version_supportted(jdk_version):
-            message = f"{jdk_version} is not supported ."
-            cls_logger.error(message)
-            raise ValueError(message)
         
-        # 第二步，如果支持、就去找安装包,如果 pkg 是 None 说明没有找到包
-        pkg = cls.find_java_pkg(jdk_version)
+        # 第一步，如果支持、就去找安装包,如果 pkg 是 None 说明没有找到包
+        pkg = cls.find_newest_pkg(jdk_version)
         if pkg is None:
             message = "pkg not find in pkg repo dir ."
             cls_logger.error(message)
@@ -139,3 +76,11 @@ class JavaInstall(BinaryInstall):
         
         # 第三步，到这里说明所有的准备工作都没有问题、开始准备安装器
         return JavaInstall(pkg)
+
+    def exports(self):
+        self.export_env("PATH", fs.join(self.target_link, "bin/"))
+        self.export_env("JAVA_HOME", self.target_link)
+
+    def make_link(self):
+        fs.link(self.get_src_dir_name(), self.target_link)
+
