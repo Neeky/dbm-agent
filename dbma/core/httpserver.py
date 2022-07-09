@@ -10,6 +10,7 @@ from aiohttp import web
 from dbma.core.router import routes
 from dbma.loggers.loggers import get_logger
 from dbma.core.views import dbmagentview as _
+from dbma.core.views import javaview as _
 
 def start_http_server():
     """启动 dbm-agent http 服务

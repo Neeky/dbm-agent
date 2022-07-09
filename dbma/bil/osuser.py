@@ -7,9 +7,6 @@
 import pwd
 import grp
 from dbma.bil.cmdexecutor import exe_shell_cmd
-from dbma.loggers.loggers import get_logger
-
-logger = get_logger(__file__)
 
 
 def is_user_exists(user: str) -> bool:
@@ -56,7 +53,6 @@ def is_group_exists(group: str) -> bool:
 class Identify(object):
     """
     """
-    logger = logger.getChild("Identify")
     _not_implement_message = "please impolement it in sub class ."
 
     # 标识名(用户名 | 组名)
@@ -166,11 +162,8 @@ class BaseUser(Identify):
         """
         在创建用户的时候如果组不存在，要去创建组
         """
-        logger = self.logger.getChild("create")
         if (self.group is not None) and (not self.group.is_exists()):
-            logger.info("group not eixsts.")
             self.group.create()
-        logger.info("going to create user")
         Identify.create(self)
         
     def __str__(self):
@@ -218,9 +211,7 @@ class MySQLUser(BaseUser):
 
 class RootGroup(BaseGroup):
     """
-    """
-    logger = logger.getChild("RootGroup")
-    
+    """    
     def __init__(self, name="root"):
         BaseGroup.__init__(self,name)
 
@@ -228,21 +219,17 @@ class RootGroup(BaseGroup):
         """
         root 组是不能删除的、所以这里不做任何实现
         """
-        logger = self.logger.getChild("drop")
-        logger.warning("root group can't be droped, skip it")
+        pass
 
 
 class ZookeeperGroup(BaseGroup):
     """
     """
-    logger = logger.getChild("ZookeeperGroup")
-
     def __init__(self, name="zookeeper"):
         BaseGroup.__init__(self,name)
 
 
 class RootUser(BaseUser):
-    logger = logger.getChild("RootUser")
     group = RootGroup()
     
     def __init__(self):
@@ -252,12 +239,9 @@ class RootUser(BaseUser):
         """
         root 组是不能删除的、所以这里不做任何实现
         """
-        logger = self.logger.getChild("drop")
-        logger.warning("root group can't be droped, skip it")
-
+        pass
 
 class ZookeeperUser(BaseUser):
-    logger = logger.getChild("ZookeeperUser")
     group = ZookeeperGroup()
     
     def __init__(self):

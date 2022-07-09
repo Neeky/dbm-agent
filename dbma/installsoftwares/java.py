@@ -52,6 +52,24 @@ class JavaInstall(BinaryInstall):
         pass
 
     @classmethod
+    def is_installed(cls):
+        """
+        """
+        logger = cls.logger.getChild("is_installed")
+        logger.info("start")
+        if fs.is_file_exists("/usr/local/java"):
+            return True
+        return False
+
+    @classmethod
+    def current_installed_version(cls):
+        """
+        """
+        logger = cls.logger.getChild("current_installed_version")
+        logger.info("start")
+        return fs.readlink("/usr/local/java")
+
+    @classmethod
     def is_version_supportted(cls, version):
         """
         根据版本号来确认是不是一个被支持的版本

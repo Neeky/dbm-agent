@@ -105,3 +105,5 @@ def append_new_line_to_etc_profile(line):
         f.write("\n")
 
 join = os.path.join
+
+readlink = os.readlink 
