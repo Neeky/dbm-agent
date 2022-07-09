@@ -1,32 +1,29 @@
 # -*- encoding: utf-8 -*-
 """
-实现 linux 系统上的 java jdk 安装(Binary 方式安装).
+实现 linux 系统上的 zookeeper 安装(Binary 方式安装)。
 """
 
-from dbma.bil import fs
+from dbma.bil import fs, sudos
 from dbma.loggers.loggers import get_logger
 from dbma.installsoftwares.base import BinaryInstall
+from dbma.bil.osuser import ZookeeperUser
 
 logger = get_logger(__file__)
 
-
-class JavaInstall(BinaryInstall):
+class ZookeeperInstall(BinaryInstall):
     """
-    实现 java-jdk 的安装
     """
-    logger = logger.getChild("JavaInstall")
+    logger = logger.getChild("ZookeeperInstall")
 
-    target_link = "/usr/local/java"
-
-    def __init__(self, pkg="TencentKona-17.0.3.b1-jdk_linux-x86_64.tar.gz"):
-        BinaryInstall.__init__(self, pkg)
+    target_link = "/usr/local/zookeeper"
+    user = ZookeeperUser()
 
     @classmethod
     def pkgs(cls):
         """
         只返回 java 的安装包
         """
-        return [_ for _ in BinaryInstall.pkgs() if _.startswith("TencentKona")]
+        return [_ for _ in BinaryInstall.pkgs() if _.startswith("apache-zookeeper")]
 
     @classmethod
     def find_newest_pkg(cls, version):
@@ -36,7 +33,7 @@ class JavaInstall(BinaryInstall):
         Parameters:
         -----------
         version: int|str
-            jdk 大版本号(8, 11, 17)
+            zookeeper 大版本号(3)
 
         Return:
         -------
@@ -49,11 +46,11 @@ class JavaInstall(BinaryInstall):
         
         # 第二步，根据 jdk_version 检查满足条件的包
         import re
-        pattern = re.compile(r"^TencentKona-.*linux-x86_64.*.tar.gz$")
+        pattern = re.compile(r"^apache-zookeeper-.*tar.gz$")
 
         pkgs = []
         for item in cls.pkgs():
-            if pattern.match(item) and item.startswith(f"TencentKona-{version}"):
+            if pattern.match(item) and item.startswith(f"apache-zookeeper-{version}"):
                 cls_logger.info(f"find pkg {item} in pkg repo dir .")
                 pkgs.append(item)
 
@@ -61,23 +58,28 @@ class JavaInstall(BinaryInstall):
         return pkgs[-1] if len(pkgs) > 0 else None
 
     @classmethod
-    def maker(cls, jdk_version=17):
+    def maker(cls, zookeeper_version=3):
         """
         根据 jdk 版本创建实例
         """
         cls_logger = cls.logger.getChild("maker")
         
         # 第一步，如果支持、就去找安装包,如果 pkg 是 None 说明没有找到包
-        pkg = cls.find_newest_pkg(jdk_version)
+        pkg = cls.find_newest_pkg(zookeeper_version)
         if pkg is None:
             message = "pkg not find in pkg repo dir ."
             cls_logger.error(message)
             raise ValueError(message)
         
         # 第三步，到这里说明所有的准备工作都没有问题、开始准备安装器
-        return JavaInstall(pkg)
+        return ZookeeperInstall(pkg)
+
+    def __init__(self, pkg="apache-zookeeper-3.7.1-bin.tar.gz"):
+        """
+        """
+        BinaryInstall.__init__(self, pkg)
 
     def exports(self):
-        self.export_env("PATH", fs.join(self.target_link, "bin/"))
-        self.export_env("JAVA_HOME", self.target_link)
-
+        self.export_env("PATH", fs.join(self.target_link, "bin"))
+    
+    

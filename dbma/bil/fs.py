@@ -49,6 +49,8 @@ def get_tar_file_name(tar_file_path):
     tar = tarfile.open(tar_file_path)
     name = tar.getnames()[0]
     tar.close()
+    if os.sep in name:
+        name, *_ = name.split(os.sep)
     return name
 
 def link(src, dest):

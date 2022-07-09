@@ -180,6 +180,10 @@ class BinaryInstall(BaseInstall):
             return fs.get_tar_file_name(fs.join(self.pkg_repo_dir, self.pkg))
         logger.info(f"pkg not exists {self.pkg}")
         return ''
+
+    def make_link(self):
+        fs.link(self.get_src_dir_name(), self.target_link)
+
     
     def install(self):
         """
