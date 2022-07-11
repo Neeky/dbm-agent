@@ -7,6 +7,7 @@
 import pwd
 import grp
 from dbma.bil.cmdexecutor import exe_shell_cmd
+from dbma.bil.sudos import sudo
 
 
 def is_user_exists(user: str) -> bool:
@@ -165,6 +166,18 @@ class BaseUser(Identify):
         if (self.group is not None) and (not self.group.is_exists()):
             self.group.create()
         Identify.create(self)
+
+    def chown(self, path, recursive=True):
+        """
+        """
+        if recursive == True:
+            cmd = f"chown -R {str(self)} {path}"
+        else:
+            cmd = f"chown {str(self)} {path}"
+
+        with sudo():
+            exe_shell_cmd(cmd)
+            
         
     def __str__(self):
         """

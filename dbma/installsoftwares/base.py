@@ -130,6 +130,17 @@ class BaseInstall(object):
         """
         raise NotImplementedError("this function not implemented 'BaseInstall.install'")
 
+    def config(self):
+        """
+        """
+        raise NotImplementedError("this function not implemented 'BaseInstall.install'")
+    
+    def start(self):
+        """
+        """
+        raise NotImplementedError("this function not implemented 'BaseInstall.install'")
+
+
 
 class TarballInstall(BaseInstall):
     """
@@ -156,12 +167,6 @@ class BinaryInstall(BaseInstall):
         """
         self.pkg = pkg
 
-    def chown(self):
-        """
-        我们认为大多数情况下这个解压就能用，这个不用管。
-        """
-        pass
-
     def get_src_dir_name(self):
         """
         一旦把 pkg 解压到 /usr/local/ 目录后就会得到一个新的目录，如果真要解压完成之后再去查这个目录名，这样做会比较麻烦。
@@ -181,10 +186,16 @@ class BinaryInstall(BaseInstall):
         logger.info(f"pkg not exists {self.pkg}")
         return ''
 
-    def make_link(self):
-        fs.link(self.get_src_dir_name(), self.target_link)
+    def chown(self):
+        """
+        把解压后的目录，和链接文件都配置上
+        """
+        self.user.chown(fs.join(self.install_dir, self.get_src_dir_name()))
+        self.user.chown(self.target_link)
 
-    
+    def make_link(self):
+        fs.link(fs.join(self.install_dir, self.get_src_dir_name()), self.target_link)
+
     def install(self):
         """
         二进制包的安装流程
