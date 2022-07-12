@@ -254,6 +254,7 @@ class RootUser(BaseUser):
         """
         pass
 
+
 class ZookeeperUser(BaseUser):
     group = ZookeeperGroup()
     
