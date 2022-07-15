@@ -3,6 +3,8 @@
 实现所有配置文件的渲染
 """
 import copy
+
+import jinja2
 from dbma.loggers.loggers import get_logger
 from dbma.exceptions import TemplateFileNotFoundError
 from dbma.installsoftwares.configrenders.templatefinders import ZookeeperTemplateFileFinder
@@ -31,12 +33,13 @@ class BaseConfigRender(object):
         logger = self.logger.getChild("__str__")
 
         try:
-            template_file_path = self.template_finder.find()
+            content = self.template_finder.load()
+            template = jinja2.Template(content)
+            return template.render(**self.configs)
         except TemplateFileNotFoundError as err:
             logger.error(err)
             raise err
         
-
 
 class ZookeeperConfigRender(BaseConfigRender):
     """
@@ -46,11 +49,3 @@ class ZookeeperConfigRender(BaseConfigRender):
     configs_defaults = {
         'data_dir': '/data/zookeeper'
     }
-
-    def __str__(self):
-        """
-        """
-        raise NotImplementedError("__str__() not implemented")
-    
-    
-

@@ -19,7 +19,7 @@ class TemplateFileFinder(object):
     """
     template_file_pattern = ''
     
-    def find(self):
+    def load(self):
         """
         Raise:
         ------
@@ -32,7 +32,7 @@ class DefaultTemplateFileFinder(TemplateFileFinder):
     """
     像 MySQL 我们要根据不同的版本来加载不同的配置文件，但是 zookeeper 类的我们可以简单的配置下就行了，不用区别版本。这样我们只要加载它的默认配置文件就行了。
     """
-    def find(self):
+    def load(self):
         """
         """
         templates_dir = '/usr/local/dbm-agent/etc/templates/'
@@ -51,7 +51,3 @@ class ZookeeperTemplateFileFinder(DefaultTemplateFileFinder):
     template_file_pattern = re.compile("^zoo.cnf.jinja$")
 
     
-
-
-
-
