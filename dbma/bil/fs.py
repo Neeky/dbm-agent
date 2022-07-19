@@ -111,3 +111,5 @@ join = os.path.join
 readlink = os.readlink
 
 listdir = os.listdir
+
+mkdir = os.mkdir

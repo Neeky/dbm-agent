@@ -7,6 +7,7 @@ from dbma.bil import fs, sudos
 from dbma.loggers.loggers import get_logger
 from dbma.installsoftwares.base import BinaryInstall
 from dbma.bil.osuser import ZookeeperUser
+from dbma.installsoftwares.configrenders.renders import ZookeeperConfigRender
 
 logger = get_logger(__file__)
 
@@ -17,6 +18,28 @@ class ZookeeperInstall(BinaryInstall):
 
     target_link = "/usr/local/zookeeper"
     user = ZookeeperUser()
+
+    def __init__(self, pkg="apache-zookeeper-3.7.1-bin.tar.gz"):
+        """
+        """
+        BinaryInstall.__init__(self, pkg)
+
+    def exports(self):
+        self.export_env("PATH", fs.join(self.target_link, "bin"))
+
+    def config(self, config_render=None):
+        """
+        """
+        if config_render is None:
+            config_render = ZookeeperConfigRender()
+        
+        with open("/usr/local/zookeeper/conf/zoo.cfg", "w") as f:
+            f.write(config_render.render())
+        
+        if fs.is_file_exists("/data/zookeeper"):
+            fs.mkdir("/data/zookeeper")
+        
+        self.user.chown("/data/zookeeper")
 
     @classmethod
     def pkgs(cls):
@@ -73,16 +96,3 @@ class ZookeeperInstall(BinaryInstall):
         
         # 第三步，到这里说明所有的准备工作都没有问题、开始准备安装器
         return ZookeeperInstall(pkg)
-
-    def __init__(self, pkg="apache-zookeeper-3.7.1-bin.tar.gz"):
-        """
-        """
-        BinaryInstall.__init__(self, pkg)
-
-    def exports(self):
-        self.export_env("PATH", fs.join(self.target_link, "bin"))
-
-
-
-    
-    

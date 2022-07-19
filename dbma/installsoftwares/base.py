@@ -214,3 +214,5 @@ class BinaryInstall(BaseInstall):
             self.make_link()
             self.chown()
             self.exports()
+        # 为了后面直接点下去, 比如 install 了之后还有可能要 config, start 这类的
+        return self
