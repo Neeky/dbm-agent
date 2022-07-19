@@ -16,8 +16,3 @@ class ZookeeperTemplateFileFinderTestCase(unittest.TestCase):
         """
         template_finder = ZookeeperTemplateFileFinder()
         self.assertIn("data_dir", template_finder.load())
-        
-        print(template_finder.load())
-
-        template = jinja2.Template(template_finder.load())
-        print(template.render(**{'data_dir': '/data/zookeeper'}))
