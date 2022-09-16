@@ -7,12 +7,14 @@ from dbma.bil import fs, sudos
 from dbma.loggers.loggers import get_logger
 from dbma.installsoftwares.base import BinaryInstall
 from dbma.bil.osuser import ZookeeperUser
+from dbma.bil.cmdexecutor import exe_shell_cmd
 from dbma.installsoftwares.configrenders.renders import ZookeeperConfigRender
 
 logger = get_logger(__file__)
 
 class ZookeeperInstall(BinaryInstall):
     """
+    zookeeper 安装功能
     """
     logger = logger.getChild("ZookeeperInstall")
 
@@ -40,6 +42,12 @@ class ZookeeperInstall(BinaryInstall):
             fs.mkdir("/data/zookeeper")
         
         self.user.chown("/data/zookeeper")
+
+    def start(self):
+        """
+        """
+        with sudos.sudo("start zookeeper") as _:
+            exe_shell_cmd("/usr/local/zookeeper/bin/zkServer.sh")
 
     @classmethod
     def pkgs(cls):
