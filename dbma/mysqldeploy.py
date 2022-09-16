@@ -78,6 +78,7 @@ class MyCnfRender(object):
         self.eq_range_index_dive_limit = 200
         self.character_set_server = 'utf8mb4'
         self.performance_schema = 'ON'
+        self.show_gipk_in_create_table_and_information_schema = 'ON'
 
         # table cache
         self.table_open_cache = 4000
@@ -269,6 +270,8 @@ class MyCnfRender(object):
         self.innodb_file_per_table = 'ON'
         self.innodb_autoextend_increment = 64
         self.innodb_open_files = 100000
+        self.sql_generate_invisible_primary_key = 'ON'
+        self.innodb_redo_log_capacity = '1G'
 
         # mgr
         self.is_mgr = False
