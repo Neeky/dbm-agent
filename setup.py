@@ -35,10 +35,9 @@ setup(name='dbm-agent',
       packages=['dbma','dbma/unix', 'dbma/core', 'dbma/core/views', 'dbma/loggers', 'dbma/installsoftwares', 'dbma/bil'],
       package_data={'dbma': ['static/cnfs/*', 'static/sql-scripts/*']},
       url='https://github.com/Neeky/dbm-agent',
-      install_requires=['Jinja2>=2.10.1', 'mysql-connector-python>=8.0.18',
+      install_requires=['Jinja2>=2.10.1', 'mysql-connector-python>=8.0.31',
                         'psutil>=5.6.6', 'requests>=2.22.0', 'distro>=1.4.0',
-                        'aiohttp==3.8.1', 'cchardet==2.1.7', 'aiodns==3.0.0',
-                        'coverage==6.4.1'],
+                        'aiohttp==3.8.1', 'cchardet==2.1.7', 'aiodns==3.0.0'],
       python_requires='>=3.6.*',
       classifiers=[
           'Development Status :: 4 - Beta',
@@ -47,5 +46,8 @@ setup(name='dbm-agent',
           'Operating System :: MacOS :: MacOS X',
           'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
-          'Programming Language :: Python :: 3.8']
+          'Programming Language :: Python :: 3.8',
+          'Programming Language :: Python :: 3.9',
+          'Programming Language :: Python :: 3.10',
+          'Programming Language :: Python :: 3.11']
       )
