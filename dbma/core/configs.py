@@ -11,10 +11,12 @@ import atexit
 from pathlib import Path
 from dataclasses import dataclass, asdict
 from dbma.unix.version import VERSION
+from dbma.bil.osuser import DBMAUser
 # TODO
 # 这里之后要改成 dbma.core.version 文件中的 VERSION 值
 
 DBM_AGENT_BASE_DIR = Path("/usr/local/dbm-agent/")
+DBM_AGENT_ETC_DIR = DBM_AGENT_BASE_DIR / "etc"
 CONFIG_FILE_PATH = DBM_AGENT_BASE_DIR / "etc/dbm-agent.json"
 
 
@@ -26,6 +28,10 @@ class DBMAgentConfig(object):
     port: int = 8086
     version: str = VERSION
     dbmcenter_url_prefix: str = "http://127.0.0.1:8080"
+    pid_file: str = "/tmp/dbm-agent.pid"
+    log_level: str = 'info'
+    log_file: str = "/tmp/dbm-agent.log"
+    
     # 单例模式
     _instance = None
 
@@ -93,5 +99,15 @@ class DBMCenterUrlConfig(object):
             cls._instance = object.__new__(cls, *args, **kw)
         return cls._instance
 
+def _auto_save_to_disk():
+    """
+    """
+    if DBM_AGENT_BASE_DIR.exists():
+        dbm_user = DBMAUser()
+        dbm_user.chown(DBM_AGENT_BASE_DIR)
+        dbm_agent_config.sync_to_disk()
+        dbm_user.chown(DBM_AGENT_BASE_DIR)
+
+
 # 进退寻出的时候保存配置对象到磁盘
-atexit.register( lambda : dbm_agent_config.sync_to_disk())
+atexit.register(_auto_save_to_disk)

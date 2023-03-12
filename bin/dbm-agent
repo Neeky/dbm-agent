@@ -11,46 +11,23 @@ from dbma.daemon import start_daemon, stop_daemon
 from dbma import server
 from dbma.unix.version import DBM_AGENT_VESION,DEFAULT_MYSQL_VERSION
 from dbma import initialization
-
+from dbma.core.agent.install import install_agent_main
+from dbma.core.httpserver import start
 
 def parser_cmd_args():
     parser = argparse.ArgumentParser(f'dbma-agent {DBM_AGENT_VESION}')
-    parser.add_argument('--dbmc-site', type=str,
-                        default="https://192.168.100.100", help='dbm-center url')
-    parser.add_argument('--base-dir', type=str,
-                        default="/usr/local/dbm-agent/", help='dbm-agent work dir')
-    parser.add_argument('--config-file', type=str,
-                        default="etc/dbma.cnf", help="dbm-agent config file")
-    parser.add_argument('--log-file', type=str,
-                        default="logs/dbma.log", help="dbm-agent log file")
-    parser.add_argument('--log-level', type=str, default="info",
-                        choices=['info', 'debug', 'error'])
-    parser.add_argument('--user-name', type=str, default="dbma", help="user")
-    parser.add_argument('--pid', type=str,
-                        default="/tmp/dbm-agent.pid", help="pid file")
-    parser.add_argument('--init-pwd', type=str,
-                        default="dbma@0352", help="default password of all user")
-    parser.add_argument('--net-if', type=str, default="ens33",
-                        help="interface (exsample eth0,eth1,ens33)")
-    parser.add_argument('--mysql-install-dir', type=str,
-                        default="/usr/local/", help="mysql install derectory")
-    parser.add_argument('--heartbeat-api', type=str,
-                        default="hosts/heatheat", help="heartbeat http interface")
-    parser.add_argument('--heartbeat-interval', type=int,
-                        default=5, help="the interval between heartbeat")
     parser.add_argument('action', type=str, default='start', choices=(
-        'init', 'uninit', 'start', 'stop', 'version', 'upgrade'), help='')
+        'install', 'uninstall', 'start', 'stop', 'version', 'upgrade'), help='')
     args = parser.parse_args()
     return args
 
 
 def main():
     args = parser_cmd_args()
-
-    if args.action == 'init':
-        initialization.init(args)
+    if args.action == 'install':
+        install_agent_main()
     elif args.action == 'start':
-        server.start(args)
+        start()
     elif args.action == 'version':
         print(f'dbma-agent {DBM_AGENT_VESION}')
     elif args.action == 'stop':
