@@ -4,10 +4,17 @@
 实现操作系统用户的相关操作
 """
 
+import os
 import pwd
 import grp
 from dbma.bil.cmdexecutor import exe_shell_cmd
 from dbma.bil.sudos import sudo
+
+def is_root() -> bool:
+    """
+    检查当前的 euser 是不是 root
+    """
+    return os.geteuid() == 0
 
 
 def is_user_exists(user: str) -> bool:
@@ -49,6 +56,16 @@ def is_group_exists(group: str) -> bool:
         return False
     except TypeError as err:
         return False
+
+def get_uid_gid(user_name):
+    """
+    返回给定用户的 (uid,gid) 组成的元组. 如果给定的用户不存在就返回 (0,0)
+    """
+    try:
+        user = pwd.getpwnam(user_name)
+        return user.pw_uid, user.pw_gid
+    except Exception as err:
+        return 0, 0
 
 
 class Identify(object):
@@ -184,6 +201,22 @@ class BaseUser(Identify):
         返回 user:group 的形式
         """
         return f"{self.name}:{self.group}"
+
+
+class DBMAGroup(BaseGroup):
+    """
+    """
+    def __init__(self, name="dbma"):
+        BaseGroup.__init__(self,name)
+
+
+class DBMAUser(BaseUser):
+    """
+    """
+    group = DBMAGroup()
+
+    def __init__(self, name="dbma"):
+        BaseUser.__init__(self, name)
 
 
 class MySQLGroup(BaseGroup):
