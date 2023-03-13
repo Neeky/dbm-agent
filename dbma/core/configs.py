@@ -31,6 +31,9 @@ class DBMAgentConfig(object):
     pid_file: str = "/tmp/dbm-agent.pid"
     log_level: str = 'info'
     log_file: str = "/tmp/dbm-agent.log"
+
+    # backends_xxx 后端线程运行周期
+    backends_register_time_interval: int = 15
     
     # 单例模式
     _instance = None
