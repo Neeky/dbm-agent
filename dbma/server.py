@@ -28,7 +28,7 @@ from .initialization import is_user_exists, get_uid_gid, is_root
 from .monitor import HostMonitor
 #from . import pusher
 from . dbmacnf import cnf
-from dbma.core.httpserver import start_http_server
+# from dbma.core.httpserver import start_http_server
 
 def start(args):
     """
@@ -63,4 +63,4 @@ def start(args):
     # the cores .... 
     #
     # 最后一步启动 dbm-agent 内置的 http 服务器
-    start_http_server()
+    #start_http_server()
