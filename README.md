@@ -144,9 +144,8 @@
    ```bash
    # 由于要创建用户和目录，dbm-agent 需要 root 权限
    sudo su
-   # init ，通过--dbmc-site 选项指定管理端的访问路径、如果你不与 dbm-center 一起使用也可以不加 --dbmc-site
-   dbm-agent --dbmc-site=https://192.168.100.100 init
-   #dbm-agent init compeleted .
+   # init ，通过--dbm-center-url-prefix 选项指定管理端的访问路径、如果你不与 dbm-center 一起使用也可以不加 --dbm-center-url-prefix
+   dbma-cli-init --dbm-center-url-prefix=https://192.168.100.100
 
    # 执行完成上面的步骤整个初始化就算完成了，实现上只是创建一些必要的用户，目录，文件 
    # 初始化会创建 dbm 用户
@@ -173,15 +172,6 @@
        ├── mysql-8.0.18-linux-glibc2.12-x86_64.tar.xz          # 各个软件的安装包(要自己下载并保存到这里，dbm-agent不会自动下载它)
        └── mysql-shell-8.0.18-linux-glibc2.12-x86-64bit.tar.gz # 各个软件的安装包(要自己下载并保存到这里，dbm-agent不会自动下载它)
    ```
-   dbm-agent init 时还有几个比较重要的参数
-
-   **1、** init-pwd 选项，init 的时候 dbm-agent 会创建若干用户(/usr/local/dbm-agent/etc/init-users.sql) 这些用户的密码都用的是 init-pwd 中指定的值。
-   如果你没有指定，那么它默认取 dbma@0352
-
-   **2、** dbmc-site 选项，指定数据库管理中心(dbm-center)站点的根路径，如果你目前还不要用上这么高大上的功能，也可以不指定(事实上目前还没有开发完全，我自己也都还没有用)。
-   
-   再开始使用之前，你还要下载 mysql 和 mysql-shell 的二进制包到 /usr/local/dbm-agent/pkg/ ，这样 dbm-agent 就有能力为你安装&配置各种 MySQL 环境了
-
    ---
 
 
