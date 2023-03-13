@@ -4,38 +4,28 @@
 # Copyright: (c) 2019, dbm Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-import os
-import sys
+
 import argparse
-from dbma.daemon import start_daemon, stop_daemon
-from dbma import server
-from dbma.unix.version import DBM_AGENT_VESION,DEFAULT_MYSQL_VERSION
-from dbma import initialization
-from dbma.core.agent.install import install_agent_main
 from dbma.core.httpserver import start, stop
+from dbma.unix.version import DBM_AGENT_VESION
+
 
 def parser_cmd_args():
     parser = argparse.ArgumentParser(f'dbma-agent {DBM_AGENT_VESION}')
     parser.add_argument('action', type=str, default='start', choices=(
-        'install', 'uninstall', 'start', 'stop', 'version', 'upgrade'), help='')
+        'start', 'stop', 'version'), help='')
     args = parser.parse_args()
     return args
 
 
 def main():
     args = parser_cmd_args()
-    if args.action == 'install':
-        install_agent_main()
-    elif args.action == 'start':
+    if args.action == 'start':
         start()
     elif args.action == 'version':
         print(f'dbma-agent {DBM_AGENT_VESION}')
     elif args.action == 'stop':
         stop()
-    elif args.action == 'uninit':
-        initialization.uninit(args)
-    elif args.action == 'upgrade':
-        initialization.upgrade(args)
 
 
 if __name__ == "__main__":

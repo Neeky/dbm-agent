@@ -1,0 +1,31 @@
+#!/usr/bin/evn python3
+
+"""
+完成 dbm-agent 的初始化操作
+"""
+
+import argparse
+from dbma.bil.net import get_ip_by_card_name
+from dbma.core.agent.init import init
+
+
+def parser_cmd_args():
+    """
+    """
+    parser = argparse.ArgumentParser('dbma-cli-init')
+    parser.add_argument('--net-card', default='eth0')
+    parser.add_argument('--dbm-center-url-prefix', default='http://127.0.0.1:8080')
+    return parser.parse_args()
+
+def main():
+    args = parser_cmd_args()
+    ip = get_ip_by_card_name(args.net_card)
+    if ip is None:
+        print("not find any ip on {}".format(args.net_card))
+        return
+    
+    init(ip, args.dbm_center_url_prefix)
+
+
+if __name__ == "__main__":
+    main()

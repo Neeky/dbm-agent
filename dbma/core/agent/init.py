@@ -11,14 +11,22 @@ import logging
 import atexit
 from pathlib import Path
 from dbma.bil.osuser import DBMAUser
-from dbma.core.configs import DBM_AGENT_BASE_DIR
+from dbma.core.configs import DBM_AGENT_BASE_DIR, DBMAgentConfig
+from dbma.bil.net import get_ip_by_card_name
 
 
-
-def install_dbm_agent():
+def init(net_card_name:str, dbm_center_url_prefix:str):
     """安装 dbm-agent
     """
+    # 配置日志
+    logging.basicConfig(level=logging.INFO, format="[%(asctime)s %(levelname)s] - [%(threadName)s] - [%(pathname)s %(lineno)d line]  ~  %(message)s")
     logging.info("start install dbm-agent .")
+
+    # 检查给定的网卡是否存在
+    ip = get_ip_by_card_name(net_card_name)
+    if ip is None:
+        logging.error("not find any ip on {}".format(net_card_name))
+        return
 
     # 创建用户
     logging.info("prepare create user dbma .")
@@ -46,16 +54,14 @@ def install_dbm_agent():
     shutil.copytree(src, dest, dirs_exist_ok=True)
     logging.info("copy template files done .")
 
+    # 更新配置并保存到磁盘
+    dbm_agent_config = DBMAgentConfig()
+    dbm_agent_config.host = ip
+    dbm_agent_config.dbmcenter_url_prefix = dbm_center_url_prefix
+    dbm_agent_config.sync_to_disk()
+
     ## 权限调整
     dbma_user.chown(DBM_AGENT_BASE_DIR)
 
     # 给到启动 dbm-agent 的命令提示
     logging.info("install dbm-agent done . \n dbm-agent start \n to start dbm-agent service . ")
-
-
-def install_agent_main():
-    """安装 dbm-agent
-    """
-    import logging
-    logging.basicConfig(level=logging.INFO, format="[%(asctime)s %(levelname)s] - [%(threadName)s] - [%(pathname)s %(lineno)d line]  ~  %(message)s")
-    install_dbm_agent()
