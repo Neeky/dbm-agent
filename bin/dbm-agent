@@ -12,7 +12,7 @@ from dbma import server
 from dbma.unix.version import DBM_AGENT_VESION,DEFAULT_MYSQL_VERSION
 from dbma import initialization
 from dbma.core.agent.install import install_agent_main
-from dbma.core.httpserver import start
+from dbma.core.httpserver import start, stop
 
 def parser_cmd_args():
     parser = argparse.ArgumentParser(f'dbma-agent {DBM_AGENT_VESION}')
@@ -31,7 +31,7 @@ def main():
     elif args.action == 'version':
         print(f'dbma-agent {DBM_AGENT_VESION}')
     elif args.action == 'stop':
-        stop_daemon(args.pid)
+        stop()
     elif args.action == 'uninit':
         initialization.uninit(args)
     elif args.action == 'upgrade':
