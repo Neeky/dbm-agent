@@ -1,0 +1,22 @@
+#!/usr/bin/env bpftrace
+
+/**
+MySQL 前端线程堆栈追踪
+作者: 蒋乐兴|neeky
+时间: 2022-05
+*/
+
+BEGIN 
+{
+    print("MySQL 前端线程堆栈追踪 \n")
+}
+
+uprobe:/usr/local/mysql/bin/mysqld:_ZN3THD19send_result_set_rowERK14mem_root_dequeIP4ItemE
+{
+    printf("%s\n", ustack(perf)); 
+}
+
+END
+{
+    print("exit \n")
+}
