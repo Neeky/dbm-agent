@@ -26,7 +26,7 @@ def registor_agent_to_center():
     """
     while keep_threads_running:
         try:
-            #logging.info("url = {} method = {} data = {}".format(dbm_center_url_config.register_agent_url, 'POST',dbm_agent_config.make_register_data()))
+            logging.info("agent ifo  = {} .".format(dbm_agent_config.make_register_data()))
             response = requests.post(dbm_center_url_config.register_agent_url, json=dbm_agent_config.make_register_data())
             data = response.json()
             if data['message'].startswith("UNIQUE constraint failed: agents_agent.host"):
