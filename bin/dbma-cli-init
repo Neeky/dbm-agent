@@ -20,11 +20,12 @@ def parser_cmd_args():
 def main():
     args = parser_cmd_args()
     ip = get_ip_by_card_name(args.net_card)
+    print("net-card {}'s ip = {}".format(args.net_card, ip))
     if ip is None:
         print("not find any ip on {}".format(args.net_card))
         return
-    
-    init(ip, args.dbm_center_url_prefix)
+    print("going to init ...")
+    init(args.net_card, args.dbm_center_url_prefix)
 
 
 if __name__ == "__main__":
