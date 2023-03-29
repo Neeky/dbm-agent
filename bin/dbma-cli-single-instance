@@ -4,73 +4,44 @@
 实例单实例架构下的 MySQL 安装与卸载
 """
 
-import psutil
 import logging
 import argparse
-#from dbma.mysqlops import MySQLInstaller, MySQLUninstaller
-#from dbma.gather import cpu_cores
-from dbma.unix.version import DEFAULT_MYSQL_VERSION
-from dbma.mysqldeploy import MySQLInstaller, MySQLUninstaller
+from pathlib import Path
+from dbma.components.mysql.install import default_pkg
+from dbma.components.mysql.install import install_mysql, uninstall_mysql
 
 
 def parser_cmd_args():
     """
     实现命令行参数的处理
     """
-    cores = psutil.cpu_count()
-
     parser = argparse.ArgumentParser(__name__)
     parser.add_argument('--port', type=int, default=3306, help="instance port")
     parser.add_argument(
-        '--pkg', type=str, default=DEFAULT_MYSQL_VERSION, help="mysql install package")
-    parser.add_argument('--max-mem', type=int, default=1024,
-                        help="the max memory mysql instances can use")
-    parser.add_argument('--cores', type=int,
-                        default=cores, help='cpu logic cores')
-    parser.add_argument('--log', type=str, default='info',
-                        choices=['debug', 'info', 'warning', 'error'])
-    parser.add_argument('action', type=str, choices=['install', 'uninstall'])
+        '--pkg-name', type=str, default=default_pkg.name, help="mysql install package name default {}".format(default_pkg.name))
+    parser.add_argument('--ibps', type=str, default='128M',
+                        help="innodb-buffer-pool-size  et: 128M , 512M, 1G, 2G")
+    parser.add_argument('action', type=str, choices=[
+                        'master', 'slave', 'source', 'replica', 'uninstall'])
     args = parser.parse_args()
     return args
 
 
 def main():
-    # config logger
+    #
     args = parser_cmd_args()
 
-    level = getattr(logging, args.log.upper())
-    logger = logging.getLogger('dbm-agent')
-    logger.setLevel(level)
-    stream_handler = logging.StreamHandler()
-    stream_handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(lineno)s - %(message)s')
-    stream_handler.setFormatter(formatter)
-    logger.addHandler(stream_handler)
+    logging.basicConfig(level=logging.INFO,
+                        format="[%(asctime)s %(levelname)s] - [%(threadName)s] - [%(pathname)s %(lineno)d line]  ~  %(message)s")
 
-    pkg = args.pkg
-    max_mem = args.max_mem
-    port = args.port
-    action = args.action
-    cores = args.cores
-
-    if action == 'install':
-
-        # 数据库安装
-        installer = MySQLInstaller(
-            pkg=pkg, max_mem=max_mem, port=port, cores=cores)
-        installer.start()
-
-        # 主线程等待安装完成
-        installer.join()
-    elif action == 'uninstall':
-        logger.info(f"start uninstall mysqld-{args.port}")
-        # 数据库卸载
-        uninstaller = MySQLUninstaller(port=args.port)
-        uninstaller.start()
-
-        # 主线程等待卸载完成
-        uninstaller.join()
+    if args.action in ('master', 'source'):
+        pkg = Path("/usr/local/dbm-agent/pkgs/") / args.pkg_name
+        port = args.port
+        innodb_buffer_pool_size = args.ibps
+        install_mysql(port=port, pkg=pkg,
+                      innodb_buffer_pool_size=innodb_buffer_pool_size)
+    elif args.action == 'uninstall':
+        uninstall_mysql(args.port)
 
 
 if __name__ == "__main__":
