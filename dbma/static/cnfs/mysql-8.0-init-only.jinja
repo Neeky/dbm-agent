@@ -1,5 +1,5 @@
 [mysqld]
-# basic
+#### for basic
 user                                     = {{user}}
 basedir                                  = {{basedir}}
 datadir                                  = {{datadir}}
@@ -12,7 +12,7 @@ admin_port                               = {{admin_port}}
 socket                                   = {{socket}}
 mysqlx_socket                            = {{mysqlx_socket}}
 pid_file                                 = {{pid_file}}  
-character_set_server                     = {{character_set_server}}
+character_set_server                     = utf8mb4
 open_files_limit                         = {{open_files_limit}}
 max_prepared_stmt_count                  = {{max_prepared_stmt_count}}  
 skip_name_resolve                        = {{skip_name_resolve}}     
@@ -28,8 +28,11 @@ autocommit                               = {{autocommit}}
 sort_buffer_size                         = {{sort_buffer_size}}
 join_buffer_size                         = {{join_buffer_size}}
 eq_range_index_dive_limit                = {{eq_range_index_dive_limit}}
+authentication_policy                    = '*,*,*'
+show_gipk_in_create_table_and_information_schema = {{show_gipk_in_create_table_and_information_schema}}
 
-## table 
+
+#### for table 
 big_tables                               = {{big_tables}}
 sql_require_primary_key                  = {{sql_require_primary_key}}
 lower_case_table_names                   = {{lower_case_table_names}}
@@ -39,7 +42,8 @@ table_open_cache                         = {{table_open_cache}}
 table_definition_cache                   = {{table_definition_cache}}
 table_open_cache_instances               = {{table_open_cache_instances}}
 
-## net 
+
+#### for net 
 max_allowed_packet                       = {{max_allowed_packet}}
 connect_timeout                          = {{connect_timeout}}
 interactive_timeout                      = {{interactive_timeout}}
@@ -48,66 +52,101 @@ net_retry_count                          = {{net_retry_count}}
 net_write_timeout                        = {{net_write_timeout}}
 net_buffer_length                        = {{net_buffer_length}}
 
-## logs 
+
+#### for logs 
 log_output                               = {{log_output}}
 general_log                              = {{general_log}}
 general_log_file                         = {{general_log_file}}
-# error
+
+
+## error
 log_error                                = {{log_error}}
 log_statements_unsafe_for_binlog         = {{log_statements_unsafe_for_binlog}}
-# slow
+
+
+## for slow
 slow_query_log                           = {{slow_query_log}}
 slow_query_log_file                      = {{slow_query_log_file}}
 long_query_time                          = {{long_query_time}}
 log_queries_not_using_indexes            = {{log_queries_not_using_indexes}}
 log_slow_admin_statements                = {{log_slow_admin_statements}}
-log_slow_slave_statements                = {{log_slow_slave_statements}}
-# binlog
-log_bin                                  = {{log_bin }}
-binlog_checksum                          = {{binlog_checksum}}
-log_bin_trust_function_creators          = {{log_bin_trust_function_creators}}
-binlog_direct_non_transactional_updates  = {{binlog_direct_non_transactional_updates}}
-binlog_expire_logs_seconds               = {{binlog_expire_logs_seconds}}
-binlog_error_action                      = {{binlog_error_action}}
-binlog_format                            = {{binlog_format}}
-max_binlog_stmt_cache_size               = {{max_binlog_stmt_cache_size}}
-max_binlog_cache_size                    = {{max_binlog_cache_size}}
-max_binlog_size                          = {{max_binlog_size}}
-binlog_order_commits                     = {{binlog_order_commits}}
-binlog_row_image                         = {{binlog_row_image}}
-binlog_row_metadata                      = {{binlog_row_metadata}}
-binlog_rows_query_log_events             = {{binlog_rows_query_log_events}}
-binlog_stmt_cache_size                   = {{binlog_stmt_cache_size}}
-log_slave_updates                        = {{log_slave_updates}}
-binlog_transaction_dependency_history_size ={{binlog_transaction_dependency_history_size}}
-binlog_transaction_dependency_tracking   = {{binlog_transaction_dependency_tracking}}
-sync_binlog                              = {{sync_binlog}}
-binlog_cache_size                        = {{binlog_cache_size}}
-binlog_group_commit_sync_delay           = {{binlog_group_commit_sync_delay}}
-binlog_group_commit_sync_no_delay_count  = {{binlog_group_commit_sync_no_delay_count}}
+log_slow_replica_statements              = ON
 
 
-## gtid
+## for binlog
+log_bin                                    = {{log_bin }}
+binlog_checksum                            = {{binlog_checksum}}
+log_bin_trust_function_creators            = {{log_bin_trust_function_creators}}
+binlog_direct_non_transactional_updates    = {{binlog_direct_non_transactional_updates}}
+binlog_expire_logs_seconds                 = {{binlog_expire_logs_seconds}}
+binlog_error_action                        = {{binlog_error_action}}
+binlog_format                              = {{binlog_format}}
+max_binlog_stmt_cache_size                 = {{max_binlog_stmt_cache_size}}
+max_binlog_cache_size                      = {{max_binlog_cache_size}}
+max_binlog_size                            = {{max_binlog_size}}
+binlog_order_commits                       = {{binlog_order_commits}}
+binlog_row_image                           = {{binlog_row_image}}
+binlog_row_metadata                        = {{binlog_row_metadata}}
+binlog_rows_query_log_events               = {{binlog_rows_query_log_events}}
+binlog_stmt_cache_size                     = {{binlog_stmt_cache_size}}
+log_replica_updates                        = ON
+binlog_transaction_compression             = {{binlog_transaction_compression}}
+binlog_transaction_dependency_history_size = {{binlog_transaction_dependency_history_size}}
+binlog_transaction_dependency_tracking     = {{binlog_transaction_dependency_tracking}}
+sync_binlog                                = {{sync_binlog}}
+binlog_cache_size                          = {{binlog_cache_size}}
+binlog_group_commit_sync_delay             = {{binlog_group_commit_sync_delay}}
+binlog_group_commit_sync_no_delay_count    = {{binlog_group_commit_sync_no_delay_count}}
+
+
+#### for replication
+#rpl_semi_sync_master_enabled              = {{rpl_semi_sync_master_enabled}}
+#rpl_semi_sync_slave_enabled               = {{rpl_semi_sync_slave_enabled}}
+#rpl_semi_sync_master_timeout              = {{rpl_semi_sync_master_timeout}}
+#rpl_semi_sync_master_wait_point           = {{rpl_semi_sync_master_wait_point}}
+#rpl_semi_sync_master_wait_no_slave        = {{rpl_semi_sync_master_wait_no_slave}}
+#rpl_semi_sync_master_wait_for_slave_count = {{rpl_semi_sync_master_wait_for_slave_count}}
+#sync_source_info                          = 1000
+#skip_replica_start                        = ON
+#replica_load_tmpdir                       = /tmp/
+#plugin_load_add                           = semisync_master.so
+#plugin_load_add                           = semisync_slave.so
+#relay_log                                 = {{relay_log}}
+#sync_relay_log                            = {{sync_relay_log}}
+#sync_relay_log_info                       = {{sync_relay_log_info}}
+#replica_preserve_commit_order             = ON
+##replica_parallel_type                    = LOGICAL_CLOCK          # deprecated from 8.0.29
+#replica_parallel_workers                  = {{replica_parallel_workers}}
+#replica_max_allowed_packet                = {{replica_max_allowed_packet}}
+
+
+#### for gtid
 gtid_mode                                = {{gtid_mode}}
 binlog_gtid_simple_recovery              = {{binlog_gtid_simple_recovery}}
 enforce_gtid_consistency                 = {{enforce_gtid_consistency}}
 gtid_executed_compression_period         = {{gtid_executed_compression_period}}
 
 
-# engines 
+#### for clone 
+#plugin-load-add                          = mysql_clone.so
+#clone                                    = FORCE_PLUS_PERMANENT
+
+
+#### for engines 
 default_storage_engine                   = {{default_storage_engine}}
 default_tmp_storage_engine               = {{default_tmp_storage_engine}}
 internal_tmp_mem_storage_engine          = {{internal_tmp_mem_storage_engine}}
 
-## innodb
+
+#### for innodb
 innodb_data_home_dir                     = {{innodb_data_home_dir}}
 innodb_data_file_path                    = {{innodb_data_file_path}}
 innodb_page_size                         = {{innodb_page_size}}
 innodb_default_row_format                = {{innodb_default_row_format}}
-innodb_log_group_home_dir                = {{innodb_log_group_home_dir}}
 innodb_redo_log_encrypt                  = {{innodb_redo_log_encrypt}}
 innodb_online_alter_log_max_size         = {{innodb_online_alter_log_max_size}}
-innodb_undo_directory                    = {{innodb_undo_directory}}
+#innodb_log_group_home_dir               = {{innodb_log_group_home_dir}}
+#innodb_undo_directory                   = {{innodb_undo_directory}}
 innodb_undo_log_encrypt                  = {{innodb_undo_log_encrypt}}
 innodb_undo_log_truncate                 = {{innodb_undo_log_truncate}}
 innodb_max_undo_log_size                 = {{innodb_max_undo_log_size}}
@@ -174,7 +213,7 @@ innodb_sort_buffer_size                  = {{innodb_sort_buffer_size}}
 innodb_fast_shutdown                     = {{innodb_fast_shutdown}}
 innodb_force_load_corrupted              = {{innodb_force_load_corrupted}}
 innodb_force_recovery                    = {{innodb_force_recovery}}
-innodb_temp_tablespaces_dir              = {{innodb_temp_tablespaces_dir}}
+#innodb_temp_tablespaces_dir              = {{innodb_temp_tablespaces_dir}}
 innodb_tmpdir                            = {{innodb_tmpdir}}
 innodb_temp_data_file_path               = {{innodb_temp_data_file_path}}
 innodb_page_cleaners                     = {{innodb_page_cleaners}}
@@ -184,12 +223,14 @@ innodb_flush_log_at_timeout              = {{innodb_flush_log_at_timeout}}
 innodb_fsync_threshold                   = {{innodb_fsync_threshold}}
 innodb_fill_factor                       = {{innodb_fill_factor}}
 innodb_file_per_table                    = {{innodb_file_per_table}}
+sql_generate_invisible_primary_key       = {{sql_generate_invisible_primary_key}} 
 innodb_autoextend_increment              = {{innodb_autoextend_increment}}
 innodb_open_files                        = {{innodb_open_files}}
 innodb_buffer_pool_chunk_size            = {{innodb_buffer_pool_chunk_size}}
 innodb_buffer_pool_instances             = {{innodb_buffer_pool_instances}}
-innodb_log_files_in_group                = {{innodb_log_files_in_group}}
-innodb_log_file_size                     = {{innodb_log_file_size}}
+#innodb_log_files_in_group               = {{innodb_log_files_in_group}}
+#innodb_log_file_size                    = {{innodb_log_file_size}}
+innodb_redo_log_capacity                 = {{innodb_redo_log_capacity}}
 innodb_flush_neighbors                   = {{innodb_flush_neighbors}}
 innodb_io_capacity                       = {{innodb_io_capacity}}
 innodb_io_capacity_max                   = {{innodb_io_capacity_max}}
@@ -201,13 +242,52 @@ innodb_flush_log_at_trx_commit           = {{innodb_flush_log_at_trx_commit}}
 innodb_buffer_pool_size                  = {{innodb_buffer_pool_size}}
 
 
+{% if is_mgr %}
+#### for group replication
+#plugin_load_add                                    = group_replication.so
+#group_replication_recovery_use_ssl                 = {{group_replication_recovery_use_ssl}}
+#group_replication_ssl_mode                         = {{group_replication_ssl_mode}}
+#group_replication_single_primary_mode              = {{group_replication_single_primary_mode}}
+#group_replication_group_name                       = {{group_replication_group_name}}
+#group_replication_start_on_boot                    = {{group_replication_start_on_boot}}
+#group_replication_bootstrap_group                  = {{group_replication_bootstrap_group}}
+#group_replication_local_address                    = {{group_replication_local_address}}
+#group_replication_group_seeds                      = {{group_replication_group_seeds}}
+#group_replication_consistency                      = {{group_replication_consistency}}
+#group_replication_poll_spin_loops                  = {{group_replication_poll_spin_loops}}
+#group_replication_compression_threshold            = {{group_replication_compression_threshold}}
+#group_replication_communication_max_message_size   = {{group_replication_communication_max_message_size}}
+#group_replication_message_cache_size               = {{group_replication_message_cache_size}}
+#group_replication_flow_control_applier_threshold   = {{group_replication_flow_control_applier_threshold}}
+#group_replication_flow_control_certifier_threshold = {{group_replication_flow_control_certifier_threshold}}
+#group_replication_flow_control_hold_percent        = {{group_replication_flow_control_hold_percent}}
+#group_replication_flow_control_mode                = {{group_replication_flow_control_mode}}
+#group_replication_flow_control_period              = {{group_replication_flow_control_period}}
+#group_replication_flow_control_release_percent     = {{group_replication_flow_control_release_percent}}
+{% endif %}
+
+
+####  for performance_schema
+performance_schema                                                      ={{performance_schema}}  
+performance_schema_consumer_global_instrumentation                      =ON  
+performance_schema_consumer_thread_instrumentation                      =ON  
+performance_schema_consumer_events_stages_current                       =ON  
+performance_schema_consumer_events_stages_history                       =ON  
+performance_schema_consumer_events_stages_history_long                  =OFF 
+performance_schema_consumer_statements_digest                           =ON  
+performance_schema_consumer_events_statements_current                   =ON  
+performance_schema_consumer_events_statements_history                   =ON  
+performance_schema_consumer_events_statements_history_long              =OFF 
+performance_schema_consumer_events_waits_current                        =ON  
+performance_schema_consumer_events_waits_history                        =ON  
+performance_schema_consumer_events_waits_history_long                   =OFF 
+performance-schema-instrument                                           ='memory/%=COUNTED'
+
 
 # -- ~ _ ~    ~ _ ~     ~ _ ~ -- 
-# init only 
-# base on mysql-8.0.18 
-# generated by https://www.sqlpy.com 2019年10月14日 21时47分11秒
+# base on mysql-8.0.31
+# generated by https://www.sqlpy.com 2022年11月11日 23:45
 # wechat: jianglegege
 # email: 1721900707@qq.com
 # -- ~ _ ~ --
-
-
+ 

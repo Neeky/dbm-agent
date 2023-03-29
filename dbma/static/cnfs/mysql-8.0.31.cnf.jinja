@@ -74,50 +74,50 @@ log_slow_replica_statements              = ON
 
 
 ## for binlog
-log_bin                                  = {{log_bin }}
-binlog_checksum                          = {{binlog_checksum}}
-log_bin_trust_function_creators          = {{log_bin_trust_function_creators}}
-binlog_direct_non_transactional_updates  = {{binlog_direct_non_transactional_updates}}
-binlog_expire_logs_seconds               = {{binlog_expire_logs_seconds}}
-binlog_error_action                      = {{binlog_error_action}}
-binlog_format                            = {{binlog_format}}
-max_binlog_stmt_cache_size               = {{max_binlog_stmt_cache_size}}
-max_binlog_cache_size                    = {{max_binlog_cache_size}}
-max_binlog_size                          = {{max_binlog_size}}
-binlog_order_commits                     = {{binlog_order_commits}}
-binlog_row_image                         = {{binlog_row_image}}
-binlog_row_metadata                      = {{binlog_row_metadata}}
-binlog_rows_query_log_events             = {{binlog_rows_query_log_events}}
-binlog_stmt_cache_size                   = {{binlog_stmt_cache_size}}
-log_replica_updates                      = ON
-binlog_transaction_compression           = {{binlog_transaction_compression}}
-binlog_transaction_dependency_history_size ={{binlog_transaction_dependency_history_size}}
-binlog_transaction_dependency_tracking   = {{binlog_transaction_dependency_tracking}}
-sync_binlog                              = {{sync_binlog}}
-binlog_cache_size                        = {{binlog_cache_size}}
-binlog_group_commit_sync_delay           = {{binlog_group_commit_sync_delay}}
-binlog_group_commit_sync_no_delay_count  = {{binlog_group_commit_sync_no_delay_count}}
+log_bin                                    = {{log_bin }}
+binlog_checksum                            = {{binlog_checksum}}
+log_bin_trust_function_creators            = {{log_bin_trust_function_creators}}
+binlog_direct_non_transactional_updates    = {{binlog_direct_non_transactional_updates}}
+binlog_expire_logs_seconds                 = {{binlog_expire_logs_seconds}}
+binlog_error_action                        = {{binlog_error_action}}
+binlog_format                              = {{binlog_format}}
+max_binlog_stmt_cache_size                 = {{max_binlog_stmt_cache_size}}
+max_binlog_cache_size                      = {{max_binlog_cache_size}}
+max_binlog_size                            = {{max_binlog_size}}
+binlog_order_commits                       = {{binlog_order_commits}}
+binlog_row_image                           = {{binlog_row_image}}
+binlog_row_metadata                        = {{binlog_row_metadata}}
+binlog_rows_query_log_events               = {{binlog_rows_query_log_events}}
+binlog_stmt_cache_size                     = {{binlog_stmt_cache_size}}
+log_replica_updates                        = ON
+binlog_transaction_compression             = {{binlog_transaction_compression}}
+binlog_transaction_dependency_history_size = {{binlog_transaction_dependency_history_size}}
+binlog_transaction_dependency_tracking     = {{binlog_transaction_dependency_tracking}}
+sync_binlog                                = {{sync_binlog}}
+binlog_cache_size                          = {{binlog_cache_size}}
+binlog_group_commit_sync_delay             = {{binlog_group_commit_sync_delay}}
+binlog_group_commit_sync_no_delay_count    = {{binlog_group_commit_sync_no_delay_count}}
 
 
 #### for replication
-rpl_semi_sync_master_enabled             = {{rpl_semi_sync_master_enabled}}
-rpl_semi_sync_slave_enabled              = {{rpl_semi_sync_slave_enabled}}
-rpl_semi_sync_master_timeout             = {{rpl_semi_sync_master_timeout}}
-rpl_semi_sync_master_wait_point          = {{rpl_semi_sync_master_wait_point}}
-rpl_semi_sync_master_wait_no_slave       = {{rpl_semi_sync_master_wait_no_slave}}
+rpl_semi_sync_master_enabled              = {{rpl_semi_sync_master_enabled}}
+rpl_semi_sync_slave_enabled               = {{rpl_semi_sync_slave_enabled}}
+rpl_semi_sync_master_timeout              = {{rpl_semi_sync_master_timeout}}
+rpl_semi_sync_master_wait_point           = {{rpl_semi_sync_master_wait_point}}
+rpl_semi_sync_master_wait_no_slave        = {{rpl_semi_sync_master_wait_no_slave}}
 rpl_semi_sync_master_wait_for_slave_count = {{rpl_semi_sync_master_wait_for_slave_count}}
-sync_source_info                         = 1000
-skip_replica_start                       = ON
-replica_load_tmpdir                      = /tmp/
-plugin_load_add                          = semisync_master.so
-plugin_load_add                          = semisync_slave.so
-relay_log                                = {{relay_log}}
-sync_relay_log                           = {{sync_relay_log}}
-sync_relay_log_info                      = {{sync_relay_log_info}}
-slave_preserve_commit_order              = ON
-replica_parallel_type                    = LOGICAL_CLOCK
+sync_source_info                          = 1000
+skip_replica_start                        = ON
+replica_load_tmpdir                       = /tmp/
+plugin_load_add                           = semisync_master.so
+plugin_load_add                           = semisync_slave.so
+relay_log                                 = {{relay_log}}
+sync_relay_log                            = {{sync_relay_log}}
+sync_relay_log_info                       = {{sync_relay_log_info}}
+replica_preserve_commit_order             = ON
+#replica_parallel_type                    = LOGICAL_CLOCK          # deprecated from 8.0.29
 replica_parallel_workers                  = {{replica_parallel_workers}}
-replica_max_allowed_packet               = {{replica_max_allowed_packet}}
+replica_max_allowed_packet                = {{replica_max_allowed_packet}}
 
 
 #### for gtid
@@ -143,10 +143,10 @@ innodb_data_home_dir                     = {{innodb_data_home_dir}}
 innodb_data_file_path                    = {{innodb_data_file_path}}
 innodb_page_size                         = {{innodb_page_size}}
 innodb_default_row_format                = {{innodb_default_row_format}}
-innodb_log_group_home_dir                = {{innodb_log_group_home_dir}}
 innodb_redo_log_encrypt                  = {{innodb_redo_log_encrypt}}
 innodb_online_alter_log_max_size         = {{innodb_online_alter_log_max_size}}
-innodb_undo_directory                    = {{innodb_undo_directory}}
+#innodb_log_group_home_dir               = {{innodb_log_group_home_dir}}
+#innodb_undo_directory                   = {{innodb_undo_directory}}
 innodb_undo_log_encrypt                  = {{innodb_undo_log_encrypt}}
 innodb_undo_log_truncate                 = {{innodb_undo_log_truncate}}
 innodb_max_undo_log_size                 = {{innodb_max_undo_log_size}}
@@ -213,7 +213,7 @@ innodb_sort_buffer_size                  = {{innodb_sort_buffer_size}}
 innodb_fast_shutdown                     = {{innodb_fast_shutdown}}
 innodb_force_load_corrupted              = {{innodb_force_load_corrupted}}
 innodb_force_recovery                    = {{innodb_force_recovery}}
-innodb_temp_tablespaces_dir              = {{innodb_temp_tablespaces_dir}}
+#innodb_temp_tablespaces_dir              = {{innodb_temp_tablespaces_dir}}
 innodb_tmpdir                            = {{innodb_tmpdir}}
 innodb_temp_data_file_path               = {{innodb_temp_data_file_path}}
 innodb_page_cleaners                     = {{innodb_page_cleaners}}
@@ -228,8 +228,8 @@ innodb_autoextend_increment              = {{innodb_autoextend_increment}}
 innodb_open_files                        = {{innodb_open_files}}
 innodb_buffer_pool_chunk_size            = {{innodb_buffer_pool_chunk_size}}
 innodb_buffer_pool_instances             = {{innodb_buffer_pool_instances}}
-innodb_log_files_in_group                = {{innodb_log_files_in_group}}
-innodb_log_file_size                     = {{innodb_log_file_size}}
+#innodb_log_files_in_group               = {{innodb_log_files_in_group}}
+#innodb_log_file_size                    = {{innodb_log_file_size}}
 innodb_redo_log_capacity                 = {{innodb_redo_log_capacity}}
 innodb_flush_neighbors                   = {{innodb_flush_neighbors}}
 innodb_io_capacity                       = {{innodb_io_capacity}}
@@ -289,4 +289,5 @@ performance-schema-instrument                                           ='memory
 # generated by https://www.sqlpy.com 2022年11月11日 23:45
 # wechat: jianglegege
 # email: 1721900707@qq.com
-# -- ~ _ ~ --   
+# -- ~ _ ~ --
+ 
