@@ -38,6 +38,12 @@ class DBMAgentConfig(object):
     # 单例模式
     _instance = None
 
+    # MySQL 相关的默认配置
+    mysql_datadir_parent = "/database/mysql/data/"
+    mysql_binlogdir_parent = "/database/mysql/binlog/"
+    mysql_user_prefix = "mysql"
+    mysql_default_version = "8.0.31"
+
     def make_register_data(self):
         """
         """
