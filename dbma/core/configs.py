@@ -10,7 +10,7 @@ import json
 import atexit
 from pathlib import Path
 from dataclasses import dataclass, asdict
-from dbma.unix.version import VERSION
+from dbma.version import VERSION
 from dbma.bil.osuser import DBMAUser
 # TODO
 # 这里之后要改成 dbma.core.version 文件中的 VERSION 值
@@ -34,15 +34,15 @@ class DBMAgentConfig(object):
 
     # backends_xxx 后端线程运行周期
     backends_register_time_interval: int = 15
-    
+
     # 单例模式
     _instance = None
 
     # MySQL 相关的默认配置
-    mysql_datadir_parent = "/database/mysql/data/"
-    mysql_binlogdir_parent = "/database/mysql/binlog/"
-    mysql_user_prefix = "mysql"
-    mysql_default_version = "8.0.31"
+    mysql_datadir_parent: str = "/database/mysql/data/"
+    mysql_binlogdir_parent: str = "/database/mysql/binlog/"
+    mysql_user_prefix: str = "mysql"
+    mysql_default_version: str = "8.0.31"
 
     def make_register_data(self):
         """
@@ -62,7 +62,7 @@ class DBMAgentConfig(object):
             json_str = json.dumps(config, indent=4)
             with open(CONFIG_FILE_PATH, 'w') as c_file:
                 c_file.write(json_str)
-    
+
     # 读取配置文件
     def read_from_disk(self):
         """对象创建的时候从磁盘读取配置文件的内容
@@ -71,7 +71,7 @@ class DBMAgentConfig(object):
             json_str = ""
             with open(CONFIG_FILE_PATH, 'r') as c_file:
                 json_str = c_file.read()
-            
+
             try:
                 json_data = json.loads(json_str)
                 self.__dict__.update(json_data)
@@ -107,6 +107,7 @@ class DBMCenterUrlConfig(object):
         if cls._instance is None:
             cls._instance = object.__new__(cls, *args, **kw)
         return cls._instance
+
 
 def _auto_save_to_disk():
     """

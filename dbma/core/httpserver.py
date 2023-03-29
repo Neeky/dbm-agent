@@ -11,10 +11,10 @@ from logging.handlers import RotatingFileHandler
 from dbma.bil.daemon import start_daemon, stop_daemon
 from dbma.bil.osuser import get_uid_gid, is_root, DBMAUser
 from dbma.core.router import routes
-from dbma.core.views import dbmagentview as _
-from dbma.core.views import javaview as _
 from dbma.core.threads import backends
 from dbma.core.configs import DBMAgentConfig
+from dbma.core.views import dbmagentview as _
+from dbma.components.mysql.views import defaultsview as _
 
 
 def start():

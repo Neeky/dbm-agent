@@ -1,5 +1,4 @@
 import os
-import re
 from setuptools import setup
 
 
@@ -9,7 +8,7 @@ def get_version():
     """
 
     project_dir_name = os.path.dirname(__file__)
-    version_file_path = os.path.join(project_dir_name, "dbma/unix/version.py")
+    version_file_path = os.path.join(project_dir_name, "dbma/version.py")
     with open(version_file_path) as version_file_obj:
         content = version_file_obj.read()
 
@@ -34,7 +33,8 @@ setup(name='dbm-agent',
                'bin/dbma-cli-backup-instance', 'bin/dbma-cli-install-backuptool', 'bin/dbm-backup-proxy',
                'bin/dbma-cli-init', 'bin/dbm-bt-conn-stack'],
       packages=['dbma', 'dbma/unix', 'dbma/core', 'dbma/core/views', 'dbma/core/agent',
-                'dbma/core/threads', 'dbma/loggers', 'dbma/installsoftwares', 'dbma/bil', 'dbma/components', 'dbma/components/mysql', 'dbma/components/redis'],
+                'dbma/core/threads', 'dbma/loggers', 'dbma/installsoftwares', 'dbma/bil', 'dbma/components',
+                'dbma/components/mysql', 'dbma/components/redis', 'dbma/components/mysql/views'],
       package_data={'dbma': ['static/cnfs/*', 'static/sql-scripts/*']},
       url='https://github.com/Neeky/dbm-agent',
       install_requires=['Jinja2>=2.10.1', 'mysql-connector-python>=8.0.31',
