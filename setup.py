@@ -9,13 +9,13 @@ def get_version():
     """
 
     project_dir_name = os.path.dirname(__file__)
-    version_file_path = os.path.join(project_dir_name,"dbma/unix/version.py")
+    version_file_path = os.path.join(project_dir_name, "dbma/unix/version.py")
     with open(version_file_path) as version_file_obj:
         content = version_file_obj.read()
 
     g = {}
 
-    exec(content,g,g)
+    exec(content, g, g)
     return g['VERSION']
 
 
@@ -32,9 +32,9 @@ setup(name='dbm-agent',
                'bin/dbma-cli-build-slave', 'bin/dbma-cli-build-mgr', 'bin/dbma-cli-clone-instance',
                'bin/dbm-monitor-gateway', 'bin/dbma-cli-zabbix-agent', 'bin/dbma-cli-mysql-monitor-item',
                'bin/dbma-cli-backup-instance', 'bin/dbma-cli-install-backuptool', 'bin/dbm-backup-proxy',
-               'bin/dbma-cli-init','bin/dbm-bt-conn-stack'],
-      packages=['dbma','dbma/unix', 'dbma/core', 'dbma/core/views', 'dbma/core/agent', 
-                'dbma/core/threads', 'dbma/loggers', 'dbma/installsoftwares', 'dbma/bil'],
+               'bin/dbma-cli-init', 'bin/dbm-bt-conn-stack'],
+      packages=['dbma', 'dbma/unix', 'dbma/core', 'dbma/core/views', 'dbma/core/agent',
+                'dbma/core/threads', 'dbma/loggers', 'dbma/installsoftwares', 'dbma/bil', 'dbma/components', 'dbma/components/mysql', 'dbma/components/redis'],
       package_data={'dbma': ['static/cnfs/*', 'static/sql-scripts/*']},
       url='https://github.com/Neeky/dbm-agent',
       install_requires=['Jinja2>=2.10.1', 'mysql-connector-python>=8.0.31',
