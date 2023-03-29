@@ -7,6 +7,7 @@
 - [初始化](#初始化)
 - [自动化安装MySQL](#自动化安装MySQL)
 - [自动化卸载MySQL](#自动化卸载MySQL)
+- [关闭dbm-agent](#关闭dbm-agent)
 
 
 ---
@@ -200,7 +201,7 @@
 
 
 
-## 关闭 dbm-agent
+## 关闭dbm-agent
    **关闭 dbm-agent 守护进程**
    ```bash
    dbm-agent stop                                                              
