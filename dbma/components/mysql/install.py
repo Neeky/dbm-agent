@@ -19,17 +19,61 @@ from dbma.bil.cmdexecutor import exe_shell_cmd
 from dbma.core.configs import dbm_agent_config
 from dbma.components.mysql.config import MySQLConfig
 from dbma.components.mysql.commons import get_mysql_version
+from dbma.components.mysql.commons import export_cmds_to_path
 from dbma.components.mysql.commons import pkg_to_basedir, default_pkg
 from dbma.components.mysql.exceptions import MySQLSystemdFileNotExists
 from dbma.components.mysql.exceptions import MySQLPkgFileNotExistsException
 from dbma.components.mysql.exceptions import InstanceHasBeenInstalledException
 
-def create_init_sql_file(version:str=None):
+
+def create_init_sql_file(version: str = None):
     """生成 init-sql 文件给 init 的时候用
+
+    Parameters:
+    -----------
+
+    version: str
+        MySQL 版本号
+
+    Exception:
+    ----------
+    ValueError
     """
-    import dbma 
-    sql_file = Path(dbma.__file__).parent / "static/cnfs/init-8.0.x.sql"
-    shutil.copy(sql_file, "/tmp/init-8.0.x.sql")
+    logging.info(messages.FUN_STARTS.format(fname()))
+
+    import dbma
+    if version is None:
+        message = "mysql version is None, can't create init-sql-file ."
+        logging.error(message)
+        raise ValueError(messages)
+
+    # 检查版本号并根据版本号生成配置文件
+    if version.startswith("8.0"):
+        sql_file = Path(dbma.__file__).parent / "static/cnfs/init-8.0.x.sql"
+    elif version.startswith("5.7"):
+        sql_file = Path(dbma.__file__).parent / "static/cnfs/init-5.7.x.sql"
+    else:
+        message = "mysql version is '{}', can't create init-sql-file .".format(
+            version)
+        logging.error(message)
+        raise ValueError(messages)
+
+    # 复制文件
+    shutil.copy(sql_file, "/tmp/mysql-init.sql")
+    logging.info(messages.FUN_ENDS.format(fname()))
+
+
+def remove_init_sql_file():
+    """清理 /tmp/mysql-init.sql 文件
+    """
+    logging.info(messages.FUN_STARTS.format(fname()))
+
+    init_sql_file = Path("/tmp/mysql-init.sql")
+    if init_sql_file.exists():
+        os.remove(init_sql_file)
+
+    logging.info(messages.FUN_ENDS.format(fname()))
+
 
 def checks_for_install(port: int = 3306, pkg: Path = default_pkg):
     """MySQL 安装前的检查
@@ -459,7 +503,7 @@ def install_mysql(port: int = 3306, pkg: Path = None, innodb_buffer_pool_size: s
     InstanceHasBeenInstalledException
     """
     logging.info(messages.FUN_STARTS.format(fname()))
-    
+
     # 安装前的检查
     try:
         checks_for_install(port, pkg)
@@ -473,6 +517,9 @@ def install_mysql(port: int = 3306, pkg: Path = None, innodb_buffer_pool_size: s
         logging.info("unknown Exception {}".format(err))
         raise err
 
+    version = get_mysql_version(pkg.name)
+    basedir = pkg_to_basedir(pkg)
+
     # 第一步 创建用户和目录
     create_user_and_dirs(port)
 
@@ -485,9 +532,9 @@ def install_mysql(port: int = 3306, pkg: Path = None, innodb_buffer_pool_size: s
     # 第四步 创建配置文件
     create_mysql_config_file(port=port, basedir=basedir,
                              innodb_buffer_pool_size=innodb_buffer_pool_size)
-    
+
     # 第五步 复制 init 文件
-    create_init_sql_file()
+    create_init_sql_file(version)
 
     # 第五步 初始化 mysql 实例
     init_mysql(port=port, basedir=basedir)
@@ -499,9 +546,15 @@ def install_mysql(port: int = 3306, pkg: Path = None, innodb_buffer_pool_size: s
     start_mysql(port)
 
     # export PATH
+    export_cmds_to_path(basedir)
+    
+    # TODO
     # export headers
     # export so
     
+    # 清理 init-sql
+    remove_init_sql_file()
+
     logging.info(messages.FUN_ENDS.format(fname()))
 
 
@@ -514,7 +567,7 @@ def uninstall_mysql(port: int = 3306):
     MySQLSystemdFileNotExists
     """
     logging.info(messages.FUN_STARTS.format(fname()))
-    
+
     # 第一步 停止 MySQL 服务
     stop_mysql(port)
 

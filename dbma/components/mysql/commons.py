@@ -4,6 +4,7 @@
 """
 
 import re
+import logging
 from pathlib import Path
 from dbma.core.configs import dbm_agent_config
 
@@ -46,4 +47,23 @@ def pkg_to_basedir(pkg: Path = default_pkg):
     return Path("/usr/local") / (pkg.name.replace('.tar.gz', '').replace('.tar.xz', ''))
 
 
+def export_cmds_to_path(basedir: Path = None):
+    """根据 basedir 设置 PATH 环境变量
+    """
+    # 读出所有的行
+    with open("/etc/profile") as f:
+        lines = [line for line in f]
     
+    # 检查是否已经导出了
+    export_str = "export PATH={}/bin:$PATH".format(basedir)
+    if export_str in lines:
+        logging.info("has exported.")
+        return
+    
+    # 如果没有导出就导出
+    with open("/etc/profile", 'a') as f:
+        last_line = lines[-1]
+        if not last_line.endswith("\n"):
+            # 说明最后一行没有换行，这个情况下先加上换行
+            f.write("\n")
+        f.write(export_str + "\n")
