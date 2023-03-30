@@ -37,7 +37,7 @@ setup(name='dbm-agent',
       install_requires=['Jinja2>=2.10.1', 'mysql-connector-python>=8.0.31',
                         'psutil>=5.6.6', 'requests>=2.22.0', 'distro>=1.4.0',
                         'aiohttp>=3.8.1'],
-      python_requires='>=3.6.*',
+      python_requires='>=3.8.*',
       classifiers=[
           'Development Status :: 4 - Beta',
           'Intended Audience :: Developers',

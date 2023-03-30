@@ -12,33 +12,24 @@ import tarfile
 import logging
 from pathlib import Path
 from datetime import datetime
+from dbma.bil.fun import fname
+from dbma.core import messages
 from dbma.bil.osuser import MySQLUser
 from dbma.bil.cmdexecutor import exe_shell_cmd
 from dbma.core.configs import dbm_agent_config
 from dbma.components.mysql.config import MySQLConfig
+from dbma.components.mysql.commons import get_mysql_version
+from dbma.components.mysql.commons import pkg_to_basedir, default_pkg
 from dbma.components.mysql.exceptions import MySQLSystemdFileNotExists
 from dbma.components.mysql.exceptions import MySQLPkgFileNotExistsException
 from dbma.components.mysql.exceptions import InstanceHasBeenInstalledException
 
-
-default_pkg = Path("/usr/local/dbm-agent/pkgs/mysql-{}-linux-glibc2.12-x86_64.tar.xz".format(
-    dbm_agent_config.mysql_default_version))
-
-
-def pkg_to_basedir(pkg: Path = default_pkg):
-    """根据 pkg 的名字计算 basedir 的名字
-
-    Parameter:
-    ----------
-    pkg: Path
-        MySQL 安装包的全路径
-
-    Return:
-    -------
-        Path
+def create_init_sql_file(version:str=None):
+    """生成 init-sql 文件给 init 的时候用
     """
-    return Path("/usr/local") / (pkg.name.replace('.tar.gz', '').replace('.tar.xz', ''))
-
+    import dbma 
+    sql_file = Path(dbma.__file__).parent / "static/cnfs/init-8.0.x.sql"
+    shutil.copy(sql_file, "/tmp/init-8.0.x.sql")
 
 def checks_for_install(port: int = 3306, pkg: Path = default_pkg):
     """MySQL 安装前的检查
@@ -63,17 +54,19 @@ def checks_for_install(port: int = 3306, pkg: Path = default_pkg):
 
     """
     # 检查安装包是否存在
-    logging.info("check for pkg file exists or not .")
+    logging.info(messages.FUN_STARTS.format(fname()))
     if not pkg.exists():
-        logging.warn("pkg file exists or not .")
-        raise MySQLPkgFileNotExistsException(pkg)
+        logging.warn(messages.FILE_NOT_EXISTS.format(pkg))
+        raise MySQLPkgFileNotExistsException(
+            messages.FILE_NOT_EXISTS.format(pkg))
 
     # 检查给定的实例是不是已经安装过了
-    logging.info("check {} is installed or not.".format(port))
     datadir = Path(dbm_agent_config.mysql_datadir_parent) / "{}".format(port)
     if datadir.exists():
-        logging.warn("instance {} has been installed.".format(port))
+        logging.warn(messages.MYSQL_INSTANCE_HAS_EXISTS.format(port))
         raise InstanceHasBeenInstalledException(str(port))
+
+    logging.info(messages.FUN_ENDS.format(fname()))
 
 
 def check_mysql_systemd_exists(port: int = 3306):
@@ -92,15 +85,15 @@ def check_mysql_systemd_exists(port: int = 3306):
     -----------
     MySQLSystemdFileNotExists
     """
-    logging.info("starts check mysql systemd exists 'mysqld-{}' ".format(port))
+    logging.info(messages.FUN_STARTS.format(fname()))
 
     systemd_file = Path("/usr/lib/systemd/system/") / \
         "mysqld-{}.service".format(port)
     if not systemd_file.exists():
-        logging.error("systemd config file '{systemd_file}' not exists .")
+        logging.error(messages.FILE_NOT_EXISTS.format(systemd_file))
         raise MySQLSystemdFileNotExists(systemd_file)
 
-    logging.info("ends check mysql systemd exists 'mysqld-{}' ".format(port))
+    logging.info(messages.FUN_ENDS.format(fname()))
 
 
 def enable_systemd_for_mysql(port: int = 3306):
@@ -120,17 +113,18 @@ def enable_systemd_for_mysql(port: int = 3306):
     MySQLSystemdFileNotExists
     """
     # 如果 systemd 配置文件不存在就报异常
-    logging.info("start enable mysql systemd .")
+    logging.info(messages.FUN_STARTS.format(fname()))
+
     try:
         check_mysql_systemd_exists(port)
-        # 没有报异常，说明 systemd 配置存在
-        # 执行 enable 操作
-        eanble_cmd = "systemctl enable mysqld-{}".format(port)
-        logging.info("execute '{}' ".format(eanble_cmd))
-        exe_shell_cmd(eanble_cmd)
+        # 没有报异常，说明 systemd 配置存在, 准备执行 enable 操作
+        enable_cmd = "systemctl enable mysqld-{}".format(port)
+        logging.info(messages.EXECUTE_CMD.format(enable_cmd))
+        exe_shell_cmd(enable_cmd)
     except MySQLSystemdFileNotExists as err:
         raise err
-    logging.info("ends enable systemd '{}' ".format(port))
+
+    logging.info(messages.FUN_ENDS.format(fname()))
 
 
 def disable_systemd_for_mysql(port: int = 3306):
@@ -150,17 +144,20 @@ def disable_systemd_for_mysql(port: int = 3306):
     MySQLSystemdFileNotExists
     """
     # 如果 systemd 配置文件不存在就报异常
-    logging.info("start disable mysql systemd .")
+    logging.info(messages.FUN_STARTS.format(fname()))
+
     try:
         check_mysql_systemd_exists(port)
         # 没有报异常，说明 systemd 配置存在
         # 执行 enable 操作
         disable_cmd = "systemctl disable mysqld-{}".format(port)
-        logging.info("execute '{}' ".format(disable_cmd))
+        logging.info(messages.EXECUTE_CMD.format(disable_cmd))
         exe_shell_cmd(disable_cmd)
     except MySQLSystemdFileNotExists as err:
+        logging.info(err)
         raise err
-    logging.info("ends disable systemd '{}' ".format(port))
+
+    logging.info(messages.FUN_ENDS.format(fname()))
 
 
 def start_mysql(port: int = 3306):
@@ -180,17 +177,19 @@ def start_mysql(port: int = 3306):
     MySQLSystemdFileNotExists
     """
     # 如果 systemd 配置文件不存在就报异常
-    logging.info("starts start mysql .")
+    logging.info(messages.FUN_STARTS.format(fname()))
+
     try:
         check_mysql_systemd_exists(port)
         # 没有报异常，说明 systemd 配置存在
         # 执行 start 操作
         start_cmd = "systemctl start mysqld-{}".format(port)
-        logging.info("execute '{}' ".format(start_cmd))
+        logging.info(messages.EXECUTE_CMD.format(start_cmd))
         exe_shell_cmd(start_cmd)
     except MySQLSystemdFileNotExists as err:
         raise err
-    logging.info("ends start mysql .")
+
+    logging.info(messages.FUN_ENDS.format(fname()))
 
 
 def stop_mysql(port: int = 3306):
@@ -210,17 +209,19 @@ def stop_mysql(port: int = 3306):
     MySQLSystemdFileNotExists
     """
     # 如果 systemd 配置文件不存在就报异常
-    logging.info("starts stop mysql .")
+    logging.info(messages.FUN_STARTS.format(fname()))
+
     try:
         check_mysql_systemd_exists(port)
         # 没有报异常，说明 systemd 配置存在
         # 执行 stop 操作
         stop_cmd = "systemctl stop mysqld-{}".format(port)
-        logging.info("execute '{}' ".format(stop_cmd))
+        logging.info(messages.EXECUTE_CMD.format(stop_cmd))
         exe_shell_cmd(stop_cmd)
     except MySQLSystemdFileNotExists as err:
         raise err
-    logging.info("ends stop mysql .")
+
+    logging.info(messages.FUN_ENDS.format(fname()))
 
 
 def create_user_and_dirs(port: int = 3306):
@@ -235,7 +236,7 @@ def create_user_and_dirs(port: int = 3306):
     -------
         None
     """
-    logging.info("starts create user and dirs port = {} .".format(port))
+    logging.info(messages.FUN_STARTS.format(fname()))
 
     # 创建用户
     user = MySQLUser(port)
@@ -246,21 +247,21 @@ def create_user_and_dirs(port: int = 3306):
     binlogdir = Path(dbm_agent_config.mysql_binlogdir_parent) / str(port)
 
     if not datadir.exists():
-        logging.info("create datadir '{}' .".format(datadir))
+        logging.info(messages.CREATE_DIR.format(datadir))
         os.mkdir(datadir)
     else:
-        logging.warning("datadir exists, skip cretae it .")
+        logging.warning(messages.DIR_EXISTS.format(datadir))
 
     if not binlogdir.exists():
-        logging.info("create binlogdir '{}' .".format(binlogdir))
+        logging.info(messages.CREATE_DIR.format(binlogdir))
         os.mkdir(binlogdir)
     else:
-        logging.warning("binlogdir exists, skip cretae it .")
+        logging.warning(messages.DIR_EXISTS.format(binlogdir))
 
     user.chown(datadir)
     user.chown(binlogdir)
 
-    logging.info("ends create user and dirs .".format(port))
+    logging.info(messages.FUN_ENDS.format(fname()))
 
 
 def backup_dirs(port: int = 3306, suffix=None):
@@ -270,18 +271,20 @@ def backup_dirs(port: int = 3306, suffix=None):
     -----------
     port: int
         MySQL 端口号
-    
+
     suffix: str
         备份文件后缀
-    
+
     Returns:
     --------
     None
     """
+    logging.info(messages.FUN_STARTS.format(fname()))
+
     # 计算 suffix
     if suffix is None:
         suffix = datetime.now().isoformat().replace(':', '-').replace('.', '-')
-    
+
     # 计算当前的 datadir 和 binlogdir
     datadir = Path(dbm_agent_config.mysql_datadir_parent) / str(port)
     binlogdir = Path(dbm_agent_config.mysql_binlogdir_parent) / str(port)
@@ -292,21 +295,42 @@ def backup_dirs(port: int = 3306, suffix=None):
     shutil.move(datadir, datadir_backup_dir)
     shutil.move(binlogdir, binlogdir_backup_dir)
 
+    logging.info(messages.FUN_ENDS.format(fname()))
+
 
 def backup_config_file(port: int = 3306, suffix=None):
     """备份配置文件
+
+    Parameters:
+    -----------
+    port: int
+        MySQL 端口号
+
+    suffix: str
+        备份文件的后缀
+
+    Return:
+    -------
+
     """
+    logging.info(messages.FUN_STARTS.format(fname()))
+
     # 计算 suffix
     if suffix is None:
         suffix = datetime.now().isoformat().replace(':', '-').replace('.', '-')
     datadir = Path(dbm_agent_config.mysql_datadir_parent) / str(port)
     if not datadir.exists():
-        logging.warn("datadir not exists, skip copy config file to datadir .")
+        logging.warn(messages.DIR_NOT_EXISTS.format(datadir))
         return
 
-    config_file  = "/etc/my-{}.cnf".format(port)
+    config_file = "/etc/my-{}.cnf".format(port)
     config_backup_file = datadir / "my-{}.cnf-backup-{}".format(port, suffix)
+    logging.info(messages.MOVE_FILE_TO.format(config_file, config_backup_file))
+
+    # 备份文件
     shutil.copyfile(config_file, config_backup_file)
+
+    logging.info(messages.FUN_ENDS.format(fname()))
 
 
 def decompression_pkg(pkg: Path = default_pkg):
@@ -325,12 +349,12 @@ def decompression_pkg(pkg: Path = default_pkg):
     ---------
         MySQLPkgFileNotExistsException
     """
-    logging.info("starts decompression pkg .")
+    logging.info(messages.FUN_STARTS.format(fname()))
 
     if not pkg.exists():
-        logging.error("mysql install package not find '{}' .".format(pkg))
-
-        raise MySQLPkgFileNotExistsException(pkg)
+        logging.error(messages.FILE_NOT_EXISTS.format(pkg))
+        raise MySQLPkgFileNotExistsException(
+            messages.FILE_NOT_EXISTS.format(pkg))
 
     basedir = pkg_to_basedir(pkg)
     flag_file = basedir / ".dbm-agent-decompression.txt"
@@ -339,7 +363,6 @@ def decompression_pkg(pkg: Path = default_pkg):
         return
 
     # 准备解压
-    logging.info("open tar file {}".format(pkg))
     with tarfile.open(pkg) as tar_pkg:
         tar_pkg.extractall("/usr/local/")
 
@@ -348,7 +371,7 @@ def decompression_pkg(pkg: Path = default_pkg):
         f.write('dbm-agent')
 
     # 解压完成
-    logging.info("ends decompression pkg .")
+    logging.info(messages.FUN_ENDS.format(fname()))
 
 
 def create_mysql_config_file(port: int = 3306, basedir: Path = None, innodb_buffer_pool_size: str = "128M"):
@@ -369,8 +392,9 @@ def create_mysql_config_file(port: int = 3306, basedir: Path = None, innodb_buff
     -------
         None
     """
+    logging.info(messages.FUN_STARTS.format(fname()))
     logging.info(
-        "starts create mysql config file. basedir = '{}', port = '{}', innodb_buffer_pool_size = '{}' .".format(basedir, port, innodb_buffer_pool_size))
+        "basedir = '{}', port = '{}', innodb_buffer_pool_size = '{}' .".format(basedir, port, innodb_buffer_pool_size))
 
     config = MySQLConfig(basedir=str(basedir), port=port,
                          innodb_buffer_pool_size=innodb_buffer_pool_size)
@@ -379,7 +403,7 @@ def create_mysql_config_file(port: int = 3306, basedir: Path = None, innodb_buff
     config.generate_init_cnf_config_file()
     config.generate_systemd_cnf_config()
 
-    logging.info("ends create mysql config file.")
+    logging.info(messages.FUN_ENDS.format(fname()))
 
 
 def init_mysql(port: int = 3306, basedir: Path = None):
@@ -397,18 +421,20 @@ def init_mysql(port: int = 3306, basedir: Path = None):
     -------
         None
     """
+    logging.info(messages.FUN_STARTS.format(fname()))
     logging.info(
-        "starts init mysql port = '{}', basedir = '{}' .".format(port, basedir))
+        "port = '{}', basedir = '{}' .".format(port, basedir))
 
     mysqld = Path(basedir) / "bin/mysqld"
     config = Path("/tmp/mysql-8.0-init.cnf")
 
-    init_cmd = "{} --defaults-file={} --initialize-insecure".format(
-        mysqld, config)
+    init_cmd = "{} --defaults-file={} --init-file={} --initialize-insecure".format(
+        mysqld, config, "/tmp/init-8.0.x.sql")
     logging.info("init-cmd = '{}' .".format(init_cmd))
+    # 执行 init 操作
     exe_shell_cmd(init_cmd)
 
-    logging.info("ends init mysql.")
+    logging.info(messages.FUN_ENDS.format(fname()))
 
 
 def install_mysql(port: int = 3306, pkg: Path = None, innodb_buffer_pool_size: str = "128M"):
@@ -432,6 +458,8 @@ def install_mysql(port: int = 3306, pkg: Path = None, innodb_buffer_pool_size: s
 
     InstanceHasBeenInstalledException
     """
+    logging.info(messages.FUN_STARTS.format(fname()))
+    
     # 安装前的检查
     try:
         checks_for_install(port, pkg)
@@ -457,6 +485,9 @@ def install_mysql(port: int = 3306, pkg: Path = None, innodb_buffer_pool_size: s
     # 第四步 创建配置文件
     create_mysql_config_file(port=port, basedir=basedir,
                              innodb_buffer_pool_size=innodb_buffer_pool_size)
+    
+    # 第五步 复制 init 文件
+    create_init_sql_file()
 
     # 第五步 初始化 mysql 实例
     init_mysql(port=port, basedir=basedir)
@@ -470,6 +501,8 @@ def install_mysql(port: int = 3306, pkg: Path = None, innodb_buffer_pool_size: s
     # export PATH
     # export headers
     # export so
+    
+    logging.info(messages.FUN_ENDS.format(fname()))
 
 
 def uninstall_mysql(port: int = 3306):
@@ -480,7 +513,17 @@ def uninstall_mysql(port: int = 3306):
 
     MySQLSystemdFileNotExists
     """
+    logging.info(messages.FUN_STARTS.format(fname()))
+    
+    # 第一步 停止 MySQL 服务
     stop_mysql(port)
+
+    # 第二步 禁用 systemd 服务
     disable_systemd_for_mysql(port)
+
+    # 第三步 备份配置文件
     backup_config_file(port)
+
+    # 第四步 备份数据目录与binlog目录
     backup_dirs(port)
+    logging.info(messages.FUN_ENDS.format(fname()))

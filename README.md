@@ -112,6 +112,31 @@
    mysql33+ 2984464       1  0 21:00 ?        00:00:02 /usr/local/mysql-8.0.31-linux-glibc2.12-x86_64/bin/mysqld --defaults-file=/etc/my-3306.cnf
    root     2985758 2962382  0 21:05 pts/44   00:00:00 grep --color=auto mysqld
    ```
+   也可以连接上去检查。
+   ```bash
+   mysql -uroot -pdbma@0352 -h127.0.0.1 -P3306
+   mysql: [Warning] Using a password on the command line interface can be insecure.
+   Welcome to the MySQL monitor.  Commands end with ; or \g.
+   Your MySQL connection id is 10
+   Server version: 8.0.31 MySQL Community Server - GPL
+   
+   Copyright (c) 2000, 2023, Oracle and/or its affiliates.
+   
+   Oracle is a registered trademark of Oracle Corporation and/or its
+   affiliates. Other names may be trademarks of their respective
+   owners.
+   
+   Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+   
+   mysql> show processlist;
+   +----+-----------------+-----------------+------+---------+------+------------------------+------------------+
+   | Id | User            | Host            | db   | Command | Time | State                  | Info             |
+   +----+-----------------+-----------------+------+---------+------+------------------------+------------------+
+   |  5 | event_scheduler | localhost       | NULL | Daemon  |   50 | Waiting on empty queue | NULL             |
+   | 10 | root            | 127.0.0.1:35720 | NULL | Query   |    0 | init                   | show processlist |
+   +----+-----------------+-----------------+------+---------+------+------------------------+------------------+
+   2 rows in set (0.00 sec)
+   ```
 
    当然直接使用命令行工具也是可以的。
    ```bash

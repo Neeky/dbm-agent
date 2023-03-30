@@ -42,7 +42,7 @@ class DBMAgentConfig(object):
     mysql_datadir_parent: str = "/database/mysql/data/"
     mysql_binlogdir_parent: str = "/database/mysql/binlog/"
     mysql_user_prefix: str = "mysql"
-    mysql_default_version: str = "8.0.31"
+    mysql_default_version: str = "8.0.32"
 
     def make_register_data(self):
         """
