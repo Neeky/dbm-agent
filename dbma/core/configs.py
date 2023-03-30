@@ -115,6 +115,7 @@ def _auto_save_to_disk():
     if DBM_AGENT_BASE_DIR.exists():
         dbm_user = DBMAUser()
         dbm_user.chown(DBM_AGENT_BASE_DIR)
+        dbm_agent_config.version = VERSION
         dbm_agent_config.sync_to_disk()
         dbm_user.chown(DBM_AGENT_BASE_DIR)
 
