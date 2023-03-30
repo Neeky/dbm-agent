@@ -9,7 +9,9 @@ from pathlib import Path
 from dbma.bil.sudos import sudo
 from dbma.core.router import routes
 from dbma.core.configs import dbm_agent_config
+from dbma.core.threads.backends import threads
 from dbma.components.mysql.install import install_mysql, uninstall_mysql
+from dbma.components.mysql.views.handlers import install_mysql_task_handler
 
 
 @routes.view("/apis/mysqls/defaults")
@@ -63,6 +65,17 @@ class MySQLInstallView(web.View):
         # 打印一下接收到的参数
         logging.info(
             "port = '{}', ibps = '{}', pkg-name = '{}', pkg = '{}' .".format(port, ibps, pkg_name, pkg))
+
+        # 检查是不是 dbm-center 发过来的请求(如果是它会带上 task_id)
+        if 'task-id' in data:
+            task_id = data['task-id']
+            threads.submit(install_mysql_task_handler, port=port,
+                           ibps=ibps, pkg=pkg, task_id=task_id)
+            # 准备返回数据
+            return web.json_response({
+                "message": 'install mysql task is doing .',
+            }, status=200)
+
         try:
             # 临时把权限提升到 root (创建目录、用户 ... 都会用到)
             with sudo("install mysql {}".format(port)):
@@ -81,7 +94,7 @@ class MySQLInstallView(web.View):
 
 
 @routes.view("/apis/mysqls/uninstall")
-class MySQLInstallView(web.View):
+class MySQLUninstallView(web.View):
     """
     MySQL 卸载逻辑
     """
@@ -98,7 +111,7 @@ class MySQLInstallView(web.View):
             return web.json_response({
                 'message': "port not in post dict",
             }, status=500)
-        
+
         port = data['port']
         try:
             with sudo("install mysql {}".format(port)):
@@ -114,4 +127,3 @@ class MySQLInstallView(web.View):
         return web.json_response({
             'message': "uninstall mysql complete ."
         }, status=200)
-        
