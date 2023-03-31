@@ -21,6 +21,7 @@ from dbma.components.mysql.config import MySQLConfig
 from dbma.components.mysql.commons import get_mysql_version
 from dbma.components.mysql.commons import export_cmds_to_path
 from dbma.components.mysql.commons import pkg_to_basedir, default_pkg
+from dbma.components.mysql.commons import export_header_files, export_so_files
 from dbma.components.mysql.exceptions import MySQLSystemdFileNotExists
 from dbma.components.mysql.exceptions import MySQLPkgFileNotExistsException
 from dbma.components.mysql.exceptions import InstanceHasBeenInstalledException
@@ -545,12 +546,14 @@ def install_mysql(port: int = 3306, pkg: Path = None, innodb_buffer_pool_size: s
     # 第七步 启动 mysql 实例
     start_mysql(port)
 
-    # export PATH
+    # 第八步 导出 PATH 环境变量
     export_cmds_to_path(basedir)
     
-    # TODO
-    # export headers
-    # export so
+    # 第九步 导出头文件
+    export_header_files(pkg)
+    
+    # 第十步 导出 so 文件
+    export_so_files(pkg)
     
     # 清理 init-sql
     remove_init_sql_file()

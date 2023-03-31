@@ -68,13 +68,13 @@
    ```bash
    dbm-agent start
    ```
-   **4. 检查** 检查 dbm-agent 进程在不在
+   **4. 检查** dbm-agent 进程在不在
    ```bash
    ps -ef | grep dbm-agent
    dbma        3520       1  0 16:02 ?        00:00:00 /usr/local/python/bin/python3.11 /usr/local/python/bin/dbm-agent start
    root        3556    3273  0 16:02 pts/4    00:00:00 grep --color=auto dbm-agent
    ```
-   **5. 检查** 检查 http 服务是否正常
+   **5. 检查** http 服务是否正常
    ```bash
    curl http://127.0.0.1:8086/apis/dbm-agent 2>/dev/null | jq
    {
