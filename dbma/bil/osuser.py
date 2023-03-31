@@ -268,13 +268,6 @@ class RootGroup(BaseGroup):
         pass
 
 
-class ZookeeperGroup(BaseGroup):
-    """
-    """
-    def __init__(self, name="zookeeper"):
-        BaseGroup.__init__(self,name)
-
-
 class RootUser(BaseUser):
     group = RootGroup()
     
@@ -286,11 +279,3 @@ class RootUser(BaseUser):
         root 组是不能删除的、所以这里不做任何实现
         """
         pass
-
-
-class ZookeeperUser(BaseUser):
-    group = ZookeeperGroup()
-    
-    def __init__(self):
-        BaseUser.__init__(self,"zookeeper")
-   
