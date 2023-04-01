@@ -3,6 +3,7 @@
 - [目录](#目录)
 - [dbm](#dbm)
 - [安装与配置](#安装与配置)
+- [检查给定的MySQL是否存在](#检查给定的mysql是否存在)
 - [自动化安装MySQL](#自动化安装mysql)
 - [自动化卸载MySQL](#自动化卸载mysql)
 - [关闭dbm-agent](#关闭dbm-agent)
@@ -83,6 +84,21 @@
    }
    ```
    ---
+
+## 检查给定的MySQL是否存在
+   体验一下 dbm-agent 自带的 http 接口的方便，以前我们要确认给定机器上有没有安装在 3306 这个端口上的实例，我们还要上机器。现在我们直接请求一下接口就行了。
+   ```bash
+   curl http://localhost:8086/apis/mysqls/3306/exists 2>/dev/null | jq
+
+   {
+     "message": "",
+     "error": null,
+     "data": {
+       "exists": false,
+       "port": 3306
+     }
+   }
+   ```
 
 
 ## 自动化安装MySQL

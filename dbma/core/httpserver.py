@@ -16,7 +16,6 @@ from dbma.core.configs import DBMAgentConfig
 from dbma.core.views import dbmagentview as _
 from dbma.components.mysql.views import defaultsview as _
 
-
 def start():
     """
     """
@@ -29,7 +28,7 @@ def start():
     if not dbma_user.is_exists():
         print("please init dbm-agent before use. ")
         exit(2)
-    
+
     # 切换到普通用户
     uid, gid = get_uid_gid(dbma_user.name)
     os.setegid(gid)
