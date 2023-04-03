@@ -9,3 +9,4 @@ dbm_agent.egg-info
 *build
 .coverage
 .backups/*
+htmlcov
