@@ -11,11 +11,27 @@ import os
 import json
 import logging
 import random
+from enum import Enum
 from pathlib import Path
 from jinja2 import Template
 from dataclasses import dataclass, asdict
+from dbma.core import messages
+from dbma.bil.fun import fname
 from dbma.core.configs import dbm_agent_config
 from dbma.components.mysql.exceptions import MySQLTemplateFileNotExistsException
+
+
+class MySQLTemplateTypes(Enum):
+    """定义配置文件模板类型
+    """
+    # MySQL 配置文件
+    MYSQL_CONFIG_FILE = 1
+
+    # MySQL init 专用配置文件
+    MYSQL_INIT_CONFIG_FILE = 2
+
+    # MySQL systemd 配置文件
+    MYSQL_SYSTEMD_FILE = 3
 
 
 @dataclass
@@ -291,44 +307,97 @@ class MySQLConfig(object):
     def calcu_second_attrs(self):
         """根据已有的配置推导出相关的其它配置
         """
+        logging.info(messages.FUN_STARTS.format(fname()))
+
         self._calcu_deps_port()
         self._calcu_random_attrs()
         self._calcu_deps_mem()
         self._calcu_deps_basedir()
 
-    def save_to_target_dir(self, target_dir=None):
-        """以 json 格式保存到给定的目录
-        """
-        # 检查目录是否存在
-        if not Path(target_dir).exists():
-            logging.error(
-                "dir '{}' not exists, skip save config to it .".format(target_dir))
-            return
+        logging.info(messages.FUN_ENDS.format(fname()))
 
+    def save_to_target_dir(self, target_dir: Path = None):
+        """以 json 格式保存到目标目录
+
+        Parameters:
+        -----------
+        target_dir: Path
+            json 格式配置文件要保存到的路径(parent-dir)
+        """
+        logging.info(messages.FUN_STARTS.format(fname()))
+
+        # 检查参数
         if target_dir is None:
             # 没有给出 target_dir 就保存到 datadir
             json_file = Path(self.datadir) / "mysql-config.json"
         else:
             json_file = Path(target_dir) / "mysql-config.json"
 
+        # 检查目录是否存在
+        if not Path(target_dir).exists():
+            logging.error(
+                "dir '{}' not exists, skip save config to it .".format(target_dir))
+            logging.info(messages.FUN_ENDS.format(fname()))
+            return
+
+        # 保存到给定目录
+        logging.info("write config file to '{}' .".format(json_file))
         json_data = asdict(self)
         with open(json_file, 'w') as f:
             f.write(json.dumps(json_data, indent=4))
 
-    def find_mysql_template_file(self):
+        logging.info(messages.FUN_ENDS.format(fname()))
+
+    def find_mysql_template_file(self, mtt: MySQLTemplateTypes = None):
         """根据版本号加载配置文件模板，如果找不到对应的模板文件就返回 None
+
+        Parameters:
+        -----------
+        mtt: MySQLTemplateTypes
+            MySQL 配置文件模板类型
+
+        Return:
+        -------
+        Path
+
+        Exceptions:
+        -----------
+        MySQLTemplateFileNotExistsException
+
         """
+        logging.info(messages.FUN_STARTS.format(fname()))
+
+        # 根据需要的配置文件类型返回模板文件(Path)
         import dbma
-        template_file = Path(dbma.__file__).parent / \
-            "static/cnfs/mysql-{}.cnf.jinja".format(self.version)
+        if mtt == MySQLTemplateTypes.MYSQL_CONFIG_FILE:
+            template_file = Path(dbma.__file__).parent / \
+                "static/cnfs/mysql-{}.cnf.jinja".format(self.version)
+        elif mtt == MySQLTemplateTypes.MYSQL_INIT_CONFIG_FILE:
+            template_file = Path(dbma.__file__).parent / \
+                "static/cnfs/mysql-8.0-init-only.jinja"
+        elif mtt == MySQLTemplateTypes.MYSQL_SYSTEMD_FILE:
+            template_file = Path(dbma.__file__).parent / \
+                "static/cnfs/mysqld.service.jinja"
+        # 检查一下是否存在
         if template_file.exists():
+            logging.info(messages.FUN_ENDS.format(fname()))
             return template_file
         logging.warning("template file '{}' not exists ".format(template_file))
 
         raise MySQLTemplateFileNotExistsException(template_file)
 
-    def render_mysql_template(self, template=None):
+    def render_mysql_template(self, template: str = None):
         """渲染给定的 template 文件
+        
+        Parameters:
+        -----------
+        template: str
+            模板文件的文字内容
+        
+        Return:
+        -------
+        str
+            渲染之后的配置文件
         """
         if template is None:
             logging.error("template is None .")
@@ -351,11 +420,12 @@ class MySQLConfig(object):
         # 渲染模板
         # 保存渲染后的内容到文件
         try:
-            tempate = self.find_mysql_template_file()
+            tempate = self.find_mysql_template_file(
+                MySQLTemplateTypes.MYSQL_CONFIG_FILE)
         except MySQLTemplateFileNotExistsException as err:
             logging.error(
                 "cannot generate cnf config file, becuase {}".format(err))
-            raise
+            raise err
 
         content = self.render_mysql_template(tempate)
 
@@ -373,27 +443,19 @@ class MySQLConfig(object):
         """
         logging.info("starts generate init cnf config file .")
         # 查询 mysql-init 的配置文件模板
-        import dbma
-        if self.version.startswith("8.0"):
-            template_file =  Path(dbma.__file__).parent /  "static/cnfs/mysql-8.0-init-only.jinja"
-        else:
-            # TODO 支持 5.7.x
-            pass
+        try:
+            tempate = self.find_mysql_template_file(
+                MySQLTemplateTypes.MYSQL_INIT_CONFIG_FILE)
+        except MySQLTemplateFileNotExistsException as err:
+            logging.error(
+                "cannot generate cnf config file, becuase {}".format(err))
+            raise err
 
-        # 检查模板文件是否存在
-        if not template_file.exists():
-            raise MySQLTemplateFileNotExistsException(template_file)
-        
-        # 准备渲染
-        with open(template_file) as f:
-            content = f.read()
-        
-        t = Template(content)
-        config_content = t.render(asdict(self))
+        content = self.render_mysql_template(tempate)
 
-        with open(Path("/tmp/mysql-8.0-init.cnf"), 'w') as f:
-            f.write(config_content)
-        
+        with open(Path(dbm_agent_config.mysql_init_cnf), 'w') as f:
+            f.write(content)
+
         logging.info("starts generate init cnf config file .")
 
     def generate_systemd_cnf_config(self):
@@ -401,26 +463,21 @@ class MySQLConfig(object):
         """
         logging.info("starts generate systemd config file .")
         # 查询 mysql-init 的配置文件模板
-        import dbma
-        if self.version.startswith("8.0"):
-            template_file =  Path(dbma.__file__).parent /  "static/cnfs/mysqld.service.jinja"
+        try:
+            tempate = self.find_mysql_template_file(
+                MySQLTemplateTypes.MYSQL_SYSTEMD_FILE)
+        except MySQLTemplateFileNotExistsException as err:
+            logging.error(
+                "cannot generate cnf config file, becuase {}".format(err))
+            raise err
 
-        # 检查模板文件是否存在
-        if not template_file.exists():
-            raise MySQLTemplateFileNotExistsException(template_file)
-        
-        # 准备渲染
-        with open(template_file) as f:
-            content = f.read()
-        
-        t = Template(content)
-        config_content = t.render(asdict(self))
+        content = self.render_mysql_template(tempate)
 
         with open(Path("/usr/lib/systemd/system/mysqld-{}.service".format(self.port)), 'w') as f:
-            f.write(config_content)
-        
+            f.write(content)
+
         logging.info("ends generate systemd config file .")
-        
+
     def _calcu_deps_port(self):
         """计算依赖于 port 的配置项
 

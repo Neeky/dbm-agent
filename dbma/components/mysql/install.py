@@ -58,9 +58,10 @@ def create_init_sql_file(version: str = None):
             version)
         logging.error(message)
         raise ValueError(messages)
+    logging.info("init sql file = {}".format(sql_file))
 
     # 复制文件
-    shutil.copy(sql_file, "/tmp/mysql-init.sql")
+    shutil.copy(sql_file, dbm_agent_config.mysql_init_user_sql_file)
     logging.info(messages.FUN_ENDS.format(fname()))
 
 
@@ -69,7 +70,7 @@ def remove_init_sql_file():
     """
     logging.info(messages.FUN_STARTS.format(fname()))
 
-    init_sql_file = Path("/tmp/mysql-init.sql")
+    init_sql_file = Path(dbm_agent_config.mysql_init_user_sql_file)
     if init_sql_file.exists():
         os.remove(init_sql_file)
 
@@ -471,10 +472,10 @@ def init_mysql(port: int = 3306, basedir: Path = None):
         "port = '{}', basedir = '{}' .".format(port, basedir))
 
     mysqld = Path(basedir) / "bin/mysqld"
-    config = Path("/tmp/mysql-8.0-init.cnf")
+    config = Path(dbm_agent_config.mysql_init_cnf)
 
     init_cmd = "{} --defaults-file={} --init-file={} --initialize-insecure".format(
-        mysqld, config, "/tmp/init-8.0.x.sql")
+        mysqld, config, dbm_agent_config.mysql_init_user_sql_file)
     logging.info("init-cmd = '{}' .".format(init_cmd))
     # 执行 init 操作
     exe_shell_cmd(init_cmd)

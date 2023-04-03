@@ -99,27 +99,6 @@ binlog_group_commit_sync_delay             = {{binlog_group_commit_sync_delay}}
 binlog_group_commit_sync_no_delay_count    = {{binlog_group_commit_sync_no_delay_count}}
 
 
-#### for replication
-#rpl_semi_sync_master_enabled              = {{rpl_semi_sync_master_enabled}}
-#rpl_semi_sync_slave_enabled               = {{rpl_semi_sync_slave_enabled}}
-#rpl_semi_sync_master_timeout              = {{rpl_semi_sync_master_timeout}}
-#rpl_semi_sync_master_wait_point           = {{rpl_semi_sync_master_wait_point}}
-#rpl_semi_sync_master_wait_no_slave        = {{rpl_semi_sync_master_wait_no_slave}}
-#rpl_semi_sync_master_wait_for_slave_count = {{rpl_semi_sync_master_wait_for_slave_count}}
-#sync_source_info                          = 1000
-#skip_replica_start                        = ON
-#replica_load_tmpdir                       = /tmp/
-#plugin_load_add                           = semisync_master.so
-#plugin_load_add                           = semisync_slave.so
-#relay_log                                 = {{relay_log}}
-#sync_relay_log                            = {{sync_relay_log}}
-#sync_relay_log_info                       = {{sync_relay_log_info}}
-#replica_preserve_commit_order             = ON
-##replica_parallel_type                    = LOGICAL_CLOCK          # deprecated from 8.0.29
-#replica_parallel_workers                  = {{replica_parallel_workers}}
-#replica_max_allowed_packet                = {{replica_max_allowed_packet}}
-
-
 #### for gtid
 gtid_mode                                = {{gtid_mode}}
 binlog_gtid_simple_recovery              = {{binlog_gtid_simple_recovery}}
@@ -240,31 +219,6 @@ innodb_flush_method                      = {{innodb_flush_method}}
 innodb_log_buffer_size                   = {{innodb_log_buffer_size}}
 innodb_flush_log_at_trx_commit           = {{innodb_flush_log_at_trx_commit}}
 innodb_buffer_pool_size                  = {{innodb_buffer_pool_size}}
-
-
-{% if is_mgr %}
-#### for group replication
-#plugin_load_add                                    = group_replication.so
-#group_replication_recovery_use_ssl                 = {{group_replication_recovery_use_ssl}}
-#group_replication_ssl_mode                         = {{group_replication_ssl_mode}}
-#group_replication_single_primary_mode              = {{group_replication_single_primary_mode}}
-#group_replication_group_name                       = {{group_replication_group_name}}
-#group_replication_start_on_boot                    = {{group_replication_start_on_boot}}
-#group_replication_bootstrap_group                  = {{group_replication_bootstrap_group}}
-#group_replication_local_address                    = {{group_replication_local_address}}
-#group_replication_group_seeds                      = {{group_replication_group_seeds}}
-#group_replication_consistency                      = {{group_replication_consistency}}
-#group_replication_poll_spin_loops                  = {{group_replication_poll_spin_loops}}
-#group_replication_compression_threshold            = {{group_replication_compression_threshold}}
-#group_replication_communication_max_message_size   = {{group_replication_communication_max_message_size}}
-#group_replication_message_cache_size               = {{group_replication_message_cache_size}}
-#group_replication_flow_control_applier_threshold   = {{group_replication_flow_control_applier_threshold}}
-#group_replication_flow_control_certifier_threshold = {{group_replication_flow_control_certifier_threshold}}
-#group_replication_flow_control_hold_percent        = {{group_replication_flow_control_hold_percent}}
-#group_replication_flow_control_mode                = {{group_replication_flow_control_mode}}
-#group_replication_flow_control_period              = {{group_replication_flow_control_period}}
-#group_replication_flow_control_release_percent     = {{group_replication_flow_control_release_percent}}
-{% endif %}
 
 
 ####  for performance_schema
