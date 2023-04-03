@@ -382,6 +382,12 @@ class MySQLConfig(object):
         if mtt == MySQLTemplateTypes.MYSQL_CONFIG_FILE:
             template_file = Path(dbma.__file__).parent / \
                 "static/cnfs/mysql-{}.cnf.jinja".format(self.version)
+            # dbm-agent 只对 5.7.x 提供有限的支持、配置文件的模板最高为 5.7.25 、也就是说所有的版本都用这个一个模板
+            if self.version.startswith("5.7"):
+                template_file = Path(dbma.__file__).parent / \
+                    "static/cnfs/mysql-{}.cnf.jinja".format("5.7.25")
+                logging.info("5.7.xx version well using config template {}".format(template_file))
+                
         elif mtt == MySQLTemplateTypes.MYSQL_INIT_CONFIG_FILE:
             short_version = "8.0" if self.version.startswith("8.0") else "5.7"
             template_file = Path(dbma.__file__).parent / \
