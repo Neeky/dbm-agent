@@ -70,6 +70,7 @@ class MySQLConfig(object):
     end_markers_in_json: str = "OFF"
     tmpdir: str = "/tmp/"
     max_connections: int = 4096
+    thread_cache_size: int = 32
     autocommit: str = "ON"
     sort_buffer_size: int = 262144
     join_buffer_size: int = 262144
@@ -127,6 +128,7 @@ class MySQLConfig(object):
     binlog_checksum: str = "CRC32"
     log_bin_trust_function_creators: str = "ON"
     binlog_direct_non_transactional_updates: str = "OFF"
+    expire_logs_days: int = 7
     binlog_expire_logs_seconds: int = 2592000
     binlog_error_action: str = "ABORT_SERVER"
     binlog_format: str = "ROW"
@@ -173,8 +175,12 @@ class MySQLConfig(object):
     rpl_semi_sync_master_wait_no_slave: str = "ON"
     rpl_semi_sync_master_wait_for_slave_count: int = 1
     sync_source_info: int = 10000
+    skip_slave_start: str = "ON"
     skip_replica_start: str = "ON"
+    log_slave_updates: str = "ON"
     replica_load_tmpdir: str = "/tmp/"
+    master_info_repository: str = "table"
+    relay_log_info_repository: str = "table"
     plugin_load_add: str = "semisync_master.so"
     plugin_load_add: str = "semisync_slave.so"
     relay_log: str = "relay-bin"
@@ -182,9 +188,12 @@ class MySQLConfig(object):
     sync_relay_log_info: int = 10000
     slave_preserve_commit_order: str = "ON"
     replica_preserve_commit_order: str = "ON"
+    slave_parallel_type: str = "LOGICAL_CLOCK"
     replica_parallel_type: str = "LOGICAL_CLOCK"
+    slave_parallel_workers: int = 4
     replica_parallel_workers: int = 4
     replica_max_allowed_packet: str = "1G"
+    transaction_write_set_extraction: str = "XXHASH64"
     # endregion replication
 
     # region engines
@@ -291,6 +300,7 @@ class MySQLConfig(object):
     innodb_autoinc_lock_mode: int = 2
     innodb_change_buffer_max_size: int = 25
     innodb_flush_method: str = "fsync"
+    innodb_change_buffering: str = "ALL"
     innodb_flush_log_at_trx_commit: int = 1
     innodb_buffer_pool_instances: int = None
     innodb_log_buffer_size: str = None
@@ -373,17 +383,20 @@ class MySQLConfig(object):
             template_file = Path(dbma.__file__).parent / \
                 "static/cnfs/mysql-{}.cnf.jinja".format(self.version)
         elif mtt == MySQLTemplateTypes.MYSQL_INIT_CONFIG_FILE:
+            short_version = "8.0" if self.version.startswith("8.0") else "5.7"
             template_file = Path(dbma.__file__).parent / \
-                "static/cnfs/mysql-8.0-init-only.jinja"
+                "static/cnfs/mysql-{}-init-only.jinja".format(short_version)
         elif mtt == MySQLTemplateTypes.MYSQL_SYSTEMD_FILE:
             template_file = Path(dbma.__file__).parent / \
                 "static/cnfs/mysqld.service.jinja"
+        logging.info("using template file {}".format(template_file))
+        
         # 检查一下是否存在
         if template_file.exists():
             logging.info(messages.FUN_ENDS.format(fname()))
             return template_file
+        
         logging.warning("template file '{}' not exists ".format(template_file))
-
         raise MySQLTemplateFileNotExistsException(template_file)
 
     def render_mysql_template(self, template: str = None):
@@ -399,6 +412,7 @@ class MySQLConfig(object):
         str
             渲染之后的配置文件
         """
+        logging.info(messages.FUN_STARTS.format(fname()))
         if template is None:
             logging.error("template is None .")
             return
@@ -411,11 +425,14 @@ class MySQLConfig(object):
             content = f.read()
 
         t = Template(content)
+        logging.info(messages.FUN_ENDS.format(fname()))
         return t.render(asdict(self))
+    
 
     def generate_cnf_config_file(self):
         """ 生成配置文件  /etc/my-{port}-cnf
         """
+        logging.info(messages.FUN_STARTS.format(fname()))
         # 根据版本号加载配置文件模板
         # 渲染模板
         # 保存渲染后的内容到文件
@@ -431,6 +448,7 @@ class MySQLConfig(object):
 
         with open(Path("/etc/my-{}.cnf".format(self.port)), 'w') as f:
             f.write(content)
+        logging.info(messages.FUN_ENDS.format(fname()))
 
     def generate_init_cnf_config_file(self):
         """生成初始化专用文件, 用于解决 plugin-add 导致的一系列问题

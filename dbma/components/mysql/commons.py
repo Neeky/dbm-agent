@@ -59,7 +59,7 @@ def export_cmds_to_path(basedir: Path = None):
         lines = [line for line in f]
 
     # 检查是否已经导出了
-    export_str = "export PATH={}/bin:$PATH".format(basedir)
+    export_str = "export PATH={}/bin:$PATH\n".format(basedir)
     if export_str in lines:
         logging.info("has exported.")
         return

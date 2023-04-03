@@ -1,0 +1,147 @@
+[mysql]
+auto-rehash
+socket                              ={{socket}}                            
+
+
+[mysqld]
+####: for global
+user                                ={{ user }}                             
+basedir                             ={{ basedir }}                          
+datadir                             ={{ datadir }}                          
+server_id                           ={{ server_id }}                        
+port                                ={{ port }} 
+pid_file                            ={{ pid_file }}                              
+character_set_server                =utf8             
+log_bin_trust_function_creators     ={{ log_bin_trust_function_creators }}  
+max_prepared_stmt_count             ={{ max_prepared_stmt_count }}          
+log_timestamps                      ={{ log_timestamps }}                   
+socket                              ={{ socket }}                           
+read_only                           ={{ read_only }}                        
+skip_name_resolve                   ={{ skip_name_resolve }}                
+auto_increment_increment            ={{ auto_increment_increment }}         
+auto_increment_offset               ={{ auto_increment_offset }}            
+lower_case_table_names              ={{ lower_case_table_names }}           
+secure_file_priv                    =null                                   
+open_files_limit                    ={{ open_files_limit }}                 
+max_connections                     ={{ max_connections }}                  
+thread_cache_size                   ={{ thread_cache_size }}                
+table_open_cache                    ={{ table_open_cache }}                 
+table_definition_cache              ={{ table_definition_cache }}           
+table_open_cache_instances          ={{ table_open_cache_instances }}       
+
+
+####: for binlog
+binlog_format                       ={{ binlog_format }}                            
+log_bin                             ={{ log_bin }}                                  
+binlog_rows_query_log_events        ={{ binlog_rows_query_log_events }}             
+log_slave_updates                   ={{ log_slave_updates }}                        
+expire_logs_days                    ={{ expire_logs_days }}                         
+binlog_cache_size                   ={{ binlog_cache_size }}                        
+binlog_checksum                     ={{ binlog_checksum }}                          
+sync_binlog                         ={{ sync_binlog }}                              
+slave_preserve_commit_order         ={{ slave_preserve_commit_order }}              
+
+
+####: for error-log
+log_error                           ={{ log_error }}                                
+
+
+####: for general-log
+general_log                         ={{ general_log }}                              
+general_log_file                    ={{ general_log_file }}                         
+
+
+####: for slow query log
+slow_query_log                      ={{ slow_query_log }}                           
+slow_query_log_file                 ={{ slow_query_log_file}}                       
+log_queries_not_using_indexes       ={{ log_queries_not_using_indexes }}            
+long_query_time                     ={{ long_query_time }}                          
+
+
+####: for gtid
+gtid_executed_compression_period    ={{ gtid_executed_compression_period }}         
+gtid_mode                           ={{ gtid_mode }}                                
+enforce_gtid_consistency            ={{ enforce_gtid_consistency }}                 
+
+
+####: for replication
+skip_slave_start                        ={{ skip_slave_start }}                         
+master_info_repository                  ={{ master_info_repository }}                   
+relay_log_info_repository               ={{ relay_log_info_repository }}                
+slave_parallel_type                     ={{ slave_parallel_type }}                      
+slave_parallel_workers                  ={{ slave_parallel_workers }}                   
+rpl_semi_sync_master_enabled            ={{ rpl_semi_sync_master_enabled }}             
+rpl_semi_sync_slave_enabled             ={{ rpl_semi_sync_slave_enabled }}              
+rpl_semi_sync_master_timeout            ={{ rpl_semi_sync_master_timeout }}             
+plugin_load_add                         =semisync_master.so                             
+plugin_load_add                         =semisync_slave.so                              
+binlog_group_commit_sync_delay          ={{ binlog_group_commit_sync_delay }}                           
+binlog_group_commit_sync_no_delay_count ={{ binlog_group_commit_sync_no_delay_count }}             
+binlog_transaction_dependency_tracking  ={{ binlog_transaction_dependency_tracking }}              
+transaction_write_set_extraction        ={{ transaction_write_set_extraction }}                    
+
+
+
+####: for innodb
+default_storage_engine                          ={{ default_storage_engine }}                       
+default_tmp_storage_engine                      ={{ default_tmp_storage_engine }}                   
+innodb_data_file_path                           ={{ innodb_data_file_path }}                        
+innodb_temp_data_file_path                      ={{ innodb_temp_data_file_path }}                   
+innodb_buffer_pool_filename                     ={{ innodb_buffer_pool_filename }}                                     
+innodb_log_files_in_group                       ={{ innodb_log_files_in_group }}                    
+innodb_log_file_size                            ={{ innodb_log_file_size }}                         
+innodb_file_per_table                           ={{ innodb_file_per_table }}                        
+innodb_online_alter_log_max_size                ={{ innodb_online_alter_log_max_size }}             
+innodb_open_files                               ={{ innodb_open_files }}                            
+innodb_page_size                                ={{ innodb_page_size }}                             
+innodb_thread_concurrency                       ={{ innodb_thread_concurrency }}                    
+innodb_read_io_threads                          ={{ innodb_read_io_threads }}                       
+innodb_write_io_threads                         ={{ innodb_write_io_threads }}                      
+innodb_purge_threads                            ={{ innodb_purge_threads }}                         
+innodb_page_cleaners                            ={{ innodb_page_cleaners }}                         
+innodb_print_all_deadlocks                      ={{ innodb_print_all_deadlocks }}                   
+innodb_deadlock_detect                          ={{ innodb_deadlock_detect }}                       
+innodb_lock_wait_timeout                        ={{ innodb_lock_wait_timeout }}                     
+innodb_spin_wait_delay                          ={{ innodb_spin_wait_delay }}                       
+innodb_autoinc_lock_mode                        ={{ innodb_autoinc_lock_mode }}                     
+innodb_io_capacity                              ={{ innodb_io_capacity }}                           
+innodb_io_capacity_max                          ={{ innodb_io_capacity_max }}                       
+innodb_stats_auto_recalc                        ={{ innodb_stats_auto_recalc }}                     
+innodb_stats_persistent                         ={{ innodb_stats_persistent }}                      
+innodb_stats_persistent_sample_pages            ={{ innodb_stats_persistent_sample_pages }}         
+innodb_buffer_pool_instances                    ={{ innodb_buffer_pool_instances }}
+innodb_adaptive_hash_index                      ={{ innodb_adaptive_hash_index }}                   
+innodb_change_buffering                         ={{ innodb_change_buffering }}                      
+innodb_change_buffer_max_size                   ={{ innodb_change_buffer_max_size }}                
+innodb_flush_neighbors                          ={{ innodb_flush_neighbors }}                       
+innodb_doublewrite                              ={{ innodb_doublewrite }}                           
+innodb_log_buffer_size                          ={{innodb_log_buffer_size }}                        
+innodb_flush_log_at_timeout                     ={{ innodb_flush_log_at_timeout }}                  
+innodb_flush_log_at_trx_commit                  ={{ innodb_flush_log_at_trx_commit }}               
+innodb_buffer_pool_size                         ={{ innodb_buffer_pool_size }}                      
+autocommit                                      ={{ autocommit }}                                   
+innodb_old_blocks_pct                           ={{ innodb_old_blocks_pct }}                        
+innodb_old_blocks_time                          ={{ innodb_old_blocks_time }}                       
+innodb_read_ahead_threshold                     ={{ innodb_read_ahead_threshold }}                  
+innodb_random_read_ahead                        ={{ innodb_random_read_ahead }}                     
+innodb_buffer_pool_dump_pct                     ={{ innodb_buffer_pool_dump_pct }}                  
+innodb_buffer_pool_dump_at_shutdown             ={{ innodb_buffer_pool_dump_at_shutdown }}          
+innodb_buffer_pool_load_at_startup              ={{ innodb_buffer_pool_load_at_startup }}           
+
+
+
+####  for performance_schema
+performance_schema                                                      ={{ performance_schema }}       
+performance_schema_consumer_global_instrumentation                      =ON                             
+performance_schema_consumer_thread_instrumentation                      =ON                             
+performance_schema_consumer_events_stages_current                       =ON                             
+performance_schema_consumer_events_stages_history                       =ON                             
+performance_schema_consumer_events_stages_history_long                  =OFF                            
+performance_schema_consumer_statements_digest                           =ON                             
+performance_schema_consumer_events_statements_current                   =ON                             
+performance_schema_consumer_events_statements_history                   =ON                             
+performance_schema_consumer_events_statements_history_long              =OFF                            
+performance_schema_consumer_events_waits_current                        =ON                             
+performance_schema_consumer_events_waits_history                        =ON                             
+performance_schema_consumer_events_waits_history_long                   =OFF                            
+performance_schema_instrument                                           ='memory/%=COUNTED'
