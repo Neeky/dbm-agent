@@ -6,10 +6,12 @@
 import re
 import logging
 import shutil
+import contextlib
+import mysql.connector
 from pathlib import Path
 from dbma.bil.fun import fname
-from dbma.bil.cmdexecutor import exe_shell_cmd
 from dbma.core import messages
+from dbma.bil.cmdexecutor import exe_shell_cmd
 from dbma.core.configs import dbm_agent_config
 
 
@@ -51,6 +53,55 @@ def pkg_to_basedir(pkg: Path = default_pkg):
     return Path("/usr/local") / (pkg.name.replace('.tar.gz', '').replace('.tar.xz', ''))
 
 
+@contextlib.contextmanager
+def dbma_mysql_cnx(port: int = 3306,
+                   user: str = dbm_agent_config.mysql_dbma_user,
+                   password: str = dbm_agent_config.mysql_dbma_password):
+    """建立到本地 MySQL 结点的短连接, 并返回 cursor 对象, 当连接遇到异常的时候返回 None .
+
+    Parameters:
+    -----------
+    port: int
+        MySQL 端口号
+
+    user: str
+        连接 MySQL 的用户名
+
+    password: str
+        连接 MySQL 的用户密码
+
+    Return:
+    -------
+    cursor
+    """
+    cnx = None
+    cursor = None
+    host = "127.0.0.1"
+    logging.info("dbma_mysql_cnx: connect to {}:{} .".format(host, port))
+    try:
+        # 连接数据库并返回游标
+        cnx = mysql.connector.connect(host=host, port=port, user=user,
+                                      password=password, autocommit=True)
+        cursor = cnx.cursor()
+        yield cursor
+    except mysql.connector.errors.Error as err:
+        # 连接异常的时候返回 None
+        logging.error(
+            "dbma_mysql_cnx: can't connect to {}:{}".format(host, port))
+        yield None
+    finally:
+        # 资源回收
+        try:
+            if cursor is not None:
+                cursor.close()
+            if cnx is not None:
+                cnx.close()
+        except (mysql.connector.errors.Error, Exception) as err:
+            # 如果 cursor 的接收缓冲区还有内容没有读的话，cursor.close() 会报异常 mysql.connector.errors.InternalError: Unread result found
+            logging.info("dbma_mysql_cnx: close cnx got error '{}' .".format(err))
+
+
+
 def export_cmds_to_path(basedir: Path = None):
     """根据 basedir 设置 PATH 环境变量
     """
@@ -86,9 +137,10 @@ def export_header_files(pkg: str = None):
 
     """
     logging.info(messages.FUN_STARTS.format(fname()))
-    
+
     # 检查是否已经导出过了
-    dst_include_dir = Path("/usr/include/") / "mysql-{}".format(get_mysql_version(pkg.name))
+    dst_include_dir = Path("/usr/include/") / \
+        "mysql-{}".format(get_mysql_version(pkg.name))
     logging.info("dst_include_dir = mysql-{}".format(dst_include_dir))
     if dst_include_dir.exists():
         # 执行到这里说明已经导出过了
@@ -98,7 +150,7 @@ def export_header_files(pkg: str = None):
 
     src_include_dir = Path(pkg_to_basedir(pkg)) / "include"
     logging.info("src_include_dir = {}".format(src_include_dir))
-    
+
     # 复制 include 目录
     shutil.copytree(src_include_dir, dst_include_dir)
 
@@ -108,23 +160,23 @@ def export_header_files(pkg: str = None):
 
 def export_so_files(pkg: Path = None):
     """导出 so 文件
-    
+
     Parameters:
     -----------
     pkg: str
         MySQL 安装包的大小
-        
+
     """
     logging.info(messages.FUN_STARTS.format(fname()))
-    
-    conf_file = Path("/etc/ld.so.conf.d") / "mysql-{}.conf".format(get_mysql_version(pkg.name))
+
+    conf_file = Path("/etc/ld.so.conf.d") / \
+        "mysql-{}.conf".format(get_mysql_version(pkg.name))
     if not conf_file.exists():
         with open(conf_file, 'w') as f:
             mysql_lib_dir = pkg_to_basedir(pkg) / "lib/"
             f.write(str(mysql_lib_dir))
             f.write("\n")
-            
+
     exe_shell_cmd("ldconfig")
-    
+
     logging.info(messages.FUN_ENDS.format(fname()))
-    
