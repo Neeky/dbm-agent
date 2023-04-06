@@ -9,6 +9,7 @@ import argparse
 from pathlib import Path
 from dbma.components.mysql.install import default_pkg
 from dbma.components.mysql.install import install_mysql, uninstall_mysql
+from dbma.components.mysql.replica import install_replica
 
 
 def parser_cmd_args():
@@ -21,6 +22,8 @@ def parser_cmd_args():
         '--pkg-name', type=str, default=default_pkg.name, help="mysql install package name default {}".format(default_pkg.name))
     parser.add_argument('--ibps', type=str, default='128M',
                         help="innodb-buffer-pool-size  et: 128M , 512M, 1G, 2G")
+    parser.add_argument('--source', type=str, default='',
+                        help="mysql source instance. et: '127.0.0.1:3306' ")
     parser.add_argument('action', type=str, choices=[
                         'master', 'slave', 'source', 'replica', 'uninstall'])
     args = parser.parse_args()
@@ -30,16 +33,32 @@ def parser_cmd_args():
 def main():
     #
     args = parser_cmd_args()
-
+    pkg = Path("/usr/local/dbm-agent/pkgs/") / args.pkg_name
+    port = args.port
+    innodb_buffer_pool_size = args.ibps
+    source=args.source
     logging.basicConfig(level=logging.INFO,
                         format="[%(asctime)s %(levelname)s] - [%(threadName)s] - [%(pathname)s %(lineno)d line]  ~  %(message)s")
 
     if args.action in ('master', 'source'):
-        pkg = Path("/usr/local/dbm-agent/pkgs/") / args.pkg_name
-        port = args.port
-        innodb_buffer_pool_size = args.ibps
         install_mysql(port=port, pkg=pkg,
-                      innodb_buffer_pool_size=innodb_buffer_pool_size)
+                      innodb_buffer_pool_size=innodb_buffer_pool_size, read_only=False)
+    elif args.action in ('slave', 'replica'):
+        if source == '':
+            logging.error("--source is missing , can't find master|source mysql instance .")
+            return 
+        
+        if ":" not in source:
+            logging.error("format error --source shuild be ip:port format. ")
+            return 
+        
+        # 解析出 master 实例的地址
+        source_ip, source_port = source.split(":")
+        source_port = int(source_port)
+        
+        # 配置 replica 实例
+        install_replica(port, pkg, innodb_buffer_pool_size, source_ip, source_port)
+        
     elif args.action == 'uninstall':
         uninstall_mysql(args.port)
 

@@ -170,7 +170,7 @@ class MySQLConfig(object):
     # region replication
     rpl_semi_sync_master_enabled: str = "ON"
     rpl_semi_sync_slave_enabled: str = "ON"
-    rpl_semi_sync_master_timeout: int = 10000
+    rpl_semi_sync_master_timeout: int = 1000
     rpl_semi_sync_master_wait_point: str = "AFTER_SYNC"
     rpl_semi_sync_master_wait_no_slave: str = "ON"
     rpl_semi_sync_master_wait_for_slave_count: int = 1

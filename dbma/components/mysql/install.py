@@ -420,7 +420,7 @@ def decompression_pkg(pkg: Path = default_pkg):
     logging.info(messages.FUN_ENDS.format(fname()))
 
 
-def create_mysql_config_file(port: int = 3306, basedir: Path = None, innodb_buffer_pool_size: str = "128M"):
+def create_mysql_config_file(port: int = 3306, basedir: Path = None, innodb_buffer_pool_size: str = "128M", read_only=True):
     """创建 MySQL 配置文件
 
     Parameter:
@@ -444,6 +444,11 @@ def create_mysql_config_file(port: int = 3306, basedir: Path = None, innodb_buff
 
     config = MySQLConfig(basedir=str(basedir), port=port,
                          innodb_buffer_pool_size=innodb_buffer_pool_size)
+    
+    if read_only == False:
+        config.read_only = 'OFF'
+        config.super_read_only = 'OFF'
+        
     config.calcu_second_attrs()
     config.generate_cnf_config_file()
     config.generate_init_cnf_config_file()
@@ -483,7 +488,7 @@ def init_mysql(port: int = 3306, basedir: Path = None):
     logging.info(messages.FUN_ENDS.format(fname()))
 
 
-def install_mysql(port: int = 3306, pkg: Path = None, innodb_buffer_pool_size: str = "128M"):
+def install_mysql(port: int = 3306, pkg: Path = None, innodb_buffer_pool_size: str = "128M", read_only=True):
     """安装 MySQL 实例
 
     Parameter:
@@ -533,7 +538,7 @@ def install_mysql(port: int = 3306, pkg: Path = None, innodb_buffer_pool_size: s
 
     # 第四步 创建配置文件
     create_mysql_config_file(port=port, basedir=basedir,
-                             innodb_buffer_pool_size=innodb_buffer_pool_size)
+                             innodb_buffer_pool_size=innodb_buffer_pool_size, read_only=read_only)
 
     # 第五步 复制 init 文件
     create_init_sql_file(version)
@@ -549,13 +554,13 @@ def install_mysql(port: int = 3306, pkg: Path = None, innodb_buffer_pool_size: s
 
     # 第八步 导出 PATH 环境变量
     export_cmds_to_path(basedir)
-    
+
     # 第九步 导出头文件
     export_header_files(pkg)
-    
+
     # 第十步 导出 so 文件
     export_so_files(pkg)
-    
+
     # 清理 init-sql
     remove_init_sql_file()
 
