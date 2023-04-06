@@ -44,9 +44,14 @@ class DBMAgentConfig(object):
     mysql_user_prefix: str = "mysql"
     mysql_default_version: str = "8.0.32"
 
-    # hiden
+    mysql_dbma_user: str = "dbma"
+    mysql_dbma_password: str = "dbma@0352"
+    # mysql_consts
+    mysql_repl_user: str = "repl"
+    mysql_repl_password: str = "2-4nw9A0-459st36"
     mysql_init_cnf: str = "/tmp/mysql-init.cnf"
     mysql_init_user_sql_file: str = "/tmp/mysql-init-user.sql"
+
 
     def make_register_data(self):
         """
