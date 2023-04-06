@@ -10,3 +10,4 @@ dbm_agent.egg-info
 .coverage
 .backups/*
 htmlcov
+.pytest_cache
