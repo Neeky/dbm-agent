@@ -22,32 +22,43 @@ threads = ThreadPoolExecutor(max_workers=2, thread_name_prefix="backends")
 
 
 def registor_agent_to_center():
-    """注册 agent 的信息到 dbm-center
-    """
+    """注册 agent 的信息到 dbm-center"""
     while keep_threads_running:
         try:
-            logging.info("agent ifo  = {} .".format(dbm_agent_config.make_register_data()))
-            response = requests.post(dbm_center_url_config.register_agent_url, json=dbm_agent_config.make_register_data())
+            logging.info(
+                "agent ifo  = {} .".format(dbm_agent_config.make_register_data())
+            )
+            response = requests.post(
+                dbm_center_url_config.register_agent_url,
+                json=dbm_agent_config.make_register_data(),
+            )
             data = response.json()
-            if data['message'].startswith("UNIQUE constraint failed: agents_agent.host"):
+            if data["message"].startswith(
+                "UNIQUE constraint failed: agents_agent.host"
+            ):
                 logging.info("agent has been registed. ")
         except ConnectionError as err:
-            logging.info("register agent info to dbm-center '{}' got ConnectionError. maybe dbm-center is done. .".format(dbm_center_url_config.register_agent_url))
+            logging.info(
+                "register agent info to dbm-center '{}' got ConnectionError. maybe dbm-center is done. .".format(
+                    dbm_center_url_config.register_agent_url
+                )
+            )
         except Exception as err:
-            logging.error("registor_agent_to_center fail err-type {}.".format(type(err)))
+            logging.error(
+                "registor_agent_to_center fail err-type {}.".format(type(err))
+            )
             logging.exception(err)
         # 默认 15 分钟注册一次
         time.sleep(dbm_agent_config.backends_register_time_interval)
 
 
 def _stop_threads():
-    """关闭后台任务
-    """
+    """关闭后台任务"""
     global keep_threads_running
     keep_threads_running = False
 
+
 def start_cycle_tasks():
-    """提交所有后台任务到线程池
-    """
+    """提交所有后台任务到线程池"""
     threads.submit(registor_agent_to_center)
     atexit.register(_stop_threads)

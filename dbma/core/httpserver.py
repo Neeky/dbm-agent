@@ -16,9 +16,9 @@ from dbma.core.configs import DBMAgentConfig
 from dbma.core.views import dbmagentview as _
 from dbma.components.mysql.views import defaultsview as _
 
+
 def start():
-    """
-    """
+    """ """
     # 检查用户
     if not is_root():
         print("please use root use run this program! ")
@@ -41,20 +41,27 @@ def start():
 
     # 配置日志
     levels = {
-        'info': logging.INFO,
-        'debug': logging.DEBUG,
-        'error': logging.ERROR,
-        'warn': logging.WARN
+        "info": logging.INFO,
+        "debug": logging.DEBUG,
+        "error": logging.ERROR,
+        "warn": logging.WARN,
     }
-    handler = RotatingFileHandler(filename=dbm_agent_config.log_file,
-                                  maxBytes=128 * 1024 * 1024, backupCount=8, encoding="utf8")
-    logging.basicConfig(handlers=[handler], level=levels[dbm_agent_config.log_level],
-                        format="[%(asctime)s %(levelname)s] - [%(threadName)s] - [%(pathname)s %(lineno)d line]  ~  %(message)s")
+    handler = RotatingFileHandler(
+        filename=dbm_agent_config.log_file,
+        maxBytes=128 * 1024 * 1024,
+        backupCount=8,
+        encoding="utf8",
+    )
+    logging.basicConfig(
+        handlers=[handler],
+        level=levels[dbm_agent_config.log_level],
+        format="[%(asctime)s %(levelname)s] - [%(threadName)s] - [%(pathname)s %(lineno)d line]  ~  %(message)s",
+    )
 
     # 服务启动的日志头
-    logging.info('-' * 21)
+    logging.info("-" * 21)
     logging.info("| start dbm-agent . |")
-    logging.info('-' * 21)
+    logging.info("-" * 21)
     logging.info("logging-level {}".format(dbm_agent_config.log_level))
 
     # 启动后台线程
@@ -69,7 +76,6 @@ def start():
 
 
 def stop():
-    """关闭 dbm-agent 服务
-    """
+    """关闭 dbm-agent 服务"""
     dbm_agent_config = DBMAgentConfig()
     stop_daemon(dbm_agent_config.pid_file)

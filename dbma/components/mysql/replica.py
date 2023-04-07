@@ -54,7 +54,12 @@ def get_start_replica_stmt(version: str = None):
     return stmt
 
 
-def change_replica_to(port: int = None, version: str = None, source_ip: str = None, source_port: int = None):
+def change_replica_to(
+    port: int = None,
+    version: str = None,
+    source_ip: str = None,
+    source_port: int = None,
+):
     """变更复制关系
 
     Parameters:
@@ -73,19 +78,27 @@ def change_replica_to(port: int = None, version: str = None, source_ip: str = No
     None
     """
     logging.info(messages.FUN_STARTS.format(fname()))
-    
+
     stmt = get_change_source_stmt(version)
-    stmt = stmt.format(dbm_agent_config.mysql_repl_user, 
-                       dbm_agent_config.mysql_repl_password,
-                       source_ip, source_port)
+    stmt = stmt.format(
+        dbm_agent_config.mysql_repl_user,
+        dbm_agent_config.mysql_repl_password,
+        source_ip,
+        source_port,
+    )
     with dbma_mysql_cnx(port) as cursor:
         cursor.execute(stmt)
         logging.info(stmt)
-    
+
     logging.info(messages.FUN_ENDS.format(fname()))
-    
-            
-def start_replica(port: int = None, version: str = None, source_ip: str = None, source_port: int = None):
+
+
+def start_replica(
+    port: int = None,
+    version: str = None,
+    source_ip: str = None,
+    source_port: int = None,
+):
     """变更复制关系
 
     Parameters:
@@ -104,16 +117,22 @@ def start_replica(port: int = None, version: str = None, source_ip: str = None, 
     None
     """
     logging.info(messages.FUN_STARTS.format(fname()))
-    
+
     stmt = get_start_replica_stmt(version)
     with dbma_mysql_cnx(port) as cursor:
         cursor.execute(stmt)
         logging.info(stmt)
-    
+
     logging.info(messages.FUN_ENDS.format(fname()))
 
 
-def install_replica(port: int = 3306, pkg: Path = None, innodb_buffer_pool_size: str = "128M", source_ip: str = None, source_port: int = None):
+def install_replica(
+    port: int = 3306,
+    pkg: Path = None,
+    innodb_buffer_pool_size: str = "128M",
+    source_ip: str = None,
+    source_port: int = None,
+):
     """安装 MySQL Replica 结点
 
     Paramters:
@@ -128,15 +147,15 @@ def install_replica(port: int = 3306, pkg: Path = None, innodb_buffer_pool_size:
         innodb_buffer_pool_size 的大小
 
     source_ip: str
-        Source 实例的主机 ip 
+        Source 实例的主机 ip
 
     source_port: int
         Source 实例的端口
     """
     logging.info(messages.FUN_STARTS.format(fname()))
-    
+
     version = get_mysql_version(pkg.name)
-    
+
     # 第一步安装 MySQL Replica 结点
     install_mysql(port, pkg, innodb_buffer_pool_size, read_only=True)
 
@@ -146,8 +165,8 @@ def install_replica(port: int = 3306, pkg: Path = None, innodb_buffer_pool_size:
 
     # 第二步执行 change-master-to
     change_replica_to(port, version, source_ip=source_ip, source_port=source_port)
-    
+
     # 第三步执行 start-replica
     start_replica(port, version, source_ip=source_ip, source_port=source_port)
-    
+
     logging.info(messages.FUN_ENDS.format(fname()))

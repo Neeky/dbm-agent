@@ -22,8 +22,8 @@ from dbma.components.mysql.exceptions import MySQLTemplateFileNotExistsException
 
 
 class MySQLTemplateTypes(Enum):
-    """定义配置文件模板类型
-    """
+    """定义配置文件模板类型"""
+
     # MySQL 配置文件
     MYSQL_CONFIG_FILE = 1
 
@@ -36,8 +36,8 @@ class MySQLTemplateTypes(Enum):
 
 @dataclass
 class MySQLConfig(object):
-    """MySQL 配置文件的动态生成
-    """
+    """MySQL 配置文件的动态生成"""
+
     # basic
     basedir: str = None
     port: str = None
@@ -315,8 +315,7 @@ class MySQLConfig(object):
     # endregion ps
 
     def calcu_second_attrs(self):
-        """根据已有的配置推导出相关的其它配置
-        """
+        """根据已有的配置推导出相关的其它配置"""
         logging.info(messages.FUN_STARTS.format(fname()))
 
         self._calcu_deps_port()
@@ -346,14 +345,15 @@ class MySQLConfig(object):
         # 检查目录是否存在
         if not Path(target_dir).exists():
             logging.error(
-                "dir '{}' not exists, skip save config to it .".format(target_dir))
+                "dir '{}' not exists, skip save config to it .".format(target_dir)
+            )
             logging.info(messages.FUN_ENDS.format(fname()))
             return
 
         # 保存到给定目录
         logging.info("write config file to '{}' .".format(json_file))
         json_data = asdict(self)
-        with open(json_file, 'w') as f:
+        with open(json_file, "w") as f:
             f.write(json.dumps(json_data, indent=4))
 
         logging.info(messages.FUN_ENDS.format(fname()))
@@ -379,40 +379,47 @@ class MySQLConfig(object):
 
         # 根据需要的配置文件类型返回模板文件(Path)
         import dbma
+
         if mtt == MySQLTemplateTypes.MYSQL_CONFIG_FILE:
-            template_file = Path(dbma.__file__).parent / \
-                "static/cnfs/mysql-{}.cnf.jinja".format(self.version)
+            template_file = Path(
+                dbma.__file__
+            ).parent / "static/cnfs/mysql-{}.cnf.jinja".format(self.version)
             # dbm-agent 只对 5.7.x 提供有限的支持、配置文件的模板最高为 5.7.25 、也就是说所有的版本都用这个一个模板
             if self.version.startswith("5.7"):
-                template_file = Path(dbma.__file__).parent / \
-                    "static/cnfs/mysql-{}.cnf.jinja".format("5.7.25")
-                logging.info("5.7.xx version well using config template {}".format(template_file))
-                
+                template_file = Path(
+                    dbma.__file__
+                ).parent / "static/cnfs/mysql-{}.cnf.jinja".format("5.7.25")
+                logging.info(
+                    "5.7.xx version well using config template {}".format(template_file)
+                )
+
         elif mtt == MySQLTemplateTypes.MYSQL_INIT_CONFIG_FILE:
             short_version = "8.0" if self.version.startswith("8.0") else "5.7"
-            template_file = Path(dbma.__file__).parent / \
-                "static/cnfs/mysql-{}-init-only.jinja".format(short_version)
+            template_file = Path(
+                dbma.__file__
+            ).parent / "static/cnfs/mysql-{}-init-only.jinja".format(short_version)
         elif mtt == MySQLTemplateTypes.MYSQL_SYSTEMD_FILE:
-            template_file = Path(dbma.__file__).parent / \
-                "static/cnfs/mysqld.service.jinja"
+            template_file = (
+                Path(dbma.__file__).parent / "static/cnfs/mysqld.service.jinja"
+            )
         logging.info("using template file {}".format(template_file))
-        
+
         # 检查一下是否存在
         if template_file.exists():
             logging.info(messages.FUN_ENDS.format(fname()))
             return template_file
-        
+
         logging.warning("template file '{}' not exists ".format(template_file))
         raise MySQLTemplateFileNotExistsException(template_file)
 
     def render_mysql_template(self, template: str = None):
         """渲染给定的 template 文件
-        
+
         Parameters:
         -----------
         template: str
             模板文件的文字内容
-        
+
         Return:
         -------
         str
@@ -427,32 +434,30 @@ class MySQLConfig(object):
             logging.error("template not exists .")
             return
 
-        with open(template, 'r') as f:
+        with open(template, "r") as f:
             content = f.read()
 
         t = Template(content)
         logging.info(messages.FUN_ENDS.format(fname()))
         return t.render(asdict(self))
-    
 
     def generate_cnf_config_file(self):
-        """ 生成配置文件  /etc/my-{port}-cnf
-        """
+        """生成配置文件  /etc/my-{port}-cnf"""
         logging.info(messages.FUN_STARTS.format(fname()))
         # 根据版本号加载配置文件模板
         # 渲染模板
         # 保存渲染后的内容到文件
         try:
             tempate = self.find_mysql_template_file(
-                MySQLTemplateTypes.MYSQL_CONFIG_FILE)
+                MySQLTemplateTypes.MYSQL_CONFIG_FILE
+            )
         except MySQLTemplateFileNotExistsException as err:
-            logging.error(
-                "cannot generate cnf config file, becuase {}".format(err))
+            logging.error("cannot generate cnf config file, becuase {}".format(err))
             raise err
 
         content = self.render_mysql_template(tempate)
 
-        with open(Path("/etc/my-{}.cnf".format(self.port)), 'w') as f:
+        with open(Path("/etc/my-{}.cnf".format(self.port)), "w") as f:
             f.write(content)
         logging.info(messages.FUN_ENDS.format(fname()))
 
@@ -469,35 +474,36 @@ class MySQLConfig(object):
         # 查询 mysql-init 的配置文件模板
         try:
             tempate = self.find_mysql_template_file(
-                MySQLTemplateTypes.MYSQL_INIT_CONFIG_FILE)
+                MySQLTemplateTypes.MYSQL_INIT_CONFIG_FILE
+            )
         except MySQLTemplateFileNotExistsException as err:
-            logging.error(
-                "cannot generate cnf config file, becuase {}".format(err))
+            logging.error("cannot generate cnf config file, becuase {}".format(err))
             raise err
 
         content = self.render_mysql_template(tempate)
 
-        with open(Path(dbm_agent_config.mysql_init_cnf), 'w') as f:
+        with open(Path(dbm_agent_config.mysql_init_cnf), "w") as f:
             f.write(content)
 
         logging.info("starts generate init cnf config file .")
 
     def generate_systemd_cnf_config(self):
-        """
-        """
+        """ """
         logging.info("starts generate systemd config file .")
         # 查询 mysql-init 的配置文件模板
         try:
             tempate = self.find_mysql_template_file(
-                MySQLTemplateTypes.MYSQL_SYSTEMD_FILE)
+                MySQLTemplateTypes.MYSQL_SYSTEMD_FILE
+            )
         except MySQLTemplateFileNotExistsException as err:
-            logging.error(
-                "cannot generate cnf config file, becuase {}".format(err))
+            logging.error("cannot generate cnf config file, becuase {}".format(err))
             raise err
 
         content = self.render_mysql_template(tempate)
 
-        with open(Path("/usr/lib/systemd/system/mysqld-{}.service".format(self.port)), 'w') as f:
+        with open(
+            Path("/usr/lib/systemd/system/mysqld-{}.service".format(self.port)), "w"
+        ) as f:
             f.write(content)
 
         logging.info("ends generate systemd config file .")
@@ -512,16 +518,18 @@ class MySQLConfig(object):
         # 目前 json 模块还不支持序列化 Path 对象，所以这里统一用 str 来表示路径
         self.user = dbm_agent_config.mysql_user_prefix + str(self.port)
         self.datadir = os.path.join(
-            dbm_agent_config.mysql_datadir_parent, str(self.port))
+            dbm_agent_config.mysql_datadir_parent, str(self.port)
+        )
         self.admin_port = self.port * 10 + 2
         self.mysqlx_port = self.port * 10
         self.log_bin = os.path.join(
-            dbm_agent_config.mysql_binlogdir_parent, str(self.port)+"/binlog")
+            dbm_agent_config.mysql_binlogdir_parent, str(self.port) + "/binlog"
+        )
 
         # 跟据 datadir 计算 socket 文件的位置
-        self.socket = os.path.join(self.datadir, 'mysql.sock')
-        self.mysqlx_socket = os.path.join(self.datadir, 'mysqlx.sock')
-        self.pid_file = os.path.join(self.datadir, 'mysql.pid')
+        self.socket = os.path.join(self.datadir, "mysql.sock")
+        self.mysqlx_socket = os.path.join(self.datadir, "mysqlx.sock")
+        self.pid_file = os.path.join(self.datadir, "mysql.pid")
 
         logging.info("set user to {} .".format(self.user))
         logging.info("set datadir to {} .".format(self.datadir))
@@ -530,13 +538,11 @@ class MySQLConfig(object):
         logging.info("ends _calcu_dep_port fun . ")
 
     def _calcu_random_attrs(self):
-        """生成随机值
-        """
+        """生成随机值"""
         self.server_id = random.randint(1024, 8192)
 
     def _calcu_deps_mem(self):
-        """计算内存相关的值
-        """
+        """计算内存相关的值"""
         if self.innodb_buffer_pool_size.endswith("M"):
             # M 级别
             self.innodb_buffer_pool_instances = 1
@@ -562,8 +568,6 @@ class MySQLConfig(object):
                 self.innodb_log_buffer_size = "1G"
 
     def _calcu_deps_basedir(self):
-        """根据 basedir 计算出 MySQL 的 version
-        """
-        m = re.search(
-            r"mysql-(?P<version>\d{1}.\d{1,2}.\d{1,2})-linux", self.basedir)
+        """根据 basedir 计算出 MySQL 的 version"""
+        m = re.search(r"mysql-(?P<version>\d{1}.\d{1,2}.\d{1,2})-linux", self.basedir)
         self.version = m.group("version")

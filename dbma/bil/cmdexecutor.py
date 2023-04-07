@@ -7,7 +7,8 @@
 import subprocess
 from dbma.bil.sudos import sudo
 
-def exe_shell_cmd(cmd:str):
+
+def exe_shell_cmd(cmd: str):
     """以 root 身份执行命令
 
     Parameter

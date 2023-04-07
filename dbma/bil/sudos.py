@@ -10,10 +10,10 @@ from threading import RLock
 
 _user_sudo_lock = RLock()
 
+
 @contextlib.contextmanager
 def sudo(message="sudo"):
-    """临时升级权限到 root .
-    """
+    """临时升级权限到 root ."""
     # 对于权限这个临界区的访问要串行化
     with _user_sudo_lock as lk:
         # 得到当前进程的 euid

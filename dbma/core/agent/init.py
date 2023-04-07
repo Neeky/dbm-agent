@@ -15,11 +15,13 @@ from dbma.core.configs import DBM_AGENT_BASE_DIR, DBMAgentConfig
 from dbma.bil.net import get_ip_by_card_name
 
 
-def init(net_card_name:str, dbm_center_url_prefix:str):
-    """安装 dbm-agent
-    """
+def init(net_card_name: str, dbm_center_url_prefix: str):
+    """安装 dbm-agent"""
     # 配置日志
-    logging.basicConfig(level=logging.INFO, format="[%(asctime)s %(levelname)s] - [%(threadName)s] - [%(pathname)s %(lineno)d line]  ~  %(message)s")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(asctime)s %(levelname)s] - [%(threadName)s] - [%(pathname)s %(lineno)d line]  ~  %(message)s",
+    )
     logging.info("start install dbm-agent .")
 
     # 检查给定的网卡是否存在
@@ -38,7 +40,7 @@ def init(net_card_name:str, dbm_center_url_prefix:str):
     logging.info("prepare create directions .")
     if not DBM_AGENT_BASE_DIR.exists():
         DBM_AGENT_BASE_DIR.mkdir()
-    
+
     for subdir in ("etc", "pkgs", "logs", "etc/templates"):
         item = DBM_AGENT_BASE_DIR / subdir
         if not item.exists():
@@ -48,6 +50,7 @@ def init(net_card_name:str, dbm_center_url_prefix:str):
     # 复制模板文件
     logging.info("prepare copy template files .")
     import dbma
+
     basedir = Path(dbma.__file__).parent
     src = basedir / "static/cnfs/"
     dest = DBM_AGENT_BASE_DIR / "etc/templates"
@@ -64,4 +67,6 @@ def init(net_card_name:str, dbm_center_url_prefix:str):
     dbma_user.chown(DBM_AGENT_BASE_DIR)
 
     # 给到启动 dbm-agent 的命令提示
-    logging.info("install dbm-agent done . \n dbm-agent start \n to start dbm-agent service . ")
+    logging.info(
+        "install dbm-agent done . \n dbm-agent start \n to start dbm-agent service . "
+    )

@@ -10,7 +10,7 @@ from datetime import datetime
 import atexit
 
 
-__ALL__ = ['start_daemon', 'stop_daemon']
+__ALL__ = ["start_daemon", "stop_daemon"]
 
 
 def auto_clean_pid(fileno, pid_file):
@@ -22,8 +22,7 @@ def auto_clean_pid(fileno, pid_file):
 
 
 def signal_handler(sig, _):
-    """定义信息处理逻辑
-    """
+    """定义信息处理逻辑"""
     if sig == signal.SIGINT or sig == signal.SIGTERM:
         # signal.SIGINT == 2
         # signal.SIGTERM == 15
@@ -31,11 +30,9 @@ def signal_handler(sig, _):
 
 
 def write_pid_file(pid, pid_file):
-    """创建 pid 文件并向其中写入 pid，成功返回 0 异常返回 1
-    """
+    """创建 pid 文件并向其中写入 pid，成功返回 0 异常返回 1"""
     # 取得 pid 文件的文件描述符
-    pid_desc = os.open(pid_file, os.O_CREAT | os.O_RDWR,
-                       stat.S_IRUSR | stat.S_IWUSR)
+    pid_desc = os.open(pid_file, os.O_CREAT | os.O_RDWR, stat.S_IRUSR | stat.S_IWUSR)
     try:
         fcntl.lockf(pid_desc, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except IOError as err:
@@ -46,15 +43,14 @@ def write_pid_file(pid, pid_file):
     # 清空 pid 文件
     os.truncate(pid_desc, 0)
     s_pid = str(pid)
-    os.write(pid_desc, s_pid.encode('utf8'))
+    os.write(pid_desc, s_pid.encode("utf8"))
     atexit.register(auto_clean_pid, pid_desc, pid_file)
     return 0
     # 注意 pid 文件不应该被 close ，因为如果 close 的话其它进程就查询不到是否有进程在用着它了，pid 文件应该是独占的
 
 
 def start_server(pid_file="/tmp/daemon.pid"):
-    """启动服务并把 pid 写入到 pid 文件
-    """
+    """启动服务并把 pid 写入到 pid 文件"""
     # 注册信号处理函数
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
@@ -69,7 +65,7 @@ def start_server(pid_file="/tmp/daemon.pid"):
 
     # 如果是父进程它上一个 if 就已经退出了，所以不不会执行到这个，也就是说下面的代码都是子进程的逻辑
     ppid = os.getppid()  # 获取父进程的 id
-    pid = os.getpid()   # 获取自己的进程 id
+    pid = os.getpid()  # 获取自己的进程 id
 
     if write_pid_file(pid, pid_file) != 0:
         # 如果执行到这里说明守护进程已经存在了
@@ -86,8 +82,7 @@ def start_server(pid_file="/tmp/daemon.pid"):
 
 
 def stop_server(pid_file="/tmp/daemon.pid"):
-    """退出守护进程并删除 pid 文件,并且退出当前程序
-    """
+    """退出守护进程并删除 pid 文件,并且退出当前程序"""
     try:
         with open(pid_file) as pid_file_ojb:
             s_pid = pid_file_ojb.read()

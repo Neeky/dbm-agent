@@ -10,6 +10,7 @@ import grp
 from dbma.bil.cmdexecutor import exe_shell_cmd
 from dbma.bil.sudos import sudo
 
+
 def is_root() -> bool:
     """
     检查当前的 euser 是不是 root
@@ -57,6 +58,7 @@ def is_group_exists(group: str) -> bool:
     except TypeError as err:
         return False
 
+
 def get_uid_gid(user_name):
     """
     返回给定用户的 (uid,gid) 组成的元组. 如果给定的用户不存在就返回 (0,0)
@@ -69,16 +71,15 @@ def get_uid_gid(user_name):
 
 
 class Identify(object):
-    """
-    """
+    """ """
+
     _not_implement_message = "please impolement it in sub class ."
 
     # 标识名(用户名 | 组名)
-    name = ''
+    name = ""
 
     def __init__(self, name):
-        """
-        """
+        """ """
         self.name = name
 
     def create_shell_str(self) -> str:
@@ -104,7 +105,7 @@ class Identify(object):
 
         Return
         ------
-            bool  
+            bool
         """
         raise NotImplementedError(self._not_implement_message)
 
@@ -131,8 +132,8 @@ class Identify(object):
 
 
 class BaseGroup(Identify):
-    """所有操作系统用户属组的基类
-    """
+    """所有操作系统用户属组的基类"""
+
     def __init__(self, name):
         Identify.__init__(self, name)
 
@@ -150,26 +151,26 @@ class BaseGroup(Identify):
 
     def __str__(self):
         return f"{self.name}"
-    
+
 
 class BaseUser(Identify):
-    """所有用户的基类
-    """
-    group = None
-    home = ''
+    """所有用户的基类"""
 
-    def __init__(self, name, home=''):
-        Identify.__init__(self,name)
+    group = None
+    home = ""
+
+    def __init__(self, name, home=""):
+        Identify.__init__(self, name)
 
         # 添加定制 home-dir 的支持
         self.home = home
 
     def create_shell_str(self) -> str:
-        if self.home == '':
+        if self.home == "":
             return f"useradd {self.name} -g {self.group.name}"
         else:
             return f"useradd {self.name} -g {self.group.name} -d {self.home}"
-    
+
     def drop_shell_str(self) -> str:
         return f"userdel {self.name}"
 
@@ -185,8 +186,7 @@ class BaseUser(Identify):
         Identify.create(self)
 
     def chown(self, path, recursive=True):
-        """
-        """
+        """ """
         if recursive == True:
             cmd = f"chown -R {str(self)} {path}"
         else:
@@ -194,8 +194,7 @@ class BaseUser(Identify):
 
         with sudo():
             exe_shell_cmd(cmd)
-            
-        
+
     def __str__(self):
         """
         返回 user:group 的形式
@@ -204,15 +203,15 @@ class BaseUser(Identify):
 
 
 class DBMAGroup(BaseGroup):
-    """
-    """
+    """ """
+
     def __init__(self, name="dbma"):
-        BaseGroup.__init__(self,name)
+        BaseGroup.__init__(self, name)
 
 
 class DBMAUser(BaseUser):
-    """
-    """
+    """ """
+
     group = DBMAGroup()
 
     def __init__(self, name="dbma"):
@@ -220,19 +219,19 @@ class DBMAUser(BaseUser):
 
 
 class MySQLGroup(BaseGroup):
-    def __init__(self,name="mysql"):
-        BaseGroup.__init__(self,name)
+    def __init__(self, name="mysql"):
+        BaseGroup.__init__(self, name)
 
 
 class MySQLUser(BaseUser):
-    """
-    """
+    """ """
+
     # MySQL 端口
     port = 3306
     # 所有的 MySQL 都共用一个 MySQL 组
     group = MySQLGroup()
 
-    def __init__(self,port:int=3306):
+    def __init__(self, port: int = 3306):
         """根据 MySQL 监听的端口创建用户
 
         Parameter
@@ -241,14 +240,13 @@ class MySQLUser(BaseUser):
         """
         self.name = f"mysql{port}"
         self.port = port
-        BaseUser.__init__(self,self.name)
-    
+        BaseUser.__init__(self, self.name)
+
     def create(self):
-        """创建 MySQL 实例用户(如果属组不存在就先创建属组)
-        """
+        """创建 MySQL 实例用户(如果属组不存在就先创建属组)"""
         if self.group.is_exists() == False:
             self.group.create()
-        
+
         BaseUser.create(self)
 
     def __str__(self):
@@ -256,10 +254,10 @@ class MySQLUser(BaseUser):
 
 
 class RootGroup(BaseGroup):
-    """
-    """    
+    """ """
+
     def __init__(self, name="root"):
-        BaseGroup.__init__(self,name)
+        BaseGroup.__init__(self, name)
 
     def drop(self):
         """
@@ -270,9 +268,9 @@ class RootGroup(BaseGroup):
 
 class RootUser(BaseUser):
     group = RootGroup()
-    
+
     def __init__(self):
-        BaseGroup.__init__(self,"root")
+        BaseGroup.__init__(self, "root")
 
     def drop(self):
         """

@@ -15,8 +15,11 @@ from dbma.bil.cmdexecutor import exe_shell_cmd
 from dbma.core.configs import dbm_agent_config
 
 
-default_pkg = Path("/usr/local/dbm-agent/pkgs/mysql-{}-linux-glibc2.12-x86_64.tar.xz".format(
-    dbm_agent_config.mysql_default_version))
+default_pkg = Path(
+    "/usr/local/dbm-agent/pkgs/mysql-{}-linux-glibc2.12-x86_64.tar.xz".format(
+        dbm_agent_config.mysql_default_version
+    )
+)
 
 
 def get_mysql_version(pkg_name: str = None):
@@ -50,13 +53,15 @@ def pkg_to_basedir(pkg: Path = default_pkg):
     -------
         Path
     """
-    return Path("/usr/local") / (pkg.name.replace('.tar.gz', '').replace('.tar.xz', ''))
+    return Path("/usr/local") / (pkg.name.replace(".tar.gz", "").replace(".tar.xz", ""))
 
 
 @contextlib.contextmanager
-def dbma_mysql_cnx(port: int = 3306,
-                   user: str = dbm_agent_config.mysql_dbma_user,
-                   password: str = dbm_agent_config.mysql_dbma_password):
+def dbma_mysql_cnx(
+    port: int = 3306,
+    user: str = dbm_agent_config.mysql_dbma_user,
+    password: str = dbm_agent_config.mysql_dbma_password,
+):
     """建立到本地 MySQL 结点的短连接, 并返回 cursor 对象, 当连接遇到异常的时候返回 None .
 
     Parameters:
@@ -80,14 +85,14 @@ def dbma_mysql_cnx(port: int = 3306,
     logging.info("dbma_mysql_cnx: connect to {}:{} .".format(host, port))
     try:
         # 连接数据库并返回游标
-        cnx = mysql.connector.connect(host=host, port=port, user=user,
-                                      password=password, autocommit=True)
+        cnx = mysql.connector.connect(
+            host=host, port=port, user=user, password=password, autocommit=True
+        )
         cursor = cnx.cursor()
         yield cursor
     except mysql.connector.errors.Error as err:
         # 连接异常的时候返回 None
-        logging.error(
-            "dbma_mysql_cnx: can't connect to {}:{}".format(host, port))
+        logging.error("dbma_mysql_cnx: can't connect to {}:{}".format(host, port))
         yield None
     finally:
         # 资源回收
@@ -101,10 +106,8 @@ def dbma_mysql_cnx(port: int = 3306,
             logging.info("dbma_mysql_cnx: close cnx got error '{}' .".format(err))
 
 
-
 def export_cmds_to_path(basedir: Path = None):
-    """根据 basedir 设置 PATH 环境变量
-    """
+    """根据 basedir 设置 PATH 环境变量"""
     # 读出所有的行
     with open("/etc/profile") as f:
         lines = [line for line in f]
@@ -116,7 +119,7 @@ def export_cmds_to_path(basedir: Path = None):
         return
 
     # 如果没有导出就导出
-    with open("/etc/profile", 'a') as f:
+    with open("/etc/profile", "a") as f:
         last_line = lines[-1]
         if not last_line.endswith("\n"):
             # 说明最后一行没有换行，这个情况下先加上换行
@@ -139,8 +142,9 @@ def export_header_files(pkg: str = None):
     logging.info(messages.FUN_STARTS.format(fname()))
 
     # 检查是否已经导出过了
-    dst_include_dir = Path("/usr/include/") / \
-        "mysql-{}".format(get_mysql_version(pkg.name))
+    dst_include_dir = Path("/usr/include/") / "mysql-{}".format(
+        get_mysql_version(pkg.name)
+    )
     logging.info("dst_include_dir = mysql-{}".format(dst_include_dir))
     if dst_include_dir.exists():
         # 执行到这里说明已经导出过了
@@ -169,10 +173,11 @@ def export_so_files(pkg: Path = None):
     """
     logging.info(messages.FUN_STARTS.format(fname()))
 
-    conf_file = Path("/etc/ld.so.conf.d") / \
-        "mysql-{}.conf".format(get_mysql_version(pkg.name))
+    conf_file = Path("/etc/ld.so.conf.d") / "mysql-{}.conf".format(
+        get_mysql_version(pkg.name)
+    )
     if not conf_file.exists():
-        with open(conf_file, 'w') as f:
+        with open(conf_file, "w") as f:
             mysql_lib_dir = pkg_to_basedir(pkg) / "lib/"
             f.write(str(mysql_lib_dir))
             f.write("\n")

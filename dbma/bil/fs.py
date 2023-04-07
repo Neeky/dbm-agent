@@ -7,11 +7,13 @@
 import os
 import tarfile
 
+
 def is_file_exists(file_path):
     """
     判断文件是否存在
     """
     return os.path.exists(file_path)
+
 
 def extract_tar_file(tar_file_path, extract_dir):
     """
@@ -33,13 +35,14 @@ def extract_tar_file(tar_file_path, extract_dir):
     tar.extractall(extract_dir)
     tar.close()
 
+
 def get_tar_file_name(tar_file_path):
     """
     获取tar文件的名称
 
     Parameters:
     -----------
-    tar_file_path: str 
+    tar_file_path: str
         tar 文件的全路径
 
     Return:
@@ -52,6 +55,7 @@ def get_tar_file_name(tar_file_path):
     if os.sep in name:
         name, *_ = name.split(os.sep)
     return name
+
 
 def link(src, dest):
     """
@@ -70,6 +74,7 @@ def link(src, dest):
         None
     """
     os.symlink(src, dest)
+
 
 def is_line_in_etc_profile(line):
     """
@@ -90,6 +95,7 @@ def is_line_in_etc_profile(line):
                 return True
     return False
 
+
 def append_new_line_to_etc_profile(line):
     """
     在 /etc/profile 中添加一行
@@ -97,7 +103,7 @@ def append_new_line_to_etc_profile(line):
     -----------
     line: str
         要写入的新行
-    
+
     Returns:
     --------
         None
@@ -105,6 +111,7 @@ def append_new_line_to_etc_profile(line):
     with open("/etc/profile", "a") as f:
         f.write(line)
         f.write("\n")
+
 
 join = os.path.join
 

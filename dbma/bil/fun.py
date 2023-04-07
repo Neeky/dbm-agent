@@ -9,7 +9,7 @@
 
 import inspect
 
+
 def fname():
-    """返回当前函数的函数名
-    """
+    """返回当前函数的函数名"""
     return inspect.stack()[1][3]
