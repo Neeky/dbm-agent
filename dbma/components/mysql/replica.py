@@ -160,7 +160,7 @@ def install_replica(
     install_mysql(port, pkg, innodb_buffer_pool_size, read_only=True)
 
     # MySQL 安装之后要 sleep 一下，希望这个时候 MySQL 的监听已经完成
-    seconds = 7
+    seconds = 5
     time.sleep(seconds)
 
     # 第二步执行 change-master-to

@@ -3,6 +3,7 @@
 """MySQL 安装的相关接口
 """
 
+import re
 import logging
 from aiohttp import web
 from pathlib import Path
@@ -14,6 +15,7 @@ from dbma.core.views.response import ResponseEntity
 from dbma.components.mysql.instance import is_instance_exists
 from dbma.components.mysql.install import install_mysql, uninstall_mysql
 from dbma.components.mysql.views.handlers import install_mysql_task_handler
+from dbma.components.mysql.views.handlers import install_mysql_replica_task_handler
 
 
 @routes.view("/apis/mysqls/defaults")
@@ -77,57 +79,101 @@ class MySQLInstallView(web.View):
             return web.json_response(response.to_dict(), status=500)
         pkg_name = data["pkg-name"]
         pkg = Path("/usr/local/dbm-agent/pkgs/") / pkg_name
+        
+        # 检查 source ? 
+        if "source" not in data:
+            source = None
+        else:
+            source = data['source']
+            # 检查格式是否有问题
+            p = re.compile("\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}:\d{1,4}")
+            if not p.match(source):
+                response.message = "source arg format error"
+                return web.json_response(response.to_dict(), status=500)
+            source_ip, source_port = source.split(":")
+        
+        # 检查 role 
+        if "role" not in data:
+            response.message = "instance 'role' arg missage, you can choise one of ['master', 'slave', 'source', 'replica']"
+            return web.json_response(response.to_dict(), status=500)
+        else:
+            role = data['role']
 
         # 检查 task-id ? 参数
         if "task-id" not in data:
             task_id = None
         else:
             task_id = data["task-id"]
+            
+        # 检查各个参数之间的逻辑关系
+        if role in ('slave', 'replica'):
+            # 在 role 是备机的情况下要求指定 source 参数
+            if source is None:
+                response.message = "args role = '{}', you must give 'source' arg ".format(role)
+                return web.json_response(response.to_dict(), status=500)     
+
         # endregion args-check
 
         # 打印一下接收到的参数
         logging.info(
-            "port = '{}', ibps = '{}', pkg-name = '{}', pkg = '{}' task-id = {}.".format(
-                port, ibps, pkg_name, pkg, task_id
+            "port = '{}', ibps = '{}', pkg-name = '{}', pkg = '{}', source = '{}', role = '{}' task-id = {} .".format(
+                port, ibps, pkg_name, pkg, source, role, task_id
             )
         )
-
-        # region post-task-to-backends
-        # 检查是不是 dbm-center 发过来的请求(如果是它会带上 task_id)
-        if not task_id is None:
-            threads.submit(
-                install_mysql_task_handler,
-                port=port,
-                ibps=ibps,
-                pkg=pkg,
-                task_id=task_id,
-            )
-            response.message = "submit install mysql task to backends threads."
-            logging.info(response.message)
-
-            # 任务放后台
-            logging.info("view-requests-ends: {}".format(self.request.url))
+        
+        # 根据 task_id 是不是 None 来决定接口是同步执行还是异步执行
+        if task_id is not None:
+            # 进入异步处理逻辑
+            #---------------
+            if role in ('master', 'source'):
+                # 进入安装单机/主库的处理逻辑
+                threads.submit(
+                    install_mysql_task_handler,
+                    port=port,
+                    ibps=ibps,
+                    pkg=pkg,
+                    task_id=task_id
+                )
+                response.message = "submit install mysql 'master|source' task to backends threads."
+            elif role in ('slave', 'replica'):
+                # 进入备机的处理逻辑
+                threads.submit(
+                    install_mysql_replica_task_handler,
+                    port=port,
+                    ibps=ibps,
+                    pkg=pkg,
+                    source_ip=source_ip,
+                    source_port=source_port,
+                    task_id=task_id
+                )
+                response.message = "submit install mysql 'slave|replica' task to backends threads."
+                
             return web.json_response(response.to_dict(), status=200)
-        # endregion post-task-to-backends
+        else:
+            # 进入同步处理逻辑
+            # -------------
+            if role in ('master', 'source'):
+                # 进入安装单机/主库的处理逻辑
+                install_mysql_task_handler(
+                    port=port,
+                    ibps=ibps,
+                    pkg=pkg,
+                    task_id=task_id)
+                response.message = "install mysql 'master|source' complete ."
+            elif role in ('slave', 'replica'):
+                # 进入备机的处理逻辑
+                install_mysql_replica_task_handler(
+                    port=port,
+                    ibps=ibps,
+                    pkg=pkg,
+                    source_ip=source_ip,
+                    source_port=source_port,
+                    task_id=task_id
+                )
+                response.message = "install mysql 'slave|replica' complete ."
+            
+            return web.json_response(response.to_dict(), status=200)
 
-        # region sync-install-mysql
-        try:
-            # 临时把权限提升到 root (创建目录、用户 ... 都会用到)
-            with sudo("install mysql {}".format(port)):
-                install_mysql(port, pkg, innodb_buffer_pool_size=ibps)
-            logging.info("install mysql compelete. ")
-
-        except Exception as err:
-            response.message = "install mysql got exception {}".format(err)
-            response.error = str(err)
-            logging.info(response.message)
-            return web.json_response(response.to_dict(), status=500)
-
-        # 执行到这里说明已经安装完成了
-        logging.info("view-requests-ends: {}".format(self.request.url))
-        response.message = "install mysql compelet."
-        return web.json_response(response.to_dict(), status=200)
-        # endregion sync-install-mysql
 
 
 @routes.view("/apis/mysqls/uninstall")
