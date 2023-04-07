@@ -83,7 +83,7 @@
    ---
 
 ## 安装配置-MySQL
-请查看 `dev-docs/01-auto-install-MySQL.md` [安装配置-MySQL:(./dev-docs/01-auto-install-MySQL)](./dev-docs/01-auto-install-MySQL.md) 。
+请查看 `dev-docs/01-auto-install-MySQL.md` [安装配置-MySQL](./dev-docs/01-auto-install-MySQL.md) 。
 
 
 ## 关闭-dbm-agent
