@@ -63,7 +63,12 @@ def install_mysql_task_handler(
 
 
 def install_mysql_replica_task_handler(
-    port: int = 3306, ibps: str = "128M", pkg: Path = None, source_ip: str = None, source_port: str = None, task_id: int = None
+    port: int = 3306,
+    ibps: str = "128M",
+    pkg: Path = None,
+    source_ip: str = None,
+    source_port: str = None,
+    task_id: int = None,
 ):
     """让安装 MySQL 备机的逻辑放后台执行
 
@@ -88,8 +93,13 @@ def install_mysql_replica_task_handler(
         # 提升后台线程的权限到 root
         with sudo("install mysql task handler"):
             # install_mysql(port=port, innodb_buffer_pool_size=ibps, pkg=pkg)
-            install_replica(port=port, pkg=pkg, innodb_buffer_pool_size=ibps,
-                            source_ip=source_ip, source_port=source_port)
+            install_replica(
+                port=port,
+                pkg=pkg,
+                innodb_buffer_pool_size=ibps,
+                source_ip=source_ip,
+                source_port=source_port,
+            )
         logging.info("install mysql 'slave|replica' complete")
 
         # 是否更新任务信息到 dbm-center
@@ -98,7 +108,9 @@ def install_mysql_replica_task_handler(
                 "install mysql 'slave|replica' task handler's callback function is None, skip callback"
             )
         else:
-            update_task_state_callback(task_id, 200, "install mysql 'slave|replica' complete")
+            update_task_state_callback(
+                task_id, 200, "install mysql 'slave|replica' complete"
+            )
 
     except Exception as err:
         logging.error("install mysql 'slave|replica' task handler got error ")
