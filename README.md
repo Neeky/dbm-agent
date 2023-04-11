@@ -84,12 +84,12 @@
    ---
 
 ## 安装-MySQL
-请查看 `dev-docs/01-auto-install-MySQL.md` [安装配置-MySQL](./dev-docs/01-auto-install-MySQL.md) 。
+请查看 `docs/01-auto-install-MySQL.md` [安装配置-MySQL](./docs/01-auto-install-MySQL.md) 。
 
 ---
 
 ## 备份-MySQL
-请查看 `dev-docs/02-auto-backup-MySQL.md` [备份-MySQL](./dev-docs/02-auto-backup-MySQL.md) 。
+请查看 `docs/02-auto-backup-MySQL.md` [备份-MySQL](./docs/02-auto-backup-MySQL.md) 。
 
 
 ## 关闭-dbm-agent
