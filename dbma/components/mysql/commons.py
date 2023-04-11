@@ -185,3 +185,24 @@ def export_so_files(pkg: Path = None):
     exe_shell_cmd("ldconfig")
 
     logging.info(messages.FUN_ENDS.format(fname()))
+
+
+def make_mysql_writable(port: int = 3306):
+    """把结点设置为可写
+    Parameters:
+    -----------
+    port: int
+        MySQL 端口号
+
+    Return
+    ------
+    None
+    """
+    logging.info(messages.FUN_STARTS.format(fname()))
+
+    with dbma_mysql_cnx(port) as cursor:
+        sql = "set @@global.read_only=OFF; set @@global.super_read_only=OFF;"
+        cursor.execute(sql)
+        logging.info("make mysql instance 127.0.0.1:{} writable .".format(port))
+        logging.info("sql = {}".format(cursor.statement))
+    logging.info(messages.FUN_ENDS.format(fname()))

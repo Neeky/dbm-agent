@@ -7,8 +7,8 @@
 import logging
 from pathlib import Path
 from dbma.bil.sudos import sudo
-from dbma.components.mysql.install import install_mysql
-from dbma.components.mysql.replica import install_replica
+from dbma.components.mysql.source import install_mysql_source
+from dbma.components.mysql.replica import install_mysql_replica
 
 
 def update_task_state_callback(
@@ -21,7 +21,7 @@ def update_task_state_callback(
     logging.info("ends update task state callback .")
 
 
-def install_mysql_task_handler(
+def install_mysql_source_task_handler(
     port: int = 3306, ibps: str = "128M", pkg: Path = None, task_id: int = None
 ):
     """让安装 MySQL 的逻辑放后台执行
@@ -46,7 +46,7 @@ def install_mysql_task_handler(
     try:
         # 提升后台线程的权限到 root
         with sudo("install mysql task handler"):
-            install_mysql(port=port, innodb_buffer_pool_size=ibps, pkg=pkg)
+            install_mysql_source(port=port, innodb_buffer_pool_size=ibps, pkg=pkg)
         logging.info("install mysql complete")
 
         # 是否更新任务信息到 dbm-center
@@ -93,7 +93,7 @@ def install_mysql_replica_task_handler(
         # 提升后台线程的权限到 root
         with sudo("install mysql task handler"):
             # install_mysql(port=port, innodb_buffer_pool_size=ibps, pkg=pkg)
-            install_replica(
+            install_mysql_replica(
                 port=port,
                 pkg=pkg,
                 innodb_buffer_pool_size=ibps,

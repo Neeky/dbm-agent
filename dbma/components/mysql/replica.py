@@ -126,7 +126,7 @@ def start_replica(
     logging.info(messages.FUN_ENDS.format(fname()))
 
 
-def install_replica(
+def install_mysql_replica(
     port: int = 3306,
     pkg: Path = None,
     innodb_buffer_pool_size: str = "128M",
@@ -157,10 +157,10 @@ def install_replica(
     version = get_mysql_version(pkg.name)
 
     # 第一步安装 MySQL Replica 结点
-    install_mysql(port, pkg, innodb_buffer_pool_size, read_only=True)
+    install_mysql(port, pkg, innodb_buffer_pool_size)
 
     # MySQL 安装之后要 sleep 一下，希望这个时候 MySQL 的监听已经完成
-    seconds = 5
+    seconds = 11
     time.sleep(seconds)
 
     # 第二步执行 change-master-to

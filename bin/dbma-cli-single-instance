@@ -4,12 +4,15 @@
 实例单实例架构下的 MySQL 安装与卸载
 """
 
+import time
 import logging
 import argparse
 from pathlib import Path
 from dbma.components.mysql.install import default_pkg
-from dbma.components.mysql.install import install_mysql, uninstall_mysql
-from dbma.components.mysql.replica import install_replica
+from dbma.components.mysql.install import uninstall_mysql
+from dbma.components.mysql.source import install_mysql_source
+from dbma.components.mysql.replica import install_mysql_replica
+from dbma.components.mysql.commons import make_mysql_writable
 
 
 def parser_cmd_args():
@@ -58,11 +61,9 @@ def main():
     )
 
     if args.action in ("master", "source"):
-        install_mysql(
-            port=port,
-            pkg=pkg,
-            innodb_buffer_pool_size=innodb_buffer_pool_size,
-            read_only=False,
+        # 安装
+        install_mysql_source(
+            port=port, pkg=pkg, innodb_buffer_pool_size=innodb_buffer_pool_size
         )
     elif args.action in ("slave", "replica"):
         if source == "":
@@ -80,7 +81,9 @@ def main():
         source_port = int(source_port)
 
         # 配置 replica 实例
-        install_replica(port, pkg, innodb_buffer_pool_size, source_ip, source_port)
+        install_mysql_replica(
+            port, pkg, innodb_buffer_pool_size, source_ip, source_port
+        )
 
     elif args.action == "uninstall":
         uninstall_mysql(args.port)

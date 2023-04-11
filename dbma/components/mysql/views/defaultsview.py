@@ -12,9 +12,9 @@ from dbma.core.router import routes
 from dbma.core.configs import dbm_agent_config
 from dbma.core.threads.backends import threads
 from dbma.core.views.response import ResponseEntity
+from dbma.components.mysql.install import uninstall_mysql
 from dbma.components.mysql.instance import is_instance_exists
-from dbma.components.mysql.install import install_mysql, uninstall_mysql
-from dbma.components.mysql.views.handlers import install_mysql_task_handler
+from dbma.components.mysql.views.handlers import install_mysql_source_task_handler
 from dbma.components.mysql.views.handlers import install_mysql_replica_task_handler
 
 
@@ -130,7 +130,7 @@ class MySQLInstallView(web.View):
             if role in ("master", "source"):
                 # 进入安装单机/主库的处理逻辑
                 threads.submit(
-                    install_mysql_task_handler,
+                    install_mysql_source_task_handler,
                     port=port,
                     ibps=ibps,
                     pkg=pkg,
@@ -160,7 +160,7 @@ class MySQLInstallView(web.View):
             # -------------
             if role in ("master", "source"):
                 # 进入安装单机/主库的处理逻辑
-                install_mysql_task_handler(
+                install_mysql_source_task_handler(
                     port=port, ibps=ibps, pkg=pkg, task_id=task_id
                 )
                 response.message = "install mysql 'master|source' complete ."
