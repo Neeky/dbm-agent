@@ -11,20 +11,25 @@ from dbma.version import DBM_AGENT_VESION
 
 
 def parser_cmd_args():
-    parser = argparse.ArgumentParser(f'dbma-agent {DBM_AGENT_VESION}')
-    parser.add_argument('action', type=str, default='start', choices=(
-        'start', 'stop', 'version'), help='')
+    parser = argparse.ArgumentParser(f"dbma-agent {DBM_AGENT_VESION}")
+    parser.add_argument(
+        "action",
+        type=str,
+        default="start",
+        choices=("start", "stop", "version"),
+        help="",
+    )
     args = parser.parse_args()
     return args
 
 
 def main():
     args = parser_cmd_args()
-    if args.action == 'start':
+    if args.action == "start":
         start()
-    elif args.action == 'version':
-        print(f'dbma-agent {DBM_AGENT_VESION}')
-    elif args.action == 'stop':
+    elif args.action == "version":
+        print(f"dbma-agent {DBM_AGENT_VESION}")
+    elif args.action == "stop":
         stop()
 
 
