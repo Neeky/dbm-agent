@@ -160,11 +160,16 @@ class MySQLConfig(object):
     # region clone
     plugin_load_add: str = "mysql_clone.so"
     clone_autotune_concurrency: str = "ON"
-    clone_buffer_size: int = 4194304
-    clone_block_ddl: str = "ON"
+    clone_buffer_size: str = "16M"
+    clone_block_ddl: str = "OFF"
+    clone_delay_after_data_drop: int = 300
     clone_ddl_timeout: int = 300
-    clone_enable_compression: str = "OFF"
+    clone_donor_timeout_after_network_failure: int = 5
+    clone_enable_compression: str = "ON"
     clone_max_concurrency: int = 16
+    clone_max_data_bandwidth: int = 0
+    clone_max_network_bandwidth: int = 0
+    clone_valid_donor_list: str = "NULL"
     # endregion clone
 
     # region replication

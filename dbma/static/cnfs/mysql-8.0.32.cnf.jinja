@@ -128,8 +128,19 @@ gtid_executed_compression_period         = {{gtid_executed_compression_period}}
 
 
 #### for clone 
-plugin-load-add                          = mysql_clone.so
-clone                                    = FORCE_PLUS_PERMANENT
+plugin-load-add                           = mysql_clone.so
+clone                                     = FORCE_PLUS_PERMANENT
+clone_autotune_concurrency                = {{ clone_autotune_concurrency}}
+clone_buffer_size                         = {{ clone_buffer_size}}
+clone_block_ddl                           = {{ clone_block_ddl}}
+clone_delay_after_data_drop               = {{ clone_delay_after_data_drop}}
+clone_ddl_timeout                         = {{ clone_ddl_timeout}}
+clone_donor_timeout_after_network_failure = {{ clone_donor_timeout_after_network_failure}}
+clone_enable_compression                  = {{ clone_enable_compression}}
+clone_max_concurrency                     = {{ clone_max_concurrency}}
+clone_max_data_bandwidth                  = {{ clone_max_data_bandwidth}}
+clone_max_network_bandwidth               = {{ clone_max_network_bandwidth}}
+clone_valid_donor_list                    = {{ clone_valid_donor_list}}
 
 
 #### for engines 
