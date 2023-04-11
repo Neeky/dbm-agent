@@ -16,6 +16,7 @@ from dbma.components.mysql.install import uninstall_mysql
 from dbma.components.mysql.instance import is_instance_exists
 from dbma.components.mysql.views.handlers import install_mysql_source_task_handler
 from dbma.components.mysql.views.handlers import install_mysql_replica_task_handler
+from dbma.components.mysql.views.handlers import clone_local_data_task_handler
 
 
 @routes.view("/apis/mysqls/defaults")
@@ -252,3 +253,38 @@ class MySQLInstanceInfoView(web.View):
         # 检查实例是否存在并返回结果
         logging.info("view-requests-ends: {}".format(self.request.url))
         return web.json_response(resposne.to_dict())
+
+
+@routes.view("/apis/mysqls/{port}/backup")
+class MySQLBackupView(web.View):
+    async def post(self):
+        logging.info("view-request-starts: {}".format(self.request.url))
+
+        data = await self.request.json()
+        response = ResponseEntity(message="", error=None, data=None)
+
+        # region args-check
+        if not self.request.match_info.get("port"):
+            response.message = "'port' arg not fund ."
+            return web.json_response(response.to_dict(), status=500)
+        port = int(self.request.match_info.get("port"))
+
+        if "backup-type" not in data:
+            response.message = "'backup-type' arg not fund ."
+            return web.json_response(response.to_dict(), status=500)
+        backup_type = data["backup-type"]
+        # endregion args-check
+
+        if backup_type == "clone":
+            threads.submit(
+                clone_local_data_task_handler, port=port, backup_type="clone"
+            )
+            response.message = (
+                "submit backup mysql using clone task to backends threads."
+            )
+            logging.info("view-requests-ends: {}".format(self.request.url))
+            return web.json_response(response.to_dict(), status=200)
+
+        response.message = "not supported backup-type {}".format(backup_type)
+        logging.info("view-requests-ends: {}".format(self.request.url))
+        return web.json_response(response.to_dict(), status=500)

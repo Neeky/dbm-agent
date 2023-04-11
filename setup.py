@@ -45,6 +45,7 @@ setup(
         "dbma/components/mysql",
         "dbma/components/redis",
         "dbma/components/mysql/views",
+        "dbma/components/mysql/backups",
     ],
     package_data={"dbma": ["static/cnfs/*", "static/sql-scripts/*"]},
     url="https://github.com/Neeky/dbm-agent",

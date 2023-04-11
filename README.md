@@ -3,7 +3,8 @@
 - [目录](#目录)
 - [dbm-愿景](#dbm-愿景)
 - [安装-dbm-agent](#安装-dbm-agent)
-- [安装配置-MySQL](#安装配置-mysql)
+- [安装-MySQL](#安装-mysql)
+- [备份-MySQL](#备份-mysql)
 - [关闭-dbm-agent](#关闭-dbm-agent)
 - [规范](#规范)
 - [官方微信公众平台](#官方微信公众平台)
@@ -82,8 +83,13 @@
    ```
    ---
 
-## 安装配置-MySQL
+## 安装-MySQL
 请查看 `dev-docs/01-auto-install-MySQL.md` [安装配置-MySQL](./dev-docs/01-auto-install-MySQL.md) 。
+
+---
+
+## 备份-MySQL
+请查看 `dev-docs/dev-docs/02-auto-backup-MySQL` [安装配置-MySQL](./dev-docs/02-auto-backup-MySQL) 。
 
 
 ## 关闭-dbm-agent

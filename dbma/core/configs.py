@@ -42,6 +42,7 @@ class DBMAgentConfig(object):
     # MySQL 相关的默认配置
     mysql_datadir_parent: str = "/database/mysql/data/"
     mysql_binlogdir_parent: str = "/database/mysql/binlog/"
+    mysql_backupdir_parent: str = "/database/mysql/backup/"
     mysql_user_prefix: str = "mysql"
     mysql_default_version: str = "8.0.32"
 

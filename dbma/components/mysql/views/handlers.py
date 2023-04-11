@@ -7,6 +7,7 @@
 import logging
 from pathlib import Path
 from dbma.bil.sudos import sudo
+from dbma.components.mysql.backups.cloneplugin import clone_local_data
 from dbma.components.mysql.source import install_mysql_source
 from dbma.components.mysql.replica import install_mysql_replica
 
@@ -115,3 +116,27 @@ def install_mysql_replica_task_handler(
     except Exception as err:
         logging.error("install mysql 'slave|replica' task handler got error ")
     logging.info("ends install mysql 'slave|replica' task handler .")
+
+
+def clone_local_data_task_handler(
+    port: int = 3306, backup_type: str = None, task_id: int = None
+):
+    """ """
+    logging.info("starts clone local data task handler .")
+    try:
+        with sudo("starts clone local data task handler"):
+            clone_local_data(port)
+    except Exception as err:
+        logging.error("starts clone local data task handler got error {}".format(err))
+
+    # 是否更新任务信息到 dbm-center
+    if not task_id is None:
+        logging.warn(
+            "starts clone local data task handler's callback function is None, skip callback"
+        )
+    else:
+        update_task_state_callback(
+            task_id, 200, "starts clone local data task handler complete"
+        )
+
+    logging.info("ends clone local data task handler .")
