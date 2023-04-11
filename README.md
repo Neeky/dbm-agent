@@ -89,7 +89,7 @@
 ---
 
 ## 备份-MySQL
-请查看 `dev-docs/dev-docs/02-auto-backup-MySQL` [安装配置-MySQL](./dev-docs/02-auto-backup-MySQL) 。
+请查看 `dev-docs/dev-docs/02-auto-backup-MySQL` [备份-MySQL](./dev-docs/02-auto-backup-MySQL) 。
 
 
 ## 关闭-dbm-agent
