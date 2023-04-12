@@ -112,15 +112,20 @@ class MySQLInstallView(web.View):
 
     async def check_args(self):
         """检查参数之间是否有逻辑冲突"""
-        if self.role in ("source", "master"):
+        logging.info(messages.FUN_STARTS.format(fname()))
+        if self.role in ("slave", "replica"):
             if self.source is None:
                 self.response.message = (
                     "args role = '{}', you must give 'source' arg ".format(self.role)
                 )
+                logging.warn(messages.FUN_ENDS.format(fname()))
                 return
+
+        logging.info(messages.FUN_ENDS.format(fname()))
 
     async def install_dispatch(self):
         """根据参数决定怎么安装 MySQL"""
+        logging.info(messages.FUN_STARTS.format(fname()))
         # 根据 task_id 是不是 None 来决定接口是同步执行还是异步执行
         if self.task_id is not None:
             # 进入异步处理逻辑
@@ -175,10 +180,11 @@ class MySQLInstallView(web.View):
                     task_id=self.task_id,
                 )
                 self.response.message = "install mysql 'slave|replica' complete ."
+        logging.info(messages.FUN_ENDS.format(fname()))
 
     async def post(self):
         logging.info(messages.VIEW_FUN_STARTS.format(self.request.url))
-        response = ResponseEntity(message="", error="", data=None)
+        self.response = ResponseEntity(message="", error="", data=None)
 
         await self.parser_post_args()
         await self.check_args()
@@ -198,10 +204,10 @@ class MySQLInstallView(web.View):
             )
         )
 
-        self.install_dispatch()
+        await self.install_dispatch()
 
         logging.info(messages.VIEW_FUN_ENDS.format(self.request.url))
-        return web.json_response(response.to_dict(), status=200)
+        return web.json_response(self.response.to_dict(), status=200)
 
 
 @routes.view("/apis/mysqls/uninstall")
@@ -353,7 +359,7 @@ class MySQLBackupView(web.View):
 
         # 备份
         try:
-            self.backup_dispatch()
+            await self.backup_dispatch()
         except Exception as err:
             self.response.message = str(err)
             self.response.error = err
