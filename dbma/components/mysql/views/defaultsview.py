@@ -184,8 +184,10 @@ class MySQLInstallView(web.View):
 
     async def post(self):
         logging.info(messages.VIEW_FUN_STARTS.format(self.request.url))
+        # 准备返回结果
         self.response = ResponseEntity(message="", error="", data=None)
 
+        # 处理参数
         await self.parser_post_args()
         await self.check_args()
         if self.response.message:
@@ -204,8 +206,8 @@ class MySQLInstallView(web.View):
             )
         )
 
+        # 安装
         await self.install_dispatch()
-
         logging.info(messages.VIEW_FUN_ENDS.format(self.request.url))
         return web.json_response(self.response.to_dict(), status=200)
 
@@ -219,48 +221,50 @@ class MySQLUninstallView(web.View):
     3. 执行删除逻辑
     """
 
-    async def post(self):
-        logging.info(messages.VIEW_FUN_STARTS.format(self.request.url))
+    port: int = None
+    response: ResponseEntity = None
 
+    async def parser_post_args(self):
+        """处理 post 参数"""
+        logging.info(messages.FUN_STARTS.format(fname()))
         data = await self.request.json()
-        response = ResponseEntity(message="", error="", data=None)
-
-        # region args-check
-        # 检查 port 参数
         if "port" not in data:
-            response.message = "port not in post dict"
-            logging.warn(response.message)
-            logging.warn(messages.VIEW_FUN_ENDS.format(self.request.url))
-            return web.json_response(response.to_dict(), status=500)
-        port = int(data["port"])
-        # endregion args-check
+            self.response.message = messages.ARG_NOT_IN_POST_DICT.format("port")
+            return
+        self.port = int(data["port"])
+        logging.info(messages.FUN_ENDS.format(fname()))
 
-        # region instance-exists-check
-        # 检查给定的实例是否存在
-        if not is_instance_exists(port):
-            response.message = "instance {} not exists.".format(port)
-            response.error = response.message
-            logging.warn(messages.VIEW_FUN_ENDS.format(self.request.url))
-            return web.json_response(response.to_dict(), status=500)
-        # endregion instance-exists-check
+    async def uninstall_dispatch(self):
+        """卸载 MySQL"""
+        if not is_instance_exists(self.port):
+            self.response.message = "instance {} not exists.".format(self.port)
+            return
 
-        # region uninstall-mysql
         try:
-            with sudo("install mysql {}".format(port)):
-                uninstall_mysql(port)
-            response.message = "uninstall mysql complete ."
-            logging.info(response.message)
+            with sudo("uninstall mysql '{}' ".format(self.port)):
+                uninstall_mysql(self.port)
         except Exception as err:
-            response.message = "got error on uninstall mysql {} .".format(port)
-            response.error = response.message
-            logging.error(response.message)
-            logging.warn(messages.VIEW_FUN_ENDS.format(self.request.url))
-            return web.json_response(response.to_dict(), status=500)
+            self.response.message = "got error on uninstall mysql {} .".format(
+                self.port
+            )
+
+    async def post(self):
+        """卸载 MySQ"""
+        logging.info(messages.VIEW_FUN_STARTS.format(self.request.url))
+        # 准备返回结果
+        self.response = ResponseEntity(message="", error="", data=None)
+
+        # 处理参数
+        await self.parser_post_args()
+        if self.response.message:
+            return web.json_response(self.response.to_dict(), status=500)
+
+        # 卸载
+        await self.uninstall_dispatch()
 
         # 到这里说明正确的完成了
         logging.info(messages.VIEW_FUN_ENDS.format(self.request.url))
-        return web.json_response(response.to_dict(), status=200)
-        # endregion uninstall-mysql
+        return web.json_response(self.response.to_dict(), status=200)
 
 
 @routes.view("/apis/mysqls/{port}/exists")
@@ -283,20 +287,20 @@ class MySQLInstanceInfoView(web.View):
     async def get(self):
         """检查给定端口的 MySQL 数据库实例是否存在"""
         logging.info(messages.VIEW_FUN_STARTS.format(self.request.url))
-        # 准备返回结果对象
+        # 准备返回结果
         self.response = ResponseEntity(
             message="", error=None, data={"exists": False, "port": None}
         )
 
-        # 检查参数
+        # 处理参数
         await self.parser_get_args()
         if self.response.message:
             return web.json_response(self.response.to_dict(), status=500)
 
+        # 检查实例是否存在并返回结果
         self.response.data["exists"] = is_instance_exists(self.port)
         self.response.data["port"] = self.port
 
-        # 检查实例是否存在并返回结果
         logging.info(messages.VIEW_FUN_ENDS.format(self.request.url))
         return web.json_response(self.response.to_dict(), status=200)
 
@@ -340,26 +344,25 @@ class MySQLBackupView(web.View):
                 "submit backup mysql using clone task to backends threads."
             )
             logging.info(messages.VIEW_FUN_ENDS.format(self.request.url))
-            return web.json_response(self.response.to_dict(), status=200)
 
         raise ValueError("not suported backp type {}".format(self.backup_type))
 
     async def post(self):
         """处理备份逻辑"""
         logging.info(messages.VIEW_FUN_STARTS.format(self.request.url))
-
+        # 准备返回结果
         self.response = ResponseEntity(message="", error=None, data=None)
 
-        # region args-check
+        # 处理参数
         await self.parser_get_args()
         await self.parser_post_args()
         if self.response.message:
             return web.json_response(self.response.to_dict(), status=500)
-        # endregion args-check
 
         # 备份
         try:
             await self.backup_dispatch()
+            return web.json_response(self.response.to_dict(), status=200)
         except Exception as err:
             self.response.message = str(err)
             self.response.error = err
