@@ -7,10 +7,10 @@
 
 # 函数开执行
 FUN_STARTS = "starts {} ."
-
-
 # 函数执行完成(return 之前)
 FUN_ENDS = "ends {} ."
+VIEW_FUN_STARTS = "view-request-starts: {}"
+VIEW_FUN_ENDS = "view-requests-ends: {}"
 
 
 # 文件不存在
@@ -30,3 +30,6 @@ MOVE_FILE_TO = "move '{}' to '{}' "
 
 # MySQL MESSAGES
 MYSQL_INSTANCE_HAS_EXISTS = "mysql instance '{}' has exists ."
+
+
+ARG_NOT_IN_POST_DICT = "argument '{}' not in post dict"
