@@ -144,6 +144,7 @@ class MySQLConfig(object):
     binlog_transaction_compression: str = "ON"
     binlog_transaction_dependency_history_size: int = 25000
     binlog_transaction_dependency_tracking: str = "WRITESET"
+    transaction_write_set_extraction: str = "XXHASH64"
     sync_binlog: int = 1
     binlog_cache_size: int = 32768
     binlog_group_commit_sync_delay: int = 0
