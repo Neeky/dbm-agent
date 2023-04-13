@@ -143,7 +143,7 @@ class MySQLConfig(object):
     log_replica_updates: str = "ON"
     binlog_transaction_compression: str = "ON"
     binlog_transaction_dependency_history_size: int = 25000
-    binlog_transaction_dependency_tracking: str = "COMMIT_ORDER"
+    binlog_transaction_dependency_tracking: str = "WRITESET"
     sync_binlog: int = 1
     binlog_cache_size: int = 32768
     binlog_group_commit_sync_delay: int = 0
