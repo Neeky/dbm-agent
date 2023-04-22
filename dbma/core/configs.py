@@ -27,6 +27,7 @@ class DBMAgentConfig(object):
     port: int = 8086
     version: str = VERSION
     dbmcenter_url_prefix: str = "http://127.0.0.1:8080"
+    dbmcenter_token: str = ""
     pid_file: str = "/tmp/dbm-agent.pid"
     log_level: str = "info"
     log_file: str = "/tmp/dbm-agent.log"
