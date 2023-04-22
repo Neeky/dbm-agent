@@ -13,8 +13,6 @@ from dataclasses import dataclass, asdict
 from dbma.version import VERSION
 from dbma.bil.osuser import DBMAUser
 
-# TODO
-# 这里之后要改成 dbma.core.version 文件中的 VERSION 值
 
 DBM_AGENT_BASE_DIR = Path("/usr/local/dbm-agent/")
 DBM_AGENT_ETC_DIR = DBM_AGENT_BASE_DIR / "etc"
@@ -113,7 +111,7 @@ class DBMCenterUrlConfig(object):
 
 
 def _auto_save_to_disk():
-    """ """
+    """在 dbm-agent 程序退出的时候把配置对象持久化到配置文件"""
     if DBM_AGENT_BASE_DIR.exists():
         dbm_user = DBMAUser()
         dbm_user.chown(DBM_AGENT_BASE_DIR)
