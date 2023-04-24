@@ -1,3 +1,7 @@
+# -*- encoding: utf-8 -*-
+
+"""异常树"""
+
 from dbma.core.exception import DBMAgentException
 
 
