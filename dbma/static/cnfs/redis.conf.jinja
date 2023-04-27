@@ -1,0 +1,19 @@
+# Redis configuration file
+# ./redis-server /path/to/redis.conf
+
+port        6379
+daemonize   yes
+bind        127.0.0.1 ::1
+dir         /database/redis/6379/
+
+
+unixsocket  /database/redis/6379/redis.sock
+pidfile     /database/redis/6379/redis.pid
+logfile     /database/redis/6379/redis.log
+dbfilename  dump.rdb
+loglevel    notice
+
+protected-mode  yes
+tcp-backlog     511
+unixsocketperm  700
+tcp-keepalive   300
