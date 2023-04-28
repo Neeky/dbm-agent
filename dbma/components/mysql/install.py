@@ -372,6 +372,7 @@ def backup_config_file(port: int = 3306, suffix=None):
 
     # 备份文件
     shutil.copyfile(config_file, config_backup_file)
+    os.remove(config_file)
 
     logging.info(messages.FUN_ENDS.format(fname()))
 
