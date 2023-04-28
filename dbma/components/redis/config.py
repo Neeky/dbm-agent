@@ -22,7 +22,7 @@ class RedisConfig(object):
         Redis 要监控的端口
     """
 
-    port: int = 6378
+    port: int = 6379
     dbfilename: str = "dump.rdb"
     loglevel: str = "notice"
     daemonize: str = "yes"
@@ -43,6 +43,10 @@ class RedisConfig(object):
         Returns
         -------
         str
+
+        Excpetions:
+        -----------
+        RedisConfigTemplateFileNotExistsException 配置文件模板不存在的情况
         """
         logging.info(messages.FUN_STARTS.format(fname()))
         import dbma
@@ -69,3 +73,10 @@ class RedisConfig(object):
         template = Template(content)
         logging.info(messages.FUN_ENDS.format(fname()))
         return template.render(asdict(self))
+
+    def generate_config_file(self):
+        """生成配置文件 /etc/redis-{self.port}.conf"""
+        config_file = "/etc/redis-{}.conf".format(self.port)
+        with open(config_file, "w") as config_object:
+            content = self.render_config()
+            config_object.write(content)
