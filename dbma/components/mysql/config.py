@@ -14,6 +14,7 @@ import random
 from enum import Enum
 from pathlib import Path
 from jinja2 import Template
+from datetime import datetime
 from dataclasses import dataclass, asdict
 from dbma.core import messages
 from dbma.bil.fun import fname
@@ -42,6 +43,7 @@ class MySQLConfig(object):
     basedir: str = None
     port: str = None
     innodb_buffer_pool_size: str = None
+    now: str = datetime.now().isoformat()
 
     # region global-config
     version: str = None
