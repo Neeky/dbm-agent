@@ -58,7 +58,6 @@ setup(
         "distro>=1.4.0",
         "aiohttp>=3.8.1",
     ],
-    python_requires=">=3.8.*",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
