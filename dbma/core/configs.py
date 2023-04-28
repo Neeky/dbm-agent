@@ -53,6 +53,9 @@ class DBMAgentConfig(object):
     mysql_init_cnf: str = "/tmp/mysql-init.cnf"
     mysql_init_user_sql_file: str = "/tmp/mysql-init-user.sql"
 
+    # redis
+    redis_default_version: str = "7.0.11"
+
     def make_register_data(self):
         """ """
         return {"host": self.host, "port": self.port, "version": self.version}
