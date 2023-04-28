@@ -264,11 +264,11 @@ class RedisUser(BaseUser):
     """Redis 用户"""
 
     # Redis 端口
-    port = 6378
+    port = 6379
     # 所有的 Redis 都共用一个 Redis 组
     group = RedisGroup()
 
-    def __init__(self, port: int = 6378):
+    def __init__(self, port: int = 6379):
         """根据 Redis 监听的端口创建用户
 
         Parameter
