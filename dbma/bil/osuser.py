@@ -253,6 +253,43 @@ class MySQLUser(BaseUser):
         return f"{self.name}:{self.group}"
 
 
+class RedisGroup(BaseGroup):
+    """Redis 组"""
+
+    def __init__(self, name="redis"):
+        BaseGroup.__init__(self, name)
+
+
+class RedisUser(BaseUser):
+    """Redis 用户"""
+
+    # Redis 端口
+    port = 6378
+    # 所有的 Redis 都共用一个 Redis 组
+    group = RedisGroup()
+
+    def __init__(self, port: int = 6378):
+        """根据 Redis 监听的端口创建用户
+
+        Parameter
+        ---------
+            port: int
+        """
+        self.name = f"redis{port}"
+        self.port = port
+        BaseUser.__init__(self, self.name)
+
+    def create(self):
+        """创建 Redis 实例用户(如果属组不存在就先创建属组)"""
+        if self.group.is_exists() == False:
+            self.group.create()
+
+        BaseUser.create(self)
+
+    def __str__(self):
+        return f"{self.name}:{self.group}"
+
+
 class RootGroup(BaseGroup):
     """ """
 
