@@ -27,3 +27,19 @@ class FileNotExistsException(DBMAgentException):
 
 
 # endregion files
+
+
+# region directorys
+class DirectoryExistsException(DBMAgentException):
+    """目录已经存在"""
+
+    pass
+
+
+class DirectoryNotExistsException(DBMAgentException):
+    """目录不存在的异常"""
+
+    pass
+
+
+# endregion directorys
