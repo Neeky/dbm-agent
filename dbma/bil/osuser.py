@@ -3,7 +3,7 @@
 """
 实现操作系统用户的相关操作
 """
-
+import logging
 import os
 import pwd
 import grp
@@ -187,11 +187,12 @@ class BaseUser(Identify):
 
     def chown(self, path, recursive=True):
         """ """
+        logging.info("execute User.chown.")
         if recursive == True:
             cmd = f"chown -R {str(self)} {path}"
         else:
             cmd = f"chown {str(self)} {path}"
-
+        logging.info(cmd)
         with sudo():
             exe_shell_cmd(cmd)
 

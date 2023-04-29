@@ -12,12 +12,18 @@ from pathlib import Path
 from dbma.core import messages
 from dbma.bil.fun import fname
 from dbma.bil.osuser import RedisUser
-from dbma.components.redis.exceptions import RedisDatabaseDirectoryExistsException
+from dbma.components.redis.exceptions import (
+    RedisDatabaseDirectoryExistsException,
+    RedisPkgFileNotExistsException,
+)
 from dbma.components.redis.commons import (
     default_redis_pkg,
     redis_pkg_re_pattern,
     default_redis_port,
 )
+from dbma.bil.cmdexecutor import exe_shell_cmd
+from dbma.components.redis.config import RedisConfig
+from dbma.components.redis.systemd import RedisSystemdConfig
 
 
 def create_redis_user(port: int = 6379):
@@ -27,6 +33,25 @@ def create_redis_user(port: int = 6379):
     # 根据端口号创建用户
     redis_user = RedisUser(port)
     redis_user.create()
+
+    logging.info(messages.FUN_ENDS.format(fname()))
+
+
+def chown_database_dir_to_redis_user(port: int = 6379):
+    """更新数据目录属组到 Redis 用户
+
+    Parameters
+    ----------
+    port : int, optional
+        Redis 端口号, by default 6379
+    """
+    logging.info(messages.FUN_STARTS.format(fname()))
+
+    redis_user = RedisUser(port)
+    database_dir = Path("/database/redis/{}".format(port))
+    logging.info("going to chown .")
+    redis_user.chown(str(database_dir), recursive=True)
+    logging.info("chown down.")
 
     logging.info(messages.FUN_ENDS.format(fname()))
 
@@ -50,23 +75,7 @@ def create_redis_database_dir(port: int = 6379):
         raise RedisDatabaseDirectoryExistsException(message)
     # 创建数据目录
     os.makedirs(database_dir)
-
-    logging.info(messages.FUN_ENDS.format(fname()))
-
-
-def chown_database_dir_to_redis_user(port: int = 6379):
-    """更新数据目录属组到 Redis 用户
-
-    Parameters
-    ----------
-    port : int, optional
-        Redis 端口号, by default 6379
-    """
-    logging.info(messages.FUN_STARTS.format(fname()))
-
-    redis_user = RedisUser(port)
-    database_dir = Path("/database/redis/{}".format(port))
-    redis_user.chown(str(database_dir))
+    chown_database_dir_to_redis_user(port)
 
     logging.info(messages.FUN_ENDS.format(fname()))
 
@@ -81,7 +90,7 @@ def pkg_to_redis_basedir(pkg: Path = default_redis_pkg):
 
     Returns:
     --------
-    str
+    Path
 
     Exceptions:
     -----------
@@ -90,14 +99,26 @@ def pkg_to_redis_basedir(pkg: Path = default_redis_pkg):
     logging.info(messages.FUN_STARTS.format(fname()))
 
     # 1. 确认当前 redis 的版本号
-    m = redis_pkg_re_pattern.match(pkg)
+    m = redis_pkg_re_pattern.match(pkg.name)
     if m is None:
         logging.error(messages.FUN_ENDS.format(fname()))
         raise ValueError("redis pkg name error .")
-    version = m.group("redis-version")
+    version = m.group("redis_version")
 
+    # 2. 返回 redis 版本应该对应的 basedir
     logging.info(messages.FUN_ENDS.format(fname()))
-    return "/usr/local/redis-{}".format(version)
+    return Path("/usr/local/redis-{}".format(version))
+
+
+def pkg_to_redis_version(pkg: Path = default_redis_pkg):
+    """_summary_
+
+    Parameters
+    ----------
+    pkg : Path, optional
+        Redis 的安装包程序, by default default_redis_pkg
+    """
+    return redis_pkg_re_pattern.match(pkg.name).group("redis_version")
 
 
 def decompression_redis_pkg(pkg: Path = default_redis_pkg):
@@ -114,6 +135,82 @@ def decompression_redis_pkg(pkg: Path = default_redis_pkg):
         redis 安装包的全路径, by default default_redis_pkg
     """
     logging.info(messages.FUN_STARTS.format(fname()))
+
     # 1. 检查标识文件是否存在、如果存在说明解压过了，那么现在可以跳过这步解压的过程。
-    #
+    flag_file = pkg_to_redis_basedir(pkg) / ".dbm-agent-decompression.txt"
+    if flag_file.exists():
+        logging.info(messages.FUN_ENDS.format(fname()))
+        return
+
+    # 2. 检查 pkg 文件是否存在
+    if not pkg.exists():
+        msg = "redis pkg file '{}' not exists. ".format(str(pkg))
+        logging.error(msg)
+        raise RedisPkgFileNotExistsException(msg)
+
+    # 3. 解压
+    with tarfile.open(pkg) as tf:
+        tf.extractall("/usr/local/")
+
+    # 4. 创建标识文件
+    with open(flag_file, "w") as flag_object:
+        flag_object.write("dbma-agent")
+
     logging.info(messages.FUN_ENDS.format(fname()))
+
+
+def start_redis(port: int = 6379):
+    """启动 Redis
+
+    Parameters
+    ----------
+    port : int, optional
+        Redis 的端口号, by default 6379
+    """
+    exe_shell_cmd("systemctl start redisd-{}".format(port))
+
+
+def stop_redis(port: int = 6379):
+    """关闭 Redis
+
+    Parameters
+    ----------
+    port : int, optional
+        Redis 端口号, by default 6379
+    """
+    exe_shell_cmd("systemctl stop redisd-{}".format(port))
+
+
+def install_redis(port: int = 6379, pkg: Path = default_redis_pkg):
+    """安装 Redis 并让其监控到指定端口
+
+    Parameters:
+    -----------
+    port : int, optional
+        Redis 要监听的端口号, by default 6379
+    pkg : Path, optional
+        Redis 的安装包, by default default_redis_pkg
+
+    Exceptions:
+    -----------
+
+    """
+    try:
+        # 第一步：创建用户
+        create_redis_user(port)
+        # 第二步：创建数据目录
+        create_redis_database_dir(port)
+        # 第三步：解压
+        decompression_redis_pkg(pkg)
+        # 第四步：生成配置
+        redis_config = RedisConfig(port)
+        redis_config.generate_config_file()
+        # 第五步：生成 systemd 配置
+        redis_systemd_config = RedisSystemdConfig(port, pkg_to_redis_basedir(pkg))
+        redis_systemd_config.generate_systemd_config()
+        # 第六步：启动 redis
+        start_redis(port)
+    except Exception as err:
+        msg = str(err)
+        logging.exception(err)
+        raise err

@@ -15,5 +15,5 @@ default_redis_pkg = Path(
 
 # Redis 安装包的正则表达式
 redis_pkg_re_pattern = re.compile(
-    r"redis-(?P<version>\d{1,2}.\d{1,2}.\d{1,3})-linux-glibc-(?P<glibc-version>\d.\d{1,2})-x86_64.tar.gz"
+    r"redis-(?P<redis_version>\d{1,2}.\d{1,2}.\d{1,3})-linux-glibc-(?P<glibc_version>\d.\d{1,2})-x86_64.tar.gz"
 )

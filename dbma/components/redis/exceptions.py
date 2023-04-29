@@ -15,6 +15,12 @@ class RedisConfigTemplateFileNotExistsException(FileNotExistsException):
     pass
 
 
+class RedisPkgFileNotExistsException(FileNotExistsException):
+    """Redis 的安装包文件不存在"""
+
+    pass
+
+
 class RedisDatabaseDirectoryExistsException(DirectoryExistsException):
     """Redis 的数据目录已经存在"""
 

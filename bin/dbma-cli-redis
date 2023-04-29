@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+
+"""
+dbm-agent Redis 的命令行接口
+"""
+
+import time
+import logging
+import argparse
+from pathlib import Path
+from dbma.components.redis.install import install_redis
+from dbma.components.redis.commons import default_redis_pkg, default_redis_port
+
+
+def parser_cmd_args():
+    """
+    实现命令行参数的处理
+    """
+    parser = argparse.ArgumentParser(__name__)
+    parser.add_argument(
+        "--pkg", default=default_redis_pkg, help="redis install pkg", type=str
+    )
+    parser.add_argument(
+        "--port", default=default_redis_port, help="redis default port", type=int
+    )
+    parser.add_argument("action", choices=["install", "uninstall"])
+    return parser.parse_args()
+
+
+def main():
+    args = parser_cmd_args()
+    pkg = Path("/usr/local/dbm-agent/pkgs") / args.pkg
+    port = args.port
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(asctime)s %(levelname)s] - [%(threadName)s] - [%(pathname)s %(lineno)d line]  ~  %(message)s",
+    )
+    if args.action == "install":
+        install_redis(port, pkg)
+    else:
+        print("not supported ops .")
+
+
+if __name__ == "__main__":
+    main()

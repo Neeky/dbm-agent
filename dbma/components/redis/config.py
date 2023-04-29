@@ -5,6 +5,7 @@
 import logging
 from pathlib import Path
 from jinja2 import Template
+from datetime import datetime
 from dataclasses import dataclass, asdict
 
 from dbma.bil.fun import fname
@@ -27,15 +28,15 @@ class RedisConfig(object):
     loglevel: str = "notice"
     daemonize: str = "yes"
     bind: str = "127.0.0.1 ::1"
-    dir: int = ""
+    redis_dir: str = "/database/redis/{}".format(port)
     protected_mode: str = "yes"
     tcp_backlog: int = 511
     unixsocketperm: str = "700"
     tcp_keepalive: int = 300
+    now: str = datetime.now().isoformat()
 
-    def __post__init__(self):
-        """根据 port 的值来调整其它值"""
-        self.dir = "/database/redis/{}".format(self.port)
+    def __post_init__(self):
+        self.redis_dir = "/database/redis/{}".format(self.port)
 
     def render_config(self) -> str:
         """渲染配置文件
