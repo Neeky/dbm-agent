@@ -4,11 +4,12 @@
 dbm-agent Redis 的命令行接口
 """
 
+import re
 import time
 import logging
 import argparse
 from pathlib import Path
-from dbma.components.redis.install import install_redis
+from dbma.components.redis.install import install_resdis_master, install_redis_replica
 from dbma.components.redis.commons import default_redis_pkg, default_redis_port
 
 
@@ -23,7 +24,10 @@ def parser_cmd_args():
     parser.add_argument(
         "--port", default=default_redis_port, help="redis default port", type=int
     )
-    parser.add_argument("action", choices=["install", "uninstall"])
+    parser.add_argument(
+        "--replica-of", default="", help="redis master instance 'host port'", type=str
+    )
+    parser.add_argument("action", choices=["master", "replica"])
     return parser.parse_args()
 
 
@@ -35,8 +39,31 @@ def main():
         level=logging.INFO,
         format="[%(asctime)s %(levelname)s] - [%(threadName)s] - [%(pathname)s %(lineno)d line]  ~  %(message)s",
     )
-    if args.action == "install":
-        install_redis(port, pkg)
+    if args.action == "master":
+        install_resdis_master(port, pkg)
+    elif args.action == "replica":
+        if args.replica_of == "" or args.replica_of is None:
+            logging.error(
+                "when user replica option ,must assign --replica-of a valid value ."
+            )
+            return
+        # 检查 replica-of 参数的值是否正确
+        # 格式1 host:port 格式2 host port
+        pattern = re.compile(r"\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}[ :]\d{4,4}")
+        match = pattern.match(args.replica_of)
+        if not match:
+            logging.error(
+                "--replica-of format error. {} not match re '\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}[ :]\d{4,4}' .".format(
+                    args.replica_of
+                )
+            )
+            return
+
+        replicaof = args.replica_of
+        if ":" in args.replica_of:
+            replicaof = args.replica_of.replace(":", " ")
+
+        install_redis_replica(port=port, replicaof=replicaof, pkg=pkg)
     else:
         print("not supported ops .")
 

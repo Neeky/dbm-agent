@@ -4,8 +4,6 @@
 
 
 import os
-import re
-import shutil
 import tarfile
 import logging
 from pathlib import Path
@@ -22,7 +20,7 @@ from dbma.components.redis.commons import (
     default_redis_port,
 )
 from dbma.bil.cmdexecutor import exe_shell_cmd
-from dbma.components.redis.config import RedisConfig
+from dbma.components.redis.config import RedisConfig, RedisReplicaConfig
 from dbma.components.redis.systemd import RedisSystemdConfig
 
 
@@ -181,7 +179,9 @@ def stop_redis(port: int = 6379):
     exe_shell_cmd("systemctl stop redisd-{}".format(port))
 
 
-def install_redis(port: int = 6379, pkg: Path = default_redis_pkg):
+def install_redis(
+    port: int = 6379, pkg: Path = default_redis_pkg, redis_config: RedisConfig = None
+):
     """安装 Redis 并让其监控到指定端口
 
     Parameters:
@@ -203,7 +203,6 @@ def install_redis(port: int = 6379, pkg: Path = default_redis_pkg):
         # 第三步：解压
         decompression_redis_pkg(pkg)
         # 第四步：生成配置
-        redis_config = RedisConfig(port)
         redis_config.generate_config_file()
         # 第五步：生成 systemd 配置
         redis_systemd_config = RedisSystemdConfig(port, pkg_to_redis_basedir(pkg))
@@ -214,3 +213,44 @@ def install_redis(port: int = 6379, pkg: Path = default_redis_pkg):
         msg = str(err)
         logging.exception(err)
         raise err
+
+
+def install_resdis_master(port: int = 6379, pkg: Path = default_redis_pkg):
+    """安装 Redis master 结点
+
+    Parameters
+    ----------
+    port : int, optional
+        Redis 端口号, by default 6379
+    pkg : Path, optional
+        Redis 安装包, by default default_redis_pkg
+    """
+    logging.info(messages.FUN_STARTS.format(fname()))
+
+    redis_master_config = RedisConfig(port)
+    install_redis(port, pkg=pkg, redis_config=redis_master_config)
+
+    logging.info(messages.FUN_ENDS.format(fname()))
+
+
+def install_redis_replica(
+    port: int = 6379, replicaof: str = "127.0.0.1 6379", pkg: Path = default_redis_pkg
+):
+    """安装 Redis replica 结点
+
+    Parameters
+    ----------
+    port : int, optional
+        Redis 结点的端口号, by default 6379
+    master : str, optional
+        Redis Master 结点的标识("host port"), by default "127.0.0.1 6379"
+    pkg : Path, optional
+        Redis 的安装包, by default default_redis_pkg
+    """
+    logging.info(messages.FUN_STARTS.format(fname()))
+    logging.info("redis-port={}, redis-master={}, pkg={}".format(port, replicaof, pkg))
+
+    redis_replica_config = RedisReplicaConfig(port=port, replicaof=replicaof)
+    install_redis(port, pkg=pkg, redis_config=redis_replica_config)
+
+    logging.info(messages.FUN_ENDS.format(fname()))

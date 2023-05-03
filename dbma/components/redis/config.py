@@ -81,3 +81,17 @@ class RedisConfig(object):
         with open(config_file, "w") as config_object:
             content = self.render_config()
             config_object.write(content)
+
+
+@dataclass
+class RedisReplicaConfig(RedisConfig):
+    """Redis 从结点配置文件生成类
+
+    Parameters
+    ----------
+    RedisConfig :
+    """
+
+    is_replica: bool = True
+    # format et: 127.0.0.1 6379
+    replicaof: str = ""
