@@ -18,7 +18,7 @@ from dbma.core.configs import DBMAgentConfig, DBMCenterUrlConfig
 keep_threads_running = True
 dbm_center_url_config = DBMCenterUrlConfig()
 dbm_agent_config = DBMAgentConfig()
-threads = ThreadPoolExecutor(max_workers=2, thread_name_prefix="backends")
+threads = ThreadPoolExecutor(max_workers=8, thread_name_prefix="backends")
 
 
 def registor_agent_to_center():
