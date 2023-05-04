@@ -6,13 +6,40 @@
 
 import os
 import tarfile
+from pathlib import Path
 
 
-def is_file_exists(file_path):
+def is_file_exists(file_path: Path = None):
     """
     判断文件是否存在
+
+    Parameters:
+    -----------
+    file_path: Path
+        文件|目录 的路径
+
+    Return:
+    --------
+    bool
+
+    Exceptions:
+    -----------
+    ValueError
+        file_path 为 None 时抛出
+    TypeError
+        file_path 的类型不为 str | Path 时抛出
     """
-    return os.path.exists(file_path)
+    if file_path is None:
+        raise ValueError("file_path is None , not a valid value .")
+
+    if type(file_path) not in (str, Path):
+        raise TypeError("file_path must be a str, or an Path object .")
+
+    # 如果是 str 的话要传成 Path 对象
+    if isinstance(file_path, str):
+        file_path = Path(file_path)
+
+    return file_path.exists()
 
 
 def extract_tar_file(tar_file_path, extract_dir):
