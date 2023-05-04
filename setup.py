@@ -30,8 +30,8 @@ setup(
     maintainer_email="neeky@live.com",
     scripts=[
         "bin/dbm-agent",
-        "bin/dbma-cli-single-instance",
         "bin/dbma-cli-init",
+        "bin/dbma-cli-mysql",
         "bin/dbma-cli-redis",
         "bin/dbm-bt-conn-stack",
     ],
