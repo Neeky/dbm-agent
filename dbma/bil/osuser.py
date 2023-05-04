@@ -186,13 +186,12 @@ class BaseUser(Identify):
         Identify.create(self)
 
     def chown(self, path, recursive=True):
-        """ """
-        logging.info("execute User.chown.")
+        """调用 chown 命令"""
         if recursive == True:
             cmd = f"chown -R {str(self)} {path}"
         else:
             cmd = f"chown {str(self)} {path}"
-        logging.info(cmd)
+        logging.debug(cmd)
         with sudo():
             exe_shell_cmd(cmd)
 
