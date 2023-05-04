@@ -27,7 +27,8 @@ class RedisConfig(object):
     dbfilename: str = "dump.rdb"
     loglevel: str = "notice"
     daemonize: str = "yes"
-    bind: str = "127.0.0.1 ::1"
+    # bind: str = "127.0.0.1 ::1"
+    bind: str = "* -::*"
     redis_dir: str = "/database/redis/{}".format(port)
     protected_mode: str = "yes"
     tcp_backlog: int = 511
