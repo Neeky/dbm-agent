@@ -15,7 +15,7 @@ dbm-agent 支持两种使用模式，第一种是命令行模式，第二种是 
 ## 安装-MySQL-主结点
 1. 命令行模式
    ```bash
-   dbma-cli-single-instance --port=3306 --ibps=128M --pkg=mysql-8.0.32-linux-glibc2.12-x86_64.tar.xz master
+   dbma-cli-mysql --port=3306 --ibps=128M --pkg=mysql-8.0.32-linux-glibc2.12-x86_64.tar.xz master
    ```
 2. 检查
    ```bash
@@ -42,7 +42,7 @@ dbm-agent 支持两种使用模式，第一种是命令行模式，第二种是 
 ## 安装-MySQL-从结点
 1. 命令行模式
    ```bash
-   dbma-cli-single-instance --port=3308 --ibps=128M --pkg=mysql-8.0.32-linux-glibc2.12-x86_64.tar.xz --source=127.0.0.1:3306 replica
+   dbma-cli-mysql --port=3308 --ibps=128M --pkg=mysql-8.0.32-linux-glibc2.12-x86_64.tar.xz --source=127.0.0.1:3306 replica
    ```
 2. 检查
    ```bash
@@ -82,7 +82,7 @@ dbm-agent 支持两种使用模式，第一种是命令行模式，第二种是 
 ## 卸载-MySQL
 1. 卸载
    ```bash
-   dbma-cli-single-instance --port=3308 uninstall
+   dbma-cli-mysql --port=3308 uninstall
    ```
 ---
 
