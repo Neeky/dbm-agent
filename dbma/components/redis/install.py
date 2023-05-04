@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 
-"""Resdis 单机环境的安装"""
+"""Redis 环境的安装"""
 
 
 import os
