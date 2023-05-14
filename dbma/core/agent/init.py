@@ -13,30 +13,53 @@ from pathlib import Path
 from dbma.bil.osuser import DBMAUser
 from dbma.core.configs import DBM_AGENT_BASE_DIR, DBMAgentConfig
 from dbma.bil.net import get_ip_by_card_name
+from dbma.core.exception import NetCardNotExistsException
 
 
-def init(net_card_name: str, dbm_center_url_prefix: str):
-    """安装 dbm-agent"""
-    # 配置日志
-    logging.basicConfig(
-        level=logging.INFO,
-        format="[%(asctime)s %(levelname)s] - [%(threadName)s] - [%(pathname)s %(lineno)d line]  ~  %(message)s",
-    )
-    logging.info("start install dbm-agent .")
+def has_net_card_exists(net_card_name: str):
+    """
+    检查给定的网卡是否存在
+    返回 True 说明给定的网卡存在，如果网卡不存在那么就会报异常 NetCardNotExistsException
 
-    # 检查给定的网卡是否存在
+    Parameters:
+    -----------
+    net_card_name: str
+
+    Returns:
+    --------
+    bool
+
+    Exceptions:
+    -----------
+    NetCardNotExistsException
+    """
     ip = get_ip_by_card_name(net_card_name)
     if ip is None:
         logging.error("not find any ip on {}".format(net_card_name))
-        return
+        raise NetCardNotExistsException(
+            "net card '{}' not exists".format(net_card_name)
+        )
+    return True
 
-    # 创建用户
+
+def create_dbma_user():
+    """
+    创建 dbma 用户
+    """
     logging.info("prepare create user dbma .")
     dbma_user = DBMAUser()
     dbma_user.create()
     logging.info("create user dbma done .")
+    return dbma_user
 
-    # 创建目录和子目录
+
+def create_dbm_agent_and_database_directorys():
+    """
+    创建 /usr/local/dbm-agent/*
+        /database/mysql/*
+        /database/redis/*
+    这三个目录和它的子目标
+    """
     logging.info("prepare create directions .")
     if not DBM_AGENT_BASE_DIR.exists():
         DBM_AGENT_BASE_DIR.mkdir()
@@ -57,19 +80,38 @@ def init(net_card_name: str, dbm_center_url_prefix: str):
 
     logging.info("create directions done .")
 
-    # 复制模板文件
-    logging.info("prepare copy template files .")
-    import dbma
 
-    basedir = Path(dbma.__file__).parent
-    src = basedir / "static/cnfs/"
-    dest = DBM_AGENT_BASE_DIR / "etc/templates"
-    shutil.copytree(src, dest, dirs_exist_ok=True)
-    logging.info("copy template files done .")
+def init(net_card_name: str, dbm_center_url_prefix: str):
+    """安装 dbm-agent"""
+    # 配置日志
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(asctime)s %(levelname)s] - [%(threadName)s] - [%(pathname)s %(lineno)d line]  ~  %(message)s",
+    )
+    logging.info("start install dbm-agent .")
+
+    # 检查给定的网卡是否存在
+    has_net_card_exists(net_card_name)
+
+    # 创建用户
+    dbma_user = create_dbma_user()
+
+    # 创建目录和子目录
+    create_dbm_agent_and_database_directorys()
+
+    # # 复制模板文件
+    # logging.info("prepare copy template files .")
+    # import dbma
+
+    # basedir = Path(dbma.__file__).parent
+    # src = basedir / "static/cnfs/"
+    # dest = DBM_AGENT_BASE_DIR / "etc/templates"
+    # shutil.copytree(src, dest, dirs_exist_ok=True)
+    # logging.info("copy template files done .")
 
     # 更新配置并保存到磁盘
     dbm_agent_config = DBMAgentConfig()
-    dbm_agent_config.host = ip
+    dbm_agent_config.host = get_ip_by_card_name(net_card_name)
     dbm_agent_config.dbmcenter_url_prefix = dbm_center_url_prefix
     dbm_agent_config.sync_to_disk()
 
