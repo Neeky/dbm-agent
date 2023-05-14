@@ -44,7 +44,17 @@ def init(net_card_name: str, dbm_center_url_prefix: str):
     for subdir in ("etc", "pkgs", "logs", "etc/templates"):
         item = DBM_AGENT_BASE_DIR / subdir
         if not item.exists():
+            logging.info("go to create dir {} .".format(item))
             item.mkdir()
+
+    # 创建 MySQL+Redis 会用的的一些公共目录
+    DATABASE_DIR = Path("/database")
+    for subdir in ("mysql", "mysql/data", "mysql/binlog", "redis"):
+        item = DATABASE_DIR / subdir
+        if not item.exists():
+            logging.info("go to create dir {} .".format(item))
+            item.mkdir()
+
     logging.info("create directions done .")
 
     # 复制模板文件
