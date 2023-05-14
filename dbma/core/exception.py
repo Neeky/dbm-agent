@@ -43,3 +43,13 @@ class DirectoryNotExistsException(DBMAgentException):
 
 
 # endregion directorys
+
+
+# region netcards
+class NetCardNotExistsException(DBMAgentException):
+    """网卡不存在"""
+
+    pass
+
+
+# endregion netcards
