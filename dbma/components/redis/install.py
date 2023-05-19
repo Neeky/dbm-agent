@@ -100,7 +100,7 @@ def pkg_to_redis_basedir(pkg: Path = default_redis_pkg):
     m = redis_pkg_re_pattern.match(pkg.name)
     if m is None:
         logging.error(messages.FUN_ENDS.format(fname()))
-        raise ValueError("redis pkg name error .")
+        raise ValueError("redis pkg name error pkg-name = '{}'.".format(pkg))
     version = m.group("redis_version")
 
     # 2. 返回 redis 版本应该对应的 basedir
