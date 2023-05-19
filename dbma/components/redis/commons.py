@@ -9,9 +9,7 @@ default_redis_port = 6379
 
 # 根据 dbm-agent 的配置文件确认默认情况下使用的 Redis 版本号
 default_redis_pkg = Path(
-    "/usr/local/dbm-agent/pkgs/redis-{}-linux-glibc-(?P<glibc_version>\d.\d{1,2})-x86_64.tar.gz".format(
-        dbm_agent_config.redis_default_version
-    )
+    "/usr/local/dbm-agent/pkgs/redis-7.0.11-linux-glibc-2.34-x86_64.tar.gz"
 )
 
 # Redis 安装包的正则表达式
