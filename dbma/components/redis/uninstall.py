@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """Redis 卸载"""
-

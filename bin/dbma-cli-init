@@ -1,4 +1,5 @@
 #!/usr/bin/evn python3
+# -*- coding: utf8 -*-
 
 """
 完成 dbm-agent 的初始化操作

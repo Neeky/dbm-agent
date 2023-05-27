@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+
+"""
+Redis 相关的公共函数
+"""
+
 import re
 from pathlib import Path
 

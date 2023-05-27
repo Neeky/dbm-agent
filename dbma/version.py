@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 
 """ dbm-agent 版本号管理
@@ -7,7 +7,7 @@
 
 DBM_AGENT_MAJOR_VERSION = 8
 DBM_AGENT_MINOR_VERSION = 33
-DBM_AGENT_PATCH_VERSION = 8
+DBM_AGENT_PATCH_VERSION = 9
 
 
 # dbm-agent 版本号
