@@ -34,7 +34,7 @@ def get_mysql_version(pkg_name: str = None):
     -------
     str | None
     """
-    p = re.compile("mysql-(?P<version>\d{1,1}.\d{1,1}.\d{1,2})-linux-glibc")
+    p = re.compile(r"mysql-(?P<version>\d{1,1}.\d{1,1}.\d{1,2})-linux-glibc")
     if (m := p.match(pkg_name)) and m is not None:
         return m.group("version")
     # 异常场景，目前还不清楚最理想的处理方式
