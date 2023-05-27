@@ -86,7 +86,12 @@ def dbma_mysql_cnx(
     try:
         # 连接数据库并返回游标
         cnx = mysql.connector.connect(
-            host=host, port=port, user=user, password=password, autocommit=True
+            host=host,
+            port=port,
+            user=user,
+            password=password,
+            autocommit=True,
+            multi=True,
         )
         cursor = cnx.cursor()
         yield cursor
