@@ -4,6 +4,7 @@
 """
 
 import re
+import time
 import logging
 import shutil
 import contextlib
@@ -206,9 +207,32 @@ def make_mysql_writable(port: int = 3306):
     logging.info(messages.FUN_STARTS.format(fname()))
 
     with dbma_mysql_cnx(port) as cursor:
-        sql = "set @@global.read_only=OFF; set @@global.super_read_only=OFF;"
-        cursor.execute(sql)
-        logging.info("make mysql instance 127.0.0.1:{} writable .".format(port))
-        logging.info("sql = {}".format(cursor.statement))
+        # sql = "set @@global.read_only=OFF; set @@global.super_read_only=OFF;"
+        sql = "set @@global.read_only=OFF;"
+        """
+        有可能 MySQL 还没有启动、所以这里加一个重试 3 次的逻辑
+        """
+        retry_conts = 3
+        for i in range(retry_conts):
+            try:
+                cursor.execute(sql)
+                logging.info("make mysql instance 127.0.0.1:{} writable .".format(port))
+                logging.info("sql = {}".format(cursor.statement))
+                break
+            except Exception as err:
+                logging.exception(err)
+                logging.warn("make mysql writeable failed '{}' ".format(str(err)))
+                logging.warn(
+                    "retry counts = {} , the max retry conts is {}", i, retry_conts - 1
+                )
+
+                # 加上 sleep 的逻辑
+                j = i + 1
+                sleep_time = 7 - (j * 2)
+                logging.info("sleep({})".format(sleep_time))
+                if sleep_time >= 1:
+                    time.sleep(sleep_time)
+                else:
+                    time.sleep(1)
 
     logging.info(messages.FUN_ENDS.format(fname()))
