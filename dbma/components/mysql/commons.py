@@ -205,4 +205,5 @@ def make_mysql_writable(port: int = 3306):
         cursor.execute(sql)
         logging.info("make mysql instance 127.0.0.1:{} writable .".format(port))
         logging.info("sql = {}".format(cursor.statement))
+
     logging.info(messages.FUN_ENDS.format(fname()))
