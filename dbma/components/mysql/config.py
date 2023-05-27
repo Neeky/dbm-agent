@@ -557,7 +557,7 @@ class MySQLConfig(object):
             self.innodb_log_buffer_size = "64M"
         elif self.innodb_buffer_pool_size.endswith("G"):
             # G 级别
-            size = re.match("\d*", self.innodb_buffer_pool_size).group(0)
+            size = re.match(r"\d*", self.innodb_buffer_pool_size).group(0)
             size = int(size)
             if size <= 2:
                 self.innodb_buffer_pool_instances = 1
