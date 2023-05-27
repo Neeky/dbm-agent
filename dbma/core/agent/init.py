@@ -73,7 +73,7 @@ def create_dbm_agent_and_database_directorys():
     # 创建 MySQL+Redis 会用的的一些公共目录
     DATABASE_DIR = Path("/database")
     if not DATABASE_DIR.exists():
-        item.mkdir()
+        DATABASE_DIR.mkdir()
 
     for subdir in ("mysql", "mysql/data", "mysql/binlog", "redis"):
         item = DATABASE_DIR / subdir
