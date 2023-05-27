@@ -55,7 +55,11 @@ def create_init_sql_file(version: str = None):
     elif version.startswith("5.7"):
         sql_file = Path(dbma.__file__).parent / "static/cnfs/init-5.7.x.sql"
     else:
-        message = "mysql version is '{}', can't create init-sql-file .".format(version)
+        message = (
+            "mysql version is '{}' not suported, can't create init-sql-file .".format(
+                version
+            )
+        )
         logging.error(message)
         raise ValueError(messages)
     logging.info("init sql file = {}".format(sql_file))
