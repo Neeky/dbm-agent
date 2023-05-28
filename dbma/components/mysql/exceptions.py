@@ -27,3 +27,9 @@ class MySQLSystemdFileNotExists(DBMAgentException):
     """ """
 
     pass
+
+
+class MySQLDataDirectoryExists(DBMAgentException):
+    """MySQL 数据目录已经存在"""
+
+    pass

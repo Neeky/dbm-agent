@@ -25,6 +25,10 @@ from dbma.components.mysql.commons import export_header_files, export_so_files
 from dbma.components.mysql.exceptions import MySQLSystemdFileNotExists
 from dbma.components.mysql.exceptions import MySQLPkgFileNotExistsException
 from dbma.components.mysql.exceptions import InstanceHasBeenInstalledException
+from dbma.components.mysql.asserts import (
+    assert_mysql_install_pkg_exists,
+    assert_mysql_datadir_not_exists,
+)
 
 
 def create_init_sql_file(version: str = None):
@@ -98,21 +102,15 @@ def checks_for_install(port: int = 3306, pkg: Path = default_pkg):
     Exceptions:
     ----------
     MySQLPkgFileNotExistsException
-
-    InstanceHasBeenInstalledException
-
+    MySQLDataDirectoryExists
     """
-    # 检查安装包是否存在
     logging.info(messages.FUN_STARTS.format(fname()))
-    if not pkg.exists():
-        logging.warn(messages.FILE_NOT_EXISTS.format(pkg))
-        raise MySQLPkgFileNotExistsException(messages.FILE_NOT_EXISTS.format(pkg))
+
+    # 检查安装包是否存在
+    assert_mysql_install_pkg_exists(pkg)
 
     # 检查给定的实例是不是已经安装过了
-    datadir = Path(dbm_agent_config.mysql_datadir_parent) / "{}".format(port)
-    if datadir.exists():
-        logging.warn(messages.MYSQL_INSTANCE_HAS_EXISTS.format(port))
-        raise InstanceHasBeenInstalledException(str(port))
+    assert_mysql_datadir_not_exists(port)
 
     logging.info(messages.FUN_ENDS.format(fname()))
 
