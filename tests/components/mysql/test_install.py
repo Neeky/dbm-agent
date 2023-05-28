@@ -57,6 +57,10 @@ class CreateInitSQLFileTestCase(unittest.TestCase):
 
         mock.assert_not_called()
 
+    def test_create_init_sql_file_given_none_value(self):
+        with self.assertRaises(ValueError):
+            create_init_sql_file()
+
 
 # endregion create_init_sql_file
 
