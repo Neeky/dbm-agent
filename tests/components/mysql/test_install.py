@@ -2,8 +2,16 @@
 
 import unittest
 from unittest.mock import Mock, patch, MagicMock, call
-from pathlib import PosixPath
-from dbma.components.mysql.install import create_init_sql_file
+from pathlib import Path, PosixPath
+from dbma.components.mysql.install import (
+    create_init_sql_file,
+    remove_init_sql_file,
+    checks_for_install,
+)
+from dbma.components.mysql.asserts import (
+    assert_mysql_install_pkg_exists,
+    assert_mysql_datadir_not_exists,
+)
 
 
 # region create_init_sql_file
@@ -51,3 +59,55 @@ class CreateInitSQLFileTestCase(unittest.TestCase):
 
 
 # endregion create_init_sql_file
+
+
+# region remove_init_sql_file
+class RemoveInitSqlFileTestCase(unittest.TestCase):
+    @patch("os.remove")
+    def test_remove_init_sql_file_given_init_file_exists(self, mock_remove):
+        """
+        given: /tmp/mysql-init.sql 存在
+        when: 调用 remove_init_sql_file
+        then: 删除 /tmp/mysql-init.sql 文件
+        """
+        with patch.object(Path, "exists") as mock_exists:
+            mock_exists.return_value = True
+            remove_init_sql_file()
+            mock_remove.assert_called_once()
+            mock_remove.assert_called_with(PosixPath("/tmp/mysql-init-user.sql"))
+
+    @patch("os.remove")
+    def test_remove_init_sql_file_given_init_file_not_exists(self, mock_remove):
+        """
+        given: /tmp/mysql-init.sql 不存在
+        when: 调用 remove_init_sql_file
+        then: 不会调用 os.remove 函数
+        """
+        with patch.object(Path, "exists") as mock_exists:
+            mock_exists.return_value = False
+            remove_init_sql_file()
+            mock_remove.assert_not_called()
+
+
+# endregion remove_init_sql_file
+
+
+# region checks_for_install
+
+
+class ChecksForInstallTestCase(unittest.TestCase):
+    @patch("dbma.components.mysql.install.assert_mysql_datadir_not_exists")
+    @patch("dbma.components.mysql.install.assert_mysql_install_pkg_exists")
+    def test_checks_for_install(self, mock_pkg, mock_dir):
+        pkg = Path(
+            "/usr/local/dbm-agent/pkgs/mysql-8.0.3333-linux-glibc2.28-x86_64.tar.gz"
+        )
+        checks_for_install(3306, pkg)
+        mock_pkg.assert_called_once()
+        mock_dir.assert_called_once()
+
+        mock_pkg.assert_called_with(pkg)
+        mock_dir.assert_called_with(3306)
+
+
+# endregion checks_for_install
