@@ -8,6 +8,8 @@ from dbma.core.configs import dbm_agent_config
 from dbma.components.mysql.exceptions import (
     MySQLPkgFileNotExistsException,
     MySQLDataDirectoryExists,
+    MySQLSystemdFileExists,
+    MySQLSystemdFileNotExists,
 )
 
 
@@ -35,7 +37,7 @@ def assert_mysql_install_pkg_exists(pkg: Path = None):
         )
 
 
-def assert_mysql_datadir_not_exists(port: int = None):
+def assert_mysql_datadir_not_exists(port: int = 3306):
     """
     断言对应端口的 MySQL 实例的数据目录存在
 
@@ -52,3 +54,42 @@ def assert_mysql_datadir_not_exists(port: int = None):
     if datadir.exists():
         message = "mysql data '{}' directory exists .".format(datadir)
         raise MySQLDataDirectoryExists(message)
+
+
+def assert_mysql_systemd_file_not_exists(port: int = 3306):
+    """
+    断言对应端口的 MySQL systemd 配置文件不存在、如果实际的情况与断言不一致就报异常
+
+    parameters:
+    -----------
+    port: int
+        MySQL 端口号
+
+    Exceptions:
+    -----------
+    MySQLSystemdFileExists
+    """
+    systemd_file = Path("/usr/lib/systemd/system/mysqld-{}.service".format(port))
+    if systemd_file.exists():
+        message = "mysql systemd config file '{}' exists.".format(str(systemd_file))
+        raise MySQLSystemdFileExists(message)
+
+
+def assert_mysql_systemd_file_exists(port: int = 3306):
+    """
+    断言对应端口的 MySQL systemd 配置文件存在、如果实际的情况与断言不一致就报异常
+
+    parameters:
+    -----------
+    port: int
+        MySQL 端口号
+
+    Exceptions:
+    -----------
+    MySQLSystemdFileExists
+    """
+    systemd_file = Path("/usr/lib/systemd/system/mysqld-{}.service".format(port))
+    if not systemd_file.exists():
+        # 如果不存在就要报异常
+        message = "mysql systemd config file '{}' exists.".format(str(systemd_file))
+        raise MySQLSystemdFileNotExists(message)
