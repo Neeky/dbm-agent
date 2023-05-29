@@ -28,6 +28,8 @@ from dbma.components.mysql.exceptions import InstanceHasBeenInstalledException
 from dbma.components.mysql.asserts import (
     assert_mysql_install_pkg_exists,
     assert_mysql_datadir_not_exists,
+    assert_mysql_systemd_file_exists,
+    assert_mysql_systemd_file_not_exists,
 )
 
 
@@ -161,7 +163,8 @@ def enable_systemd_for_mysql(port: int = 3306):
     logging.info(messages.FUN_STARTS.format(fname()))
 
     try:
-        check_mysql_systemd_exists(port)
+        # check_mysql_systemd_exists(port)
+        assert_mysql_systemd_file_exists(port)
         # 没有报异常，说明 systemd 配置存在, 准备执行 enable 操作
         enable_cmd = "systemctl enable mysqld-{}".format(port)
         logging.info(messages.EXECUTE_CMD.format(enable_cmd))
@@ -192,7 +195,8 @@ def disable_systemd_for_mysql(port: int = 3306):
     logging.info(messages.FUN_STARTS.format(fname()))
 
     try:
-        check_mysql_systemd_exists(port)
+        # check_mysql_systemd_exists(port)
+        assert_mysql_systemd_file_exists(port)
         # 没有报异常，说明 systemd 配置存在
         # 执行 enable 操作
         disable_cmd = "systemctl disable mysqld-{}".format(port)
@@ -225,7 +229,8 @@ def start_mysql(port: int = 3306):
     logging.info(messages.FUN_STARTS.format(fname()))
 
     try:
-        check_mysql_systemd_exists(port)
+        # check_mysql_systemd_exists(port)
+        assert_mysql_systemd_file_exists(port)
         # 没有报异常，说明 systemd 配置存在
         # 执行 start 操作
         start_cmd = "systemctl start mysqld-{}".format(port)
@@ -257,7 +262,8 @@ def stop_mysql(port: int = 3306):
     logging.info(messages.FUN_STARTS.format(fname()))
 
     try:
-        check_mysql_systemd_exists(port)
+        # check_mysql_systemd_exists(port)
+        assert_mysql_systemd_file_exists(port)
         # 没有报异常，说明 systemd 配置存在
         # 执行 stop 操作
         stop_cmd = "systemctl stop mysqld-{}".format(port)

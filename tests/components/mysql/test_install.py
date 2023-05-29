@@ -7,11 +7,16 @@ from dbma.components.mysql.install import (
     create_init_sql_file,
     remove_init_sql_file,
     checks_for_install,
+    enable_systemd_for_mysql,
+    exe_shell_cmd,
 )
 from dbma.components.mysql.asserts import (
     assert_mysql_install_pkg_exists,
     assert_mysql_datadir_not_exists,
+    assert_mysql_systemd_file_exists,
+    assert_mysql_systemd_file_not_exists,
 )
+from dbma.components.mysql.exceptions import MySQLSystemdFileNotExists
 
 
 # region create_init_sql_file
@@ -115,3 +120,40 @@ class ChecksForInstallTestCase(unittest.TestCase):
 
 
 # endregion checks_for_install
+
+
+# region enable_systemd_for_mysql
+
+
+class EnableSystemdForMysqlTestCase(unittest.TestCase):
+    port: int = 3308
+    enable_cmd = "systemctl enable mysqld-3308"
+
+    @patch("dbma.components.mysql.install.exe_shell_cmd")
+    @patch("dbma.components.mysql.install.assert_mysql_systemd_file_exists")
+    def test_enable_systemd_for_mysql_given_systemd_exists(self, mock_a, mock_e):
+        """
+        given: 给定端口号对应的 Systemd 文件存在
+        when: 调用 enable_systemd_for_mysql
+        then: 去调用对应的 systemctl 命令
+        """
+        enable_systemd_for_mysql(self.port)
+        mock_a.assert_called_with(self.port)
+        mock_e.assert_called_with(self.enable_cmd)
+
+    @patch("dbma.components.mysql.install.exe_shell_cmd")
+    @patch("dbma.components.mysql.install.assert_mysql_systemd_file_exists")
+    def test_enable_systemd_for_mysql_given_systemd_not_exists(self, mock_a, mock_e):
+        """
+        given: 给定端口号对应的 Systemd 文件不存在
+        when: 调用 enable_systemd_for_mysql
+        then: 报异常
+        """
+        mock_a.side_effect = MySQLSystemdFileNotExists()
+        with self.assertRaises(MySQLSystemdFileNotExists):
+            enable_systemd_for_mysql(self.port)
+        mock_a.assert_called_with(self.port)
+        mock_e.not_called()
+
+
+# endregion enable_systemd_for_mysql
