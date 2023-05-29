@@ -17,7 +17,7 @@ from dbma.core.configs import dbm_agent_config
 
 
 default_pkg = Path(
-    "/usr/local/dbm-agent/pkgs/mysql-{}-linux-glibc2.12-x86_64.tar.xz".format(
+    "/usr/local/dbm-agent/pkgs/mysql-{}-linux-glibc2.28-x86_64.tar.gz".format(
         dbm_agent_config.mysql_default_version
     )
 )
