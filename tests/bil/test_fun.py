@@ -4,14 +4,15 @@
 测试 fun.py 模块
 """
 
-from pytest_mock import MockerFixture
+import unittest
+from unittest.mock import Mock, patch, MagicMock, call
 from dbma.bil.fun import fname
 
-def test_fname(mocker: MockerFixture):
-    def hello():
-        name = fname()
-        return name
-    
-    name = hello()
-    assert name == "hello"
-    
+
+class FnameTestCase(unittest.TestCase):
+    @patch("inspect.stack")
+    def test_fname(self, mock):
+        mock.return_value = [None, [None, None, None, "funhello"]]
+        expected = "funhello"
+        result = fname()
+        self.assertEqual(result, expected)
