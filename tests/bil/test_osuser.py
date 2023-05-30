@@ -8,7 +8,15 @@ import unittest
 from unittest.mock import Mock, patch, MagicMock, call
 from collections import namedtuple
 
-from dbma.bil.osuser import is_root, is_user_exists, is_group_exists, get_uid_gid
+from dbma.bil.osuser import (
+    is_root,
+    is_user_exists,
+    is_group_exists,
+    get_uid_gid,
+    Identify,
+    BaseGroup,
+)
+
 
 # region is_root
 
@@ -45,6 +53,7 @@ class IsRootTestCase(unittest.TestCase):
 
 # endregion is_root
 
+
 # region is_user_exists
 
 
@@ -76,9 +85,8 @@ class IsUserExistsTestCase(unittest.TestCase):
 
 # endregion is_user_exists
 
+
 # region is_group_exists
-
-
 class IsGroupExistsTestCase(unittest.TestCase):
     """
     测试 is_group_exists
@@ -116,6 +124,7 @@ class IsGroupExistsTestCase(unittest.TestCase):
 # endregion is_group_exists
 
 
+# region get_uid_gid
 class GetUidGidTestCase(unittest.TestCase):
     """
     测试 get_uid_gid
@@ -150,3 +159,112 @@ class GetUidGidTestCase(unittest.TestCase):
         mock.assert_called_with("mysql")
         self.assertEqual(uid, 0)
         self.assertEqual(gid, 0)
+
+
+# endregion get_uid_gid
+
+
+# region Identify
+class IdentifyTestCase(unittest.TestCase):
+    """
+    测试 Identify 类
+    """
+
+    def test_create_shell_str(self):
+        identif = Identify("mysql")
+        with self.assertRaises(NotImplementedError):
+            identif.create_shell_str()
+
+    def test_drop_shell_str(self):
+        identif = Identify("mysql")
+        with self.assertRaises(NotImplementedError):
+            identif.drop_shell_str()
+
+    def test_is_exists(self):
+        identif = Identify("mysql")
+        with self.assertRaises(NotImplementedError):
+            identif.is_exists()
+
+    @patch("dbma.bil.osuser.exe_shell_cmd")
+    def test_create_given_user_exists(self, mock):
+        identif = Identify("mysql")
+        identif.is_exists = Mock()
+        identif.is_exists.return_value = True
+        identif.create()
+        mock.assert_not_called()
+
+    @patch("dbma.bil.osuser.exe_shell_cmd")
+    def test_create_given_user_not_exists(self, mock):
+        identif = Identify("mysql")
+        identif.is_exists = Mock()
+        identif.create_shell_str = Mock()
+
+        identif.is_exists.return_value = False
+        identif.create_shell_str.return_value = "useradd mysql"
+        identif.create()
+        mock.assert_called_once()
+        mock.assert_called_with("useradd mysql")
+
+    @patch("dbma.bil.osuser.exe_shell_cmd")
+    def test_drop_given_user_exists(self, mock):
+        identif = Identify("mysql")
+        identif.is_exists = Mock()
+        identif.drop_shell_str = Mock()
+
+        identif.is_exists.return_value = True
+        identif.drop_shell_str.return_value = "userdel mysql"
+        identif.drop()
+        mock.assert_called_once()
+        mock.assert_called_with("userdel mysql")
+
+    @patch("dbma.bil.osuser.exe_shell_cmd")
+    def test_drop_given_user_not_exists(self, mock):
+        identif = Identify("mysql")
+        identif.is_exists = Mock()
+        identif.drop_shell_str = Mock()
+
+        identif.is_exists.return_value = False
+        identif.drop_shell_str.return_value = "userdel mysql"
+        identif.drop()
+        mock.assert_not_called()
+
+
+# endregion Identify
+
+
+# region BaseGroup
+
+
+class BaseGroupTestCase(unittest.TestCase):
+    def test_create_shell_str(self):
+        identify = BaseGroup("mysql")
+        self.assertEqual(identify.create_shell_str(), "groupadd mysql")
+
+    def test_drop_shell_str(self):
+        identify = BaseGroup("mysql")
+        self.assertEqual(identify.drop_shell_str(), "groupdel mysql")
+
+    @patch("dbma.bil.osuser.is_group_exists")
+    def test_is_exists_given_group_exists(self, mock):
+        mock.return_value = True
+        identify = BaseGroup("mysql")
+        self.assertEqual(identify.is_exists(), True)
+
+    @patch("dbma.bil.osuser.is_group_exists")
+    def test_is_exists_given_group_not_exists(self, mock):
+        mock.return_value = False
+        identify = BaseGroup("mysql")
+        self.assertEqual(identify.is_exists(), False)
+
+    def test__str(self):
+        """ """
+        identify = BaseGroup("mysql")
+        self.assertEqual(str(identify), "mysql")
+
+    def test__repr(self):
+        """ """
+        identify = BaseGroup("mysql")
+        self.assertEqual(repr(identify), "BaseGroup{name=mysql}")
+
+
+# endregion BaseGroup
