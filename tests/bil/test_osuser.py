@@ -16,6 +16,7 @@ from dbma.bil.osuser import (
     Identify,
     BaseGroup,
     BaseUser,
+    DBMAUser,
 )
 
 
@@ -386,3 +387,17 @@ class BaseUserTestCase(unittest.TestCase):
 
 
 # endregion BaseUser
+
+
+# region DBMUser
+
+
+class DBMAUserTestCase(unittest.TestCase):
+    user_name: str = "mysql"
+
+    def test__init(self):
+        identify = DBMAUser(self.user_name)
+        self.assertEqual(identify.name, self.user_name)
+
+
+# endregion DBMUser
