@@ -15,6 +15,7 @@ from dbma.bil.osuser import (
     get_uid_gid,
     Identify,
     BaseGroup,
+    BaseUser,
 )
 
 
@@ -268,3 +269,120 @@ class BaseGroupTestCase(unittest.TestCase):
 
 
 # endregion BaseGroup
+
+
+# region BaseUser
+
+
+class BaseUserTestCase(unittest.TestCase):
+    """
+    测试 BaseUser
+    """
+
+    user_name: str = "mysql3306"
+
+    def test_init(self):
+        """
+        given: 给定对象的 name 属性
+        when: 访问对象的 name
+        then: 能得到之前传进去的值
+        """
+        identify = BaseUser(self.user_name)
+        self.assertEqual(identify.name, self.user_name)
+
+    def test_create_shell_str(self):
+        """
+        given: 给定一个 BaseUser ,它的 group.name 的值为 “mysql”
+        when: create_shell_str
+        then: 返回的字符串应该是 “useradd mysql3306 -g mysql”
+        """
+        identify = BaseUser(self.user_name)
+        identify.group = Mock()
+        identify.group.name = "mysql"
+
+        result = identify.create_shell_str()
+        self.assertEqual(result, "useradd mysql3306 -g mysql")
+
+        identify.home = "/home/mysql3306"
+        result = identify.create_shell_str()
+        self.assertEqual(result, "useradd mysql3306 -g mysql -d /home/mysql3306")
+
+    def test_drop_shell_str(self):
+        """
+        given: 给定一个 BaseUser
+        when: 调用 create_shell_str
+        then: 返回的字符串应该是 "userdel mysql"
+        """
+        expected = "userdel mysql"
+        identify = BaseUser("mysql")
+        res = identify.drop_shell_str()
+        self.assertEqual(res, expected)
+
+    @patch("dbma.bil.osuser.is_user_exists")
+    def test_is_exists_given_user_exists(self, mock):
+        """
+        given: 给定的用户存在于操作系统之上
+        when:  调用 is_exists 方法
+        then:  返回 True
+        """
+        mock.return_value = True
+        identify = BaseUser(self.user_name)
+        expected = True
+        res = identify.is_exists()
+        self.assertEqual(res, expected)
+
+    @patch("dbma.bil.osuser.is_user_exists")
+    def test_is_exists_given_user_not_exists(self, mock):
+        """
+        given: 给定的用户不存在于操作系统之上
+        when:  调用 is_exists() 方法
+        then:  返回 True
+        """
+        mock.return_value = False
+        identify = BaseUser(self.user_name)
+        expected = False
+        res = identify.is_exists()
+        self.assertEqual(res, expected)
+
+    def test_create_given_group_exists(self):
+        """
+        given: 给定的用户存在于操作系统之上
+        when:  调用 create() 方法
+        then:  创建给定的用户
+        """
+        identify = BaseUser(self.user_name)
+        identify.group = Mock()
+        identify.group.is_exists.return_value = True
+        with patch.object(Identify, "create") as ic_mock:
+            identify.create()
+            ic_mock.assert_called_once()
+
+    def test_create_given_group_not_exists(self):
+        """
+        given: 给定的用户存在于操作系统之上
+        when:  调用 create() 方法
+        then:  创建给定的用户
+        """
+        identify = BaseUser(self.user_name)
+        identify.group = Mock()
+        identify.group.is_exists.return_value = False
+        with patch.object(Identify, "create") as ic_mock:
+            identify.create()
+            ic_mock.assert_called_once()
+        # 当 group 不存在的时候会调用 group 的 create 方法
+        identify.group.create.assert_called_once()
+
+    @patch("dbma.bil.osuser.exe_shell_cmd")
+    def test_chown(self, mock):
+        t_p = "/database/mysql/data/3306"
+        identify = BaseUser(self.user_name)
+        identify.group = "mysql"
+        identify.chown(t_p)
+        mock.assert_called_once()
+        mock.assert_called_with("chown -R mysql3306:mysql /database/mysql/data/3306")
+
+        identify.chown(t_p, recursive=False)
+        mock.assert_called_with("chown mysql3306:mysql /database/mysql/data/3306")
+
+
+# endregion BaseUser
