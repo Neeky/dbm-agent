@@ -17,6 +17,10 @@ from dbma.bil.osuser import (
     BaseGroup,
     BaseUser,
     DBMAUser,
+    MySQLUser,
+    RedisUser,
+    RootGroup,
+    RootUser,
 )
 
 
@@ -401,3 +405,102 @@ class DBMAUserTestCase(unittest.TestCase):
 
 
 # endregion DBMUser
+
+
+# region MySQLUser
+
+
+class MySQLUserTestCase(unittest.TestCase):
+    mysql_port: int = 3306
+
+    def test__init(self):
+        identify = MySQLUser(self.mysql_port)
+        self.assertEqual(identify.name, "mysql{}".format(self.mysql_port))
+
+    def test_create(self):
+        """
+        given: 给定的用户存在
+        when:  调用 create() 方法
+        then:
+        """
+        identity = MySQLUser(self.mysql_port)
+        identity.group.is_exists = Mock(return_value=True)
+        with patch.object(BaseUser, "create") as mock:
+            identity.create()
+        mock.assert_called_once()
+
+        identity.group.is_exists = Mock(return_value=False)
+        with patch.object(BaseUser, "create") as mock:
+            identity.create()
+        mock.assert_called_once()
+
+    def test__str(self):
+        expected = "mysql3306:mysql"
+        identity = MySQLUser(self.mysql_port)
+        self.assertEqual(str(identity), expected)
+
+
+# endregion MySQLUser
+
+
+# region RediskUser
+
+
+class RedisUserTestCase(unittest.TestCase):
+    """
+    测试 RedisUser
+    """
+
+    redis_port: int = 6375
+
+    def test__init(self):
+        identify = RedisUser(self.redis_port)
+        self.assertEqual(identify.name, "redis{}".format(self.redis_port))
+
+    def test_create(self):
+        identify = RedisUser(self.redis_port)
+        identify.group = Mock()
+        identify.group.is_exists = Mock(return_value=True)
+        identify.create()
+
+        identify.group.is_exists = Mock(return_value=False)
+        identify.group.create = Mock()
+        identify.create()
+
+        identify.group.create.assert_called()
+
+    def test__str(self):
+        identify = RedisUser(self.redis_port)
+        expected = "redis{}:redis".format(self.redis_port)
+        self.assertEqual(str(identify), expected)
+
+
+# endregion RedisUser
+
+
+# region RootGroup
+
+
+class RootGroupTestCase(unittest.TestCase):
+    """ """
+
+    def test_drop(self):
+        identify = RootGroup()
+        identify.drop()
+
+
+# endregion RootGroup
+
+
+# region RootUser
+
+
+class RootUserTestCase(unittest.TestCase):
+    """ """
+
+    def test_drop(self):
+        identify = RootUser()
+        identify.drop()
+
+
+# endregion RootUser
