@@ -9,6 +9,7 @@ from dbma.components.mysql.install import (
     checks_for_install,
     enable_systemd_for_mysql,
     disable_systemd_for_mysql,
+    check_mysql_systemd_exists,
     exe_shell_cmd,
 )
 from dbma.components.mysql.asserts import (
@@ -160,6 +161,7 @@ class EnableSystemdForMysqlTestCase(unittest.TestCase):
 # endregion enable_systemd_for_mysql
 
 
+# region disable_systemd_for_mysql
 class DisableSystemdForMysqlTestCase(unittest.TestCase):
     """
     disable_systemd_for_mysql 的测试用例
@@ -203,3 +205,36 @@ class DisableSystemdForMysqlTestCase(unittest.TestCase):
 
         mock_exists.assert_called_with(self.port)
         mock_cmd.assert_not_called()
+
+
+# endregion disable_systemd_for_mysql
+
+# region check_mysql_systemd_exists
+
+
+class CheckMysqlSystemdExistsTestCase(unittest.TestCase):
+    port = 3306
+
+    def test_check_mysql_systemd_exists_given_exists(self):
+        """
+        given: mysql systemd 配置文件存在
+        when: 调用 check_mysql_systemd_exists(3306)
+        then: 正常执行
+        """
+        with patch.object(Path, "exists") as mock:
+            mock.return_value = True
+            check_mysql_systemd_exists(self.port)
+
+    def test_check_mysql_systemd_exists_given_not_exists(self):
+        """
+        given: mysql systemd 配置文件存在
+        when: 调用 check_mysql_systemd_exists(3306)
+        then: 报异常
+        """
+        with patch.object(Path, "exists") as mock:
+            mock.return_value = False
+            with self.assertRaises(MySQLSystemdFileNotExists):
+                check_mysql_systemd_exists(self.port)
+
+
+# endregion check_mysql_systemd_exists
