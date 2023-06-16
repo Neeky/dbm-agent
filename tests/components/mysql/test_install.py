@@ -11,6 +11,7 @@ from dbma.components.mysql.install import (
     disable_systemd_for_mysql,
     check_mysql_systemd_exists,
     exe_shell_cmd,
+    start_mysql,
 )
 from dbma.components.mysql.asserts import (
     assert_mysql_install_pkg_exists,
@@ -238,3 +239,50 @@ class CheckMysqlSystemdExistsTestCase(unittest.TestCase):
 
 
 # endregion check_mysql_systemd_exists
+
+
+# region start_mysql
+
+
+class StartMySQLTestCase(unittest.TestCase):
+    """ """
+
+    port = 3306
+
+    @patch("dbma.components.mysql.install.exe_shell_cmd")
+    @patch("dbma.components.mysql.install.assert_mysql_systemd_file_exists")
+    def test_start_mysql_given_instance_exists(self, mock_assert, mock_exec):
+        """
+        given: 给定的 MySQL 实例存在
+        when: 调用 start_mysql
+        then: 执行 systemctl start mysqld-${port} 命令
+        """
+        mock_assert.return_value = True
+        start_mysql(self.port)
+
+        mock_assert.assert_called_once()
+        mock_assert.assert_called_once_with(self.port)
+
+        mock_exec.assert_called_once()
+        mock_exec.assert_called_once_with("systemctl start mysqld-3306")
+
+    @patch("dbma.components.mysql.install.exe_shell_cmd")
+    @patch("dbma.components.mysql.install.assert_mysql_systemd_file_exists")
+    def test_start_mysql_given_instance_not_exists(self, mock_assert, mock_exec):
+        """
+        given: 给定的 MySQL 实例不存在
+        when: 调用 start_mysql
+        then: 执行 systemctl start mysqld-${port} 命令报异常
+        """
+        mock_assert.side_effect = MySQLSystemdFileNotExists()
+        with self.assertRaises(MySQLSystemdFileNotExists):
+            start_mysql(self.port)
+
+        mock_assert.assert_called_once()
+        mock_assert.assert_called_once_with(self.port)
+
+        mock_exec.assert_not_called()
+        # mock_exec.assert_called_once_with("systemctl start mysqld-3306")
+
+
+# endregion start_mysql
