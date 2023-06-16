@@ -12,6 +12,7 @@ from dbma.components.mysql.install import (
     check_mysql_systemd_exists,
     exe_shell_cmd,
     start_mysql,
+    stop_mysql,
 )
 from dbma.components.mysql.asserts import (
     assert_mysql_install_pkg_exists,
@@ -286,3 +287,46 @@ class StartMySQLTestCase(unittest.TestCase):
 
 
 # endregion start_mysql
+
+
+# region stop_mysql
+class StopMySQLTestCase(unittest.TestCase):
+    """ """
+
+    port = 3306
+
+    @patch("dbma.components.mysql.install.exe_shell_cmd")
+    @patch("dbma.components.mysql.install.assert_mysql_systemd_file_exists")
+    def test_stop_mysql_given_instance_exists(self, mock_assert, mock_exec):
+        """
+        given: 给定的实例存在
+        when: 调用 stop_mysql
+        then: 执行 systemctl stop mysqld-${port} 命令
+        """
+        stop_mysql(self.port)
+
+        mock_assert.assert_called_once()
+        mock_assert.assert_called_once_with(self.port)
+
+        mock_exec.assert_called_once()
+        mock_exec.assert_called_once_with("systemctl stop mysqld-3306")
+
+    @patch("dbma.components.mysql.install.exe_shell_cmd")
+    @patch("dbma.components.mysql.install.assert_mysql_systemd_file_exists")
+    def test_stop_mysql_given_instance_not_exists(self, mock_assert, mock_exec):
+        """
+        given: 给定的实例不存在
+        when: 调用 stop_mysql
+        then: 报异常
+        """
+        mock_assert.side_effect = MySQLSystemdFileNotExists()
+        with self.assertRaises(MySQLSystemdFileNotExists):
+            stop_mysql(self.port)
+
+        mock_assert.assert_called_once()
+        mock_assert.assert_called_once_with(self.port)
+
+        mock_exec.assert_not_called()
+
+
+# endregion stop_mysql
