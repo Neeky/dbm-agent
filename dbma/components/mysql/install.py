@@ -547,7 +547,6 @@ def install_mysql(
     # 第三步 计算 basedir
     basedir = pkg_to_basedir(pkg)
 
-    # TODO 清理掉 read_only 参数
     # 第四步 创建配置文件
     create_mysql_config_file(
         port=port, basedir=basedir, innodb_buffer_pool_size=innodb_buffer_pool_size
