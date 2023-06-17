@@ -5,8 +5,10 @@
 - [安装-dbm-agent](#安装-dbm-agent)
 - [安装-MySQL](#安装-mysql)
 - [备份-MySQL](#备份-mysql)
+- [安装-Redis](#安装-Redis)
 - [关闭-dbm-agent](#关闭-dbm-agent)
 - [规范](#规范)
+- [源码安装](#)
 - [官方微信公众平台](#官方微信公众平台)
 
 
@@ -160,6 +162,17 @@ OK
 
   ---
 
+## 源码安装
+```bash
+# 生成 tar.gz 格式的安装包
+cd dbm-agent
+python3 setup.py sdist
+
+# 执行安装
+cd dist
+pip3 install ./dbm-agent-8.33.10.tar.gz
+```
+---
 
 ## 官方微信公众平台 
 
