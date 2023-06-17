@@ -13,6 +13,8 @@ from dbma.components.mysql.install import (
     create_user_and_dirs,
     start_mysql,
     stop_mysql,
+    backup_dirs,
+    backup_config_file,
 )
 from dbma.components.mysql.asserts import (
     assert_mysql_install_pkg_exists,
@@ -414,3 +416,62 @@ class CreateUserAndDirsTestCase(unittest.TestCase):
 
 
 # endregion create_user_and_dirs
+
+
+# region backup_dirs
+
+
+class BackupDirsTestCase(unittest.TestCase):
+    """
+    backup_dirs 函数本身写的不好，后面重构
+    """
+
+    @patch("shutil.move")
+    def test_backup_dirs_given_instance_exists(self, mock):
+        """
+        given: 给定的实例存在
+        when: 调用 backup_dirs 函数
+        then: 备份相关目录
+        """
+        backup_dirs(3306)
+
+        mock.assert_called()
+
+
+# endregion backup_dirs
+
+
+# region backup_config_file
+
+
+class BackupConfigFileTestCase(unittest.TestCase):
+    """ """
+
+    port = 3306
+
+    @patch("os.remove")
+    @patch("shutil.copyfile")
+    def test_backup_config_file_given_instance_exists(self, mock_shutil, mock_remove):
+        """ """
+        with patch.object(Path, "exists") as mock:
+            mock.return_value = True
+            backup_config_file(self.port)
+
+        mock_shutil.assert_called_once()
+        mock_remove.assert_called_once()
+
+    @patch("os.remove")
+    @patch("shutil.copyfile")
+    def test_backup_config_file_given_instance_not_exists(
+        self, mock_shutil, mock_remove
+    ):
+        """ """
+        with patch.object(Path, "exists") as mock:
+            mock.return_value = False
+            backup_config_file(self.port)
+
+        mock_shutil.assert_not_called()
+        mock_remove.assert_not_called()
+
+
+# endregion backup_config_file
