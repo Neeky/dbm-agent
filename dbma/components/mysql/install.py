@@ -371,7 +371,7 @@ def backup_config_file(port: int = 3306, suffix=None):
         suffix = datetime.now().isoformat().replace(":", "-").replace(".", "-")
     datadir = Path(dbm_agent_config.mysql_datadir_parent) / str(port)
     if not datadir.exists():
-        logging.warn(messages.DIR_NOT_EXISTS.format(datadir))
+        logging.warning(messages.DIR_NOT_EXISTS.format(datadir))
         return
 
     config_file = "/etc/my-{}.cnf".format(port)
