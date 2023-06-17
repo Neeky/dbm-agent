@@ -15,6 +15,7 @@ from dbma.components.mysql.install import (
     stop_mysql,
     backup_dirs,
     backup_config_file,
+    decompression_pkg,
 )
 from dbma.components.mysql.asserts import (
     assert_mysql_install_pkg_exists,
@@ -22,7 +23,10 @@ from dbma.components.mysql.asserts import (
     assert_mysql_systemd_file_exists,
     assert_mysql_systemd_file_not_exists,
 )
-from dbma.components.mysql.exceptions import MySQLSystemdFileNotExists
+from dbma.components.mysql.exceptions import (
+    MySQLSystemdFileNotExists,
+    MySQLPkgFileNotExistsException,
+)
 from dbma.bil.osuser import MySQLUser
 
 
@@ -475,3 +479,18 @@ class BackupConfigFileTestCase(unittest.TestCase):
 
 
 # endregion backup_config_file
+
+
+# region decompression_pkg
+class DecompressionPkgTestCase(unittest.TestCase):
+    """ """
+
+    def test_decompression_pkg_given_pkg_not_exists(self):
+        """ """
+        pkg = Mock()
+        pkg.exists.return_value = False
+        with self.assertRaises(MySQLPkgFileNotExistsException):
+            decompression_pkg(pkg)
+
+
+# endregion decompression_pkg

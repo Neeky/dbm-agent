@@ -407,6 +407,9 @@ def decompression_pkg(pkg: Path = default_pkg):
         logging.error(messages.FILE_NOT_EXISTS.format(pkg))
         raise MySQLPkgFileNotExistsException(messages.FILE_NOT_EXISTS.format(pkg))
 
+    # TODO
+    # / 运行加大了测试用例的编写难度
+    # 这个后面改掉
     basedir = pkg_to_basedir(pkg)
     flag_file = basedir / ".dbm-agent-decompression.txt"
     if flag_file.exists():
