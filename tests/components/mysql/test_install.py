@@ -20,6 +20,7 @@ from dbma.components.mysql.install import (
     init_mysql,
     install_mysql,
     uninstall_mysql,
+    create_mysql_dirs,
 )
 from dbma.components.mysql.asserts import (
     assert_mysql_install_pkg_exists,
@@ -350,77 +351,19 @@ class CreateUserAndDirsTestCase(unittest.TestCase):
 
     port = 3306
 
-    @patch("os.mkdir")
-    @patch("dbma.components.mysql.install.Path")
-    @patch("dbma.components.mysql.install.MySQLUser")
-    def test_create_user_and_dirs_given_user_and_path_not_exists(
-        self, mock_mysql_user_cls, mock_path_cls, mock_os_mkdir
+    @patch("dbma.components.mysql.install.create_os_user_for_mysql")
+    @patch("dbma.components.mysql.install.create_mysql_dirs")
+    def test_create_user_and_dirs(
+        self, mock_create_mysql_dirs, mock_create_os_user_for_mysql
     ):
         """
-        given: 给定的用户+路径都不存在
-        when: 调用 create_user_and_dirs
-        then: 创建相关的目录与用户
+        given: 给定的用户和目录都不存在(存在也没有事，幂等的)
+        when: 调用 create_mysql_dirs
+
         """
-        user = Mock()
-        mock_mysql_user_cls.return_value = user
-
-        def return_self(self, other):
-            return self
-
-        # 让 mock 对象支持除法，这里还有些问题，测试代码太 hack 了，后面要重写业务逻辑
-        path = Mock()
-        path.__class__.__truediv__ = return_self
-        mock_path_cls.return_value = path
-        path.exists.return_value = False
-
-        create_user_and_dirs()
-
-        # 调用 create
-        user.create.assert_called_once()
-        user.create.assert_called_once_with()
-
-        # exists 调用两次
-        self.assertEqual(path.exists.call_count, 2)
-
-        # 由于 datadir + binlogdir 都不存在，所以 os.mkdir 要被调用两次, chown 也会把调用两次
-        self.assertEqual(mock_os_mkdir.call_count, 2)
-        self.assertEqual(user.chown.call_count, 2)
-
-    @patch("os.mkdir")
-    @patch("dbma.components.mysql.install.Path")
-    @patch("dbma.components.mysql.install.MySQLUser")
-    def test_create_user_and_dirs_given_user_and_path_exists(
-        self, mock_mysql_user_cls, mock_path_cls, mock_os_mkdir
-    ):
-        """
-        given: 给定的用户+路径都存在
-        when: 调用 create_user_and_dirs
-        then: 除了检查基本不做事
-        """
-        user = Mock()
-        mock_mysql_user_cls.return_value = user
-
-        def return_self(self, other):
-            return self
-
-        # 让 mock 对象支持除法，这里还有些问题，测试代码太 hack 了，后面要重写业务逻辑
-        path = Mock()
-        path.__class__.__truediv__ = return_self
-        mock_path_cls.return_value = path
-        path.exists.return_value = True
-
-        create_user_and_dirs()
-
-        # 调用 create
-        user.create.assert_called_once()
-        user.create.assert_called_once_with()
-
-        # exists 调用两次
-        self.assertEqual(path.exists.call_count, 2)
-
-        # 由于 datadir + binlogdir 都不存在，所以 os.mkdir 要被调用两次, chown 也会把调用两次
-        self.assertEqual(mock_os_mkdir.call_count, 0)
-        self.assertEqual(user.chown.call_count, 2)
+        create_user_and_dirs(self.port)
+        mock_create_mysql_dirs.assert_called()
+        mock_create_os_user_for_mysql.assert_called()
 
 
 # endregion create_user_and_dirs

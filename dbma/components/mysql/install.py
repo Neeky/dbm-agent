@@ -21,7 +21,12 @@ from dbma.components.mysql.config import MySQLConfig
 from dbma.components.mysql.commons import get_mysql_version
 from dbma.components.mysql.commons import export_cmds_to_path
 from dbma.components.mysql.commons import pkg_to_basedir, default_pkg
-from dbma.components.mysql.commons import export_header_files, export_so_files
+from dbma.components.mysql.commons import (
+    export_header_files,
+    export_so_files,
+    create_os_user_for_mysql,
+    create_mysql_dirs,
+)
 from dbma.components.mysql.exceptions import MySQLSystemdFileNotExists
 from dbma.components.mysql.exceptions import MySQLPkgFileNotExistsException
 from dbma.components.mysql.exceptions import InstanceHasBeenInstalledException
@@ -289,28 +294,31 @@ def create_user_and_dirs(port: int = 3306):
     """
     logging.info(messages.FUN_STARTS.format(fname()))
 
-    # 创建用户
-    user = MySQLUser(port)
-    user.create()
+    user = create_os_user_for_mysql(port)
+    create_mysql_dirs(port, user)
 
-    # 创建 datadir & binlogdir
-    datadir = Path(dbm_agent_config.mysql_datadir_parent) / str(port)
-    binlogdir = Path(dbm_agent_config.mysql_binlogdir_parent) / str(port)
+    # # 创建用户
+    # user = MySQLUser(port)
+    # user.create()
 
-    if not datadir.exists():
-        logging.info(messages.CREATE_DIR.format(datadir))
-        os.mkdir(datadir)
-    else:
-        logging.warning(messages.DIR_EXISTS.format(datadir))
+    # # 创建 datadir & binlogdir
+    # datadir = Path(dbm_agent_config.mysql_datadir_parent) / str(port)
+    # binlogdir = Path(dbm_agent_config.mysql_binlogdir_parent) / str(port)
 
-    if not binlogdir.exists():
-        logging.info(messages.CREATE_DIR.format(binlogdir))
-        os.mkdir(binlogdir)
-    else:
-        logging.warning(messages.DIR_EXISTS.format(binlogdir))
+    # if not datadir.exists():
+    #     logging.info(messages.CREATE_DIR.format(datadir))
+    #     os.mkdir(datadir)
+    # else:
+    #     logging.warning(messages.DIR_EXISTS.format(datadir))
 
-    user.chown(datadir)
-    user.chown(binlogdir)
+    # if not binlogdir.exists():
+    #     logging.info(messages.CREATE_DIR.format(binlogdir))
+    #     os.mkdir(binlogdir)
+    # else:
+    #     logging.warning(messages.DIR_EXISTS.format(binlogdir))
+
+    # user.chown(datadir)
+    # user.chown(binlogdir)
 
     logging.info(messages.FUN_ENDS.format(fname()))
 

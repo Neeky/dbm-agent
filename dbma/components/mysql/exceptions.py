@@ -37,3 +37,9 @@ class MySQLDataDirectoryExists(DBMAgentException):
     """MySQL 数据目录已经存在"""
 
     pass
+
+
+class NotSuportMySQLDirectoryType(DBMAgentException):
+    """不支持的 MySQL 目录类型"""
+
+    pass

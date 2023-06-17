@@ -8,12 +8,15 @@ import time
 import logging
 import shutil
 import contextlib
+from enum import Enum
 import mysql.connector
 from pathlib import Path
 from dbma.bil.fun import fname
 from dbma.core import messages
+from dbma.bil.osuser import MySQLUser
 from dbma.bil.cmdexecutor import exe_shell_cmd
 from dbma.core.configs import dbm_agent_config
+from dbma.components.mysql.exceptions import NotSuportMySQLDirectoryType
 
 
 default_pkg = Path(
@@ -21,6 +24,12 @@ default_pkg = Path(
         dbm_agent_config.mysql_default_version
     )
 )
+
+
+class MySQLDirs(Enum):
+    DATA = 1
+    BINLOG = 2
+    BACKUP = 3
 
 
 def get_mysql_version(pkg_name: str = None):
@@ -231,3 +240,100 @@ def make_mysql_writable(port: int = 3306):
                     time.sleep(1)
 
     logging.info(messages.FUN_ENDS.format(fname()))
+
+
+def create_os_user_for_mysql(port: int = 3306):
+    """
+    创建 MySQL 在 OS 层面的用户
+
+    Parameters:
+    ----------
+    port: int
+        MySQL 的端口号
+
+
+    """
+    logging.info(messages.FUN_STARTS.format(fname()))
+
+    user = MySQLUser(port)
+    user.create()
+    return user
+
+    logging.info(messages.FUN_ENDS.format(fname()))
+
+
+def create_directory(path: Path = None):
+    """
+    创建给定目录，如果你目录不存在就先创建父目录
+
+    Parameters:
+    -----------
+    path: Path
+        要创建的目录
+    """
+    logging.info(messages.FUN_STARTS.format(fname()))
+
+    # 把 str 转成 Path
+    if isinstance(path, str):
+        path = Path(path)
+
+    # 如果存在就直接退出
+    if path.exists():
+        return
+
+    # 如果父目录都不存在就先创建父目录
+    if not path.parent.exists():
+        create_directory(path.parent)
+        # raise ValueError("parent path not exists .")
+
+    # 创建目录
+    path.mkdir()
+
+    logging.info(messages.FUN_ENDS.format(fname()))
+
+
+def calculate_mysql_directory_by_port_and_type(
+    port: int = 3306, dir_type: MySQLDirs = MySQLDirs.DATA
+):
+    """
+    根据端口号和目录类型计算出对应的 Path 对象
+
+    Parameters:
+    -----------
+    port:int
+        MySQL 端口号
+
+    dir_type: MySQLDirectorys
+        MySQL 的目录类型
+    """
+    parent = None
+    if dir_type == MySQLDirs.DATA:
+        parent = Path(dbm_agent_config.mysql_datadir_parent)
+    elif dir_type == MySQLDirs.BINLOG:
+        parent = Path(dbm_agent_config.mysql_binlogdir_parent)
+    elif dir_type == MySQLDirs.BACKUP:
+        parent = Path(dbm_agent_config.mysql_backupdir_parent)
+    else:
+        raise NotSuportMySQLDirectoryType(
+            "not suport MySQLDirectorys type '{}'".format(dir_type)
+        )
+
+    return parent / str(port)
+
+
+def create_mysql_dirs(port: int = 3306, user: MySQLUser = None):
+    """
+    创建 MySQL 相关的目录(data/binlog/backup)
+
+    Parameters:
+    -----------
+    port: int
+        MySQL 端口号
+
+    user: MySQLUser
+        MySQL 在 os 层面的用户
+    """
+    for dir_type in MySQLDirs:
+        path = calculate_mysql_directory_by_port_and_type(port, dir_type)
+        create_directory(path)
+        user.chown(path)
