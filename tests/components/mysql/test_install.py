@@ -16,6 +16,7 @@ from dbma.components.mysql.install import (
     backup_dirs,
     backup_config_file,
     decompression_pkg,
+    create_mysql_config_file,
 )
 from dbma.components.mysql.asserts import (
     assert_mysql_install_pkg_exists,
@@ -494,3 +495,24 @@ class DecompressionPkgTestCase(unittest.TestCase):
 
 
 # endregion decompression_pkg
+
+
+# region create_mysql_config_file
+class CreateMysqlConfigFileTestCase(unittest.TestCase):
+    """ """
+
+    @patch("dbma.components.mysql.install.MySQLConfig")
+    def test_create_mysql_config_file(self, mock):
+        """ """
+        config_object = Mock()
+        mock.return_value = config_object
+
+        create_mysql_config_file(3306, "usr/local/mysql/", "128MB")
+
+        config_object.calcu_second_attrs.assert_called_once()
+        config_object.generate_cnf_config_file.assert_called_once()
+        config_object.generate_init_cnf_config_file.assert_called_once()
+        config_object.generate_systemd_cnf_config.assert_called_once()
+
+
+# endregion create_mysql_config_file
