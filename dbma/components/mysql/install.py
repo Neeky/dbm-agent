@@ -537,7 +537,6 @@ def install_mysql(
         raise err
 
     version = get_mysql_version(pkg.name)
-    basedir = pkg_to_basedir(pkg)
 
     # 第一步 创建用户和目录
     create_user_and_dirs(port)
