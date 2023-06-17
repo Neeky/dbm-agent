@@ -17,6 +17,8 @@ from dbma.components.mysql.install import (
     backup_config_file,
     decompression_pkg,
     create_mysql_config_file,
+    init_mysql,
+    install_mysql,
 )
 from dbma.components.mysql.asserts import (
     assert_mysql_install_pkg_exists,
@@ -516,3 +518,79 @@ class CreateMysqlConfigFileTestCase(unittest.TestCase):
 
 
 # endregion create_mysql_config_file
+
+
+# region init_mysql
+
+
+class InitMysqlTestCase(unittest.TestCase):
+    """ """
+
+    @patch("dbma.components.mysql.install.exe_shell_cmd")
+    def test_init_mysql(self, mock):
+        """ """
+        init_mysql(3306, Path("/usr/local/mysql"))
+
+        mock.assert_called_once()
+
+
+# endregion init_mysql
+
+
+# region install_mysql
+
+
+class InstallMysqlTestCase(unittest.TestCase):
+    """ """
+
+    @patch("dbma.components.mysql.install.remove_init_sql_file")
+    @patch("dbma.components.mysql.install.export_so_files")
+    @patch("dbma.components.mysql.install.export_header_files")
+    @patch("dbma.components.mysql.install.export_cmds_to_path")
+    @patch("dbma.components.mysql.install.start_mysql")
+    @patch("dbma.components.mysql.install.enable_systemd_for_mysql")
+    @patch("dbma.components.mysql.install.init_mysql")
+    @patch("dbma.components.mysql.install.create_init_sql_file")
+    @patch("dbma.components.mysql.install.create_mysql_config_file")
+    @patch("dbma.components.mysql.install.decompression_pkg")
+    @patch("dbma.components.mysql.install.create_user_and_dirs")
+    @patch("dbma.components.mysql.install.pkg_to_basedir")
+    @patch("dbma.components.mysql.install.get_mysql_version")
+    @patch("dbma.components.mysql.install.checks_for_install")
+    def test_install_mysql(
+        self,
+        mock_checks,
+        mock_get_mysql_version,
+        mock_pkg_to_basedir,
+        mock_create_user,
+        mock_decompression_pkg,
+        mock_create_mysql_config_file,
+        mock_create_init_sql_file,
+        mock_init_mysql,
+        mock_enable_systemd_for_mysql,
+        mock_start_mysql,
+        mock_export_cmds_to_path,
+        mock_export_header_files,
+        mock_export_so_files,
+        mock_remove_init_sql_file,
+    ):
+        """ """
+        install_mysql(3306, Path("/usr/local/mysql/"))
+
+        mock_checks.assert_called_once()
+        mock_get_mysql_version.assert_called_once()
+        mock_pkg_to_basedir.assert_called_once()
+        mock_create_user.assert_called_once()
+        mock_decompression_pkg.assert_called_once()
+        mock_create_mysql_config_file.assert_called_once()
+        mock_create_init_sql_file.assert_called_once()
+        mock_init_mysql.assert_called_once()
+        mock_enable_systemd_for_mysql.assert_called_once()
+        mock_start_mysql.assert_called_once()
+        mock_export_cmds_to_path.assert_called_once()
+        mock_export_header_files.assert_called_once()
+        mock_export_so_files.assert_called_once()
+        mock_remove_init_sql_file.assert_called_once()
+
+
+# endregion install_mysql
