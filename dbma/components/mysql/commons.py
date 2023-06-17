@@ -254,12 +254,12 @@ def create_os_user_for_mysql(port: int = 3306):
 
     """
     logging.info(messages.FUN_STARTS.format(fname()))
-
+    logging.info("mysql-user 'mysql{}' ".format(port))
     user = MySQLUser(port)
     user.create()
-    return user
-
     logging.info(messages.FUN_ENDS.format(fname()))
+
+    return user
 
 
 def create_directory(path: Path = None):
@@ -272,6 +272,7 @@ def create_directory(path: Path = None):
         要创建的目录
     """
     logging.info(messages.FUN_STARTS.format(fname()))
+    logging.info("path =  '{}' .".format(path))
 
     # 把 str 转成 Path
     if isinstance(path, str):
@@ -284,7 +285,6 @@ def create_directory(path: Path = None):
     # 如果父目录都不存在就先创建父目录
     if not path.parent.exists():
         create_directory(path.parent)
-        # raise ValueError("parent path not exists .")
 
     # 创建目录
     path.mkdir()
