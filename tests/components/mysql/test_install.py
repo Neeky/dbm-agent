@@ -19,6 +19,7 @@ from dbma.components.mysql.install import (
     create_mysql_config_file,
     init_mysql,
     install_mysql,
+    uninstall_mysql,
 )
 from dbma.components.mysql.asserts import (
     assert_mysql_install_pkg_exists,
@@ -594,3 +595,27 @@ class InstallMysqlTestCase(unittest.TestCase):
 
 
 # endregion install_mysql
+
+
+# region uninstall_mysql
+
+
+class UninstallMysqlTestCase(unittest.TestCase):
+    """ """
+
+    @patch("dbma.components.mysql.install.backup_dirs")
+    @patch("dbma.components.mysql.install.backup_config_file")
+    @patch("dbma.components.mysql.install.disable_systemd_for_mysql")
+    @patch("dbma.components.mysql.install.stop_mysql")
+    def test_uninstall_mysql(
+        self,
+        mock_stop_mysql,
+        mock_disable_systemd_for_mysql,
+        mock_backup_config_file,
+        mock_backup_dirs,
+    ):
+        """ """
+        uninstall_mysql(3306)
+
+
+# endregion uninstall_mysql
