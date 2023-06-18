@@ -41,6 +41,7 @@ class ClearTask(object):
 
     path: Path
 
+    @property
     def rename_at(self):
         """根据目录名，计算出目录备份的时间点"""
         # 目录的后缀是 “2023-05-29T20-23-32-472128” 这个格式，也就是说它不是一个正确的时间日期格式
@@ -60,7 +61,7 @@ class ClearTask(object):
         # 用传好格式构造 datetime 对象
         if match:
             now = datetime.now() if now is None else now
-            delta = now - self.rename_at()
+            delta = now - self.rename_at
             if delta.days >= 3:
                 return True
         # 没有匹配到正则、或是没有超过 3 天
