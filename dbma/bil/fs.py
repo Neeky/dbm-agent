@@ -140,6 +140,41 @@ def append_new_line_to_etc_profile(line):
         f.write("\n")
 
 
+def get_file_size(file_path: Path):
+    """返回给定文件的大小(字节)
+
+    Parameters:
+    -----------
+    file_path: Path
+        文件路径
+    """
+    # 如果参数是 str 给它转换成 Path
+    if isinstance(file_path, str):
+        file_path = Path(file_path)
+
+    res = os.lstat(file_path)
+    return res.st_size
+
+
+def is_file_greater_then(file_path: Path = None, size: int = None):
+    """
+    检查 file_path 对应文件大小是不是大于 size, 如果是返回 True, 不是返回 False。
+
+    Parameters:
+    -----------
+    file_path: Path
+        文件路径
+
+    size: int
+        大小
+
+    Return:
+    -------
+    bool
+    """
+    return get_file_size(file_path) > size
+
+
 join = os.path.join
 
 readlink = os.readlink
