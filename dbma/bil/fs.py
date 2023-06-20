@@ -175,6 +175,31 @@ def is_file_greater_then(file_path: Path = None, size: int = None):
     return get_file_size(file_path) > size
 
 
+def truncate_or_delete_file(file_path: Path = None, chunk_size: int = 16 * 1024 * 1024):
+    """
+    如果 file_path 的大小大于 chunk_size 就截断 chunk_size 大小的段，不然就删除文件
+
+    Parameters:
+    -----------
+    file_path: Path
+        要执行删除|截断的文件
+
+    chunk_size: int
+        单次截断的大小
+
+    """
+    if isinstance(file_path, str):
+        file_path = Path(file_path)
+
+    # 如果已经不足 chunk_size 大，就删除掉；然后就 truncate 指定大小
+    file_size = get_file_size(file_path)
+    if file_size < chunk_size:
+        os.remove(file_path)
+    else:
+        chunk = file_size - chunk_size
+        os.truncate(file_path, chunk)
+
+
 join = os.path.join
 
 readlink = os.readlink
