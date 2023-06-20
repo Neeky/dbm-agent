@@ -16,12 +16,14 @@
 
 import re
 import glob
+import time
 import logging
 from pathlib import Path
 from datetime import datetime
 from collections import deque
 from dataclasses import dataclass
 from dbma.bil.fun import fname
+from dbma.bil.fs import truncate_or_delete_file, get_file_size
 from dbma.core import messages
 from dbma.core.configs import dbm_agent_config
 
@@ -100,3 +102,42 @@ def scan_data_dir_gen_task():
 
     logging.info(messages.FUN_ENDS.format(fname()))
     return result
+
+
+def clear_instance(task: ClearTask = None):
+    """
+    根据 ClearTask 中指定的目录进行清理动作
+    """
+    logging.info(messages.FUN_STARTS.format(fname()))
+    logging.info(
+        "task.path = '{}'  is_expire = '{}' ".format(task.path, task.is_expired)
+    )
+    files = []
+    dirs = []
+
+    for item in glob.glob(task.path, recursive=True):
+        path = Path(item)
+        if path.is_dir():
+            dirs.append(dirs)
+        else:
+            files.append(path)
+
+    # 先清理文件
+    for path in files:
+        # 准备清理
+        while True:
+            # 如果文件比较大，那么就一直 truncate 到 0 为止
+            logging.info(
+                "prepare clear '{}' size = {}".format(path), get_file_size(path)
+            )
+            chunck = truncate_or_delete_file(path, 16 * 1024 * 1024)
+            logging.info("done clear '{}' size = {}".format(path), get_file_size(path))
+            if chunck == 0:
+                break
+        # 清理完成
+        time.sleep(1)
+
+    # 清理目录
+    # TODO
+
+    logging.info(messages.FUN_ENDS.format(fname()))
