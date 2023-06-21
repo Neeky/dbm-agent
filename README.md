@@ -1,16 +1,16 @@
 ## 目录
 ---
-- [目录](#目录)
+<!-- - [目录](#目录)
 - [dbm-愿景](#dbm-愿景)
 - [安装-dbm-agent](#安装-dbm-agent)
-- [安装-MySQL](#安装-mysql)
-- [备份-MySQL](#备份-mysql)
-- [安装-Redis](#安装-Redis)
+- [MySQL自动化](#MySQL自动化)
 - [关闭-dbm-agent](#关闭-dbm-agent)
 - [规范](#规范)
 - [源码安装](#源码安装)
-- [官方微信公众平台](#官方微信公众平台)
+- [官方微信公众平台](#官方微信公众平台) -->
 
+
+[toc]
 
 ---
 
@@ -85,13 +85,17 @@
    ```
    ---
 
-## 安装-MySQL
-请查看 `docs/01-auto-install-MySQL.md` [安装配置-MySQL](./docs/01-auto-install-MySQL.md) 。
+## MySQL自动化运维
+MySQL 目前支持的功能列表如下
 
----
-
-## 备份-MySQL
-请查看 `docs/02-auto-backup-MySQL.md` [备份-MySQL](./docs/02-auto-backup-MySQL.md) 。
+|**功能名**|**详细文档**|
+|---------|-----------
+|MySQL单机&主从安装配置| [MySQL-安装配置](./docs/mysql-01-auto-install.md)|
+|MySQL备份|[备份-MySQL](./docs/mysql-02-auto-backup.md)|
+|MySQL卸载|[卸载-MySQL](./docs/mysql-03-auto-uninstall.md)|
+|MySQL清理|[清理-MySQL](./docs/mysql-04-clear-backup-files.md)|
+|MySQLMGR| 开发中|
+|高可用|开发中|
 
 ---
 
