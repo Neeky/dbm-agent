@@ -15,6 +15,7 @@ from dbma.core.router import routes
 from dbma.core.threads import backends
 from dbma.core.configs import DBMAgentConfig
 from dbma.core.views import dbmagentview as _
+from dbma.components.mysql.backends.clears import start_clear_tasks
 from dbma.components.mysql.views import defaultsview as _
 
 dbm_agent_config = DBMAgentConfig()
@@ -95,6 +96,7 @@ def start():
     # 启动后台线程
     logging.info("start backends threads .")
     backends.start_cycle_tasks()
+    start_clear_tasks()
 
     # 启动 http 服务
     logging.info("going to start dbm-agent http-server bind on 0.0.0.0:8086 .")

@@ -196,10 +196,10 @@ def truncate_or_delete_file(file_path: Path = None, chunk_size: int = 16 * 1024 
     if file_size < chunk_size:
         os.remove(file_path)
         return 0
-    else:
-        chunk = file_size - chunk_size
-        os.truncate(file_path, chunk)
-        return chunk
+
+    chunk = file_size - chunk_size
+    os.truncate(file_path, chunk)
+    return chunk
 
 
 join = os.path.join

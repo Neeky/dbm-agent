@@ -14,9 +14,11 @@
     
 """
 
+import os
 import re
 import glob
 import time
+import shutil
 import logging
 from pathlib import Path
 from datetime import datetime
@@ -26,6 +28,8 @@ from dbma.bil.fun import fname
 from dbma.bil.fs import truncate_or_delete_file, get_file_size
 from dbma.core import messages
 from dbma.core.configs import dbm_agent_config
+from dbma.core.threads.backends import threads, keep_threads_running
+from dbma.bil.osuser import sudo
 
 
 clear_tasks = deque(maxlen=1024)
@@ -110,34 +114,98 @@ def clear_instance(task: ClearTask = None):
     """
     logging.info(messages.FUN_STARTS.format(fname()))
     logging.info(
-        "task.path = '{}'  is_expire = '{}' ".format(task.path, task.is_expired)
+        "task.path = '{}'  is_expire = '{}' ".format(task.path, task.is_expired())
     )
     files = []
     dirs = []
 
-    for item in glob.glob(task.path, recursive=True):
+    for item in glob.glob("{}/*".format(task.path)):
         path = Path(item)
         if path.is_dir():
-            dirs.append(dirs)
+            dirs.append(path)
         else:
             files.append(path)
+    logging.info("files = {}, dirs = {}".format(len(files), len(dirs)))
 
     # 先清理文件
     for path in files:
+        logging.info("deal-with file '{}' ".format(path))
         # 准备清理
         while True:
             # 如果文件比较大，那么就一直 truncate 到 0 为止
-            logging.info(
-                "prepare clear '{}' size = {}".format(path), get_file_size(path)
-            )
             chunck = truncate_or_delete_file(path, 16 * 1024 * 1024)
-            logging.info("done clear '{}' size = {}".format(path), get_file_size(path))
+            time.sleep(1)
             if chunck == 0:
+                # chunck == 0 说明文件已经执行 remove 清理掉了
+                logging.info("file '{}' removed ".format(path))
                 break
-        # 清理完成
-        time.sleep(1)
+            else:
+                logging.info("file '{}' truncated ".format(path))
 
-    # 清理目录
-    # TODO
+    # 清理子目录
+    for sub in dirs:
+        clear_instance(ClearTask(sub))
+
+    # 清理当前目录
+    dirs = []
+    for item in glob.glob("{}/*".format(task.path)):
+        path = Path(item)
+        if path.is_dir():
+            dirs.append(path)
+
+    if len(dirs) == 0:
+        logging.info(
+            "sub directorys not exists, rm current directory '{}' ".format(task.path)
+        )
+        shutil.rmtree(task.path)
 
     logging.info(messages.FUN_ENDS.format(fname()))
+
+
+def pub_clear_task_thread_fun():
+    """
+    生成后台清理任务的线程函数
+    """
+    global keep_threads_running
+    while keep_threads_running:
+        logging.info(messages.FUN_STARTS.format(fname()))
+        with sudo():
+            tasks = scan_data_dir_gen_task()
+            for task in tasks:
+                clear_tasks.append(task)
+
+        logging.info(messages.FUN_STARTS.format(fname()))
+
+        # 一小时扫一次目录，生成清理任务
+        time.sleep(3600)
+
+
+def sub_clear_task_thread_fun():
+    """
+    从队列里取出任务并执行清理
+    """
+    global keep_threads_running
+    while keep_threads_running:
+        try:
+            logging.info(messages.FUN_STARTS.format(fname()))
+            try:
+                task = clear_tasks.pop()
+            except IndexError as err:
+                logging.info("task deque is empty .")
+                # 对于队列中没有任务的情况下线程休息 30 分钟
+                time.sleep(1800)
+                continue
+
+            with sudo():
+                clear_instance(task)
+            # 清理完成一个实例之后要休息 1 分钟
+            time.sleep(60)
+            logging.info(messages.FUN_STARTS.format(fname()))
+        except Exception as err:
+            logging.error(err)
+
+
+def start_clear_tasks():
+    threads.submit(pub_clear_task_thread_fun)
+    time.sleep(5)
+    threads.submit(sub_clear_task_thread_fun)

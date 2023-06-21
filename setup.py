@@ -46,6 +46,7 @@ setup(
         "dbma/components/mysql",
         "dbma/components/mysql/views",
         "dbma/components/mysql/backups",
+        "dbma/components/mysql/backends",
         "dbma/components/redis",
         "dbma/components/orchestrator",
     ],
