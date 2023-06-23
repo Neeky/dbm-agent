@@ -102,7 +102,13 @@ def scan_data_dir_gen_task():
             if backup_dir_re_pattern.search(instance_path):
                 logging.info("find '{}' .".format(instance_path))
                 # 构造 ClearTask 对象
-                result.append(ClearTask(instance_path))
+                task = ClearTask(instance_path)
+                if task.is_expired():
+                    result.append(task)
+                else:
+                    logging.info(
+                        "instance '{}' backup not expired .".format(instance_path)
+                    )
 
     logging.info(messages.FUN_ENDS.format(fname()))
     return result
