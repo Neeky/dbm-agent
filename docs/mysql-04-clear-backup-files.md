@@ -1,5 +1,5 @@
 ## 清理动作是自动的
-当你对一个调用 uninstall 之后，它的 datadir 会被 rename 成如下的形式
+当你对一个实例调用 uninstall 之后，它的 datadir 会被 rename 成如下的形式
 ```bash
 /database/mysql/data/3308-backup-2023-05-29T20-23-32-472128
 ```
