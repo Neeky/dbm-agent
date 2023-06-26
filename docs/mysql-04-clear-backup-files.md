@@ -14,6 +14,6 @@
 [2023-06-21 14:17:19,179 INFO] - [backends_2] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/mysql/backends/clears.py 162 line]  ~  ends clear_instance .
 [2023-06-21 14:17:19,179 INFO] - [backends_2] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/mysql/backends/clears.py 157 line]  ~  sub directorys not exists, rm current directory '/database/mysql/data/3308-backup-2023-05-29T20-23-32-472128'
 ```
-后台的清理的温和的，对于大于 16MB 的文件一次截断 16MB，对于小于 16MB 的文件才会直接删除。
+后台的清理是温和的，也就是说对于大于 16MB 的文件一次截断 16MB，对于小于 16MB 的文件才会直接删除。
 
 ---
