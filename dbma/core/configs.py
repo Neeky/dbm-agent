@@ -52,6 +52,8 @@ class DBMAgentConfig(object):
     mysql_repl_password: str = "2-4nw9A0-459st36"
     mysql_init_cnf: str = "/tmp/mysql-init.cnf"
     mysql_init_user_sql_file: str = "/tmp/mysql-init-user.sql"
+    # clear 目录的过期时间默认 3 天
+    mysql_clear_instance_expire_time: int = 86400 * 3
 
     # redis
     redis_default_version: str = "7.0.11"
