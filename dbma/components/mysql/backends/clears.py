@@ -14,7 +14,6 @@
     
 """
 
-import os
 import re
 import glob
 import time
@@ -72,6 +71,27 @@ class ClearTask(object):
                 return True
         # 没有匹配到正则、或是没有超过 3 天
         return False
+
+    def glob(self):
+        """
+        返回 path 目录下的所有文件和目录
+        """
+        return glob.glob("{}/*".format(self.path))
+
+    def __post_init__(self):
+        """
+        init 完成之后先检查一下，实例有没有过期，过期了的话就先把目录给它扫出来
+        """
+        self.dirs = []
+        self.files = []
+        if self.is_expired():
+            # 过期了就分别把目录、文件保存到 dirs 和 files 中去
+            for item in self.glob():
+                item = Path(item)
+                if item.is_dir():
+                    self.dirs.append(item)
+                else:
+                    self.files.append(item)
 
 
 def scan_data_dir_gen_task():
@@ -174,13 +194,15 @@ def pub_clear_task_thread():
     """
     global keep_threads_running
     while keep_threads_running:
-        logging.info(messages.FUN_STARTS.format(fname()))
-        with sudo():
-            tasks = scan_data_dir_gen_task()
-            for task in tasks:
-                clear_tasks.append(task)
-
-        logging.info(messages.FUN_STARTS.format(fname()))
+        try:
+            logging.info(messages.FUN_STARTS.format(fname()))
+            with sudo():
+                tasks = scan_data_dir_gen_task()
+                for task in tasks:
+                    clear_tasks.append(task)
+            logging.info(messages.FUN_STARTS.format(fname()))
+        except Exception as err:
+            logging.error(err)
 
         # 一小时扫一次目录，生成清理任务
         time.sleep(3600)
