@@ -168,7 +168,7 @@ def clear_instance(task: ClearTask = None):
     logging.info(messages.FUN_ENDS.format(fname()))
 
 
-def pub_clear_task_thread_fun():
+def pub_clear_task_thread():
     """
     生成后台清理任务的线程函数
     """
@@ -186,7 +186,7 @@ def pub_clear_task_thread_fun():
         time.sleep(3600)
 
 
-def sub_clear_task_thread_fun():
+def sub_clear_task_thread():
     """
     从队列里取出任务并执行清理
     """
@@ -212,6 +212,6 @@ def sub_clear_task_thread_fun():
 
 
 def start_clear_tasks():
-    threads.submit(pub_clear_task_thread_fun)
+    threads.submit(pub_clear_task_thread)
     time.sleep(5)
-    threads.submit(sub_clear_task_thread_fun)
+    threads.submit(sub_clear_task_thread)
