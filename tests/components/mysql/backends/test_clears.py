@@ -103,7 +103,7 @@ class ClearTaskTestCase(unittest.TestCase):
         then: 返回 False
         """
         task = ClearTask(self.path)
-        now = datetime(2023, 5, 30, 0, 0, 0)
+        now = datetime(2023, 5, 29, 20, 23, 33)
         self.assertEqual(task.is_expired(now), False)
 
     def test_glob(self):
