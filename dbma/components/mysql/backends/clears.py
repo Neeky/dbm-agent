@@ -67,7 +67,10 @@ class ClearTask(object):
         if match:
             now = datetime.now() if now is None else now
             delta = now - self.rename_at
-            if delta.seconds >= dbm_agent_config.mysql_clear_instance_expire_time:
+            if (
+                delta.total_seconds()
+                >= dbm_agent_config.mysql_clear_instance_expire_time
+            ):
                 return True
         # 没有匹配到正则、或是没有超过 3 天
         return False
