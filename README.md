@@ -83,7 +83,7 @@
    ```
    ---
 
-## MySQL-自动化
+## MySQL-功能列表
 
 MySQL 目前支持的功能列表如下
 
@@ -98,43 +98,13 @@ MySQL 目前支持的功能列表如下
 
 ---
 
-## 安装-Redis
-```
-dbma-cli-redis --pkg=redis-7.0.11-linux-glibc-2.34-x86_64.tar.gz --port=6381 master
+## Redis-功能列表
 
-[2023-06-14 23:44:05,086 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/install.py 228 line]  ~  starts install_resdis_master .
-[2023-06-14 23:44:05,087 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/install.py 29 line]  ~  starts create_redis_user .
-[2023-06-14 23:44:05,369 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/install.py 35 line]  ~  ends create_redis_user .
-[2023-06-14 23:44:05,369 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/install.py 68 line]  ~  starts create_redis_database_dir .
-[2023-06-14 23:44:05,370 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/install.py 46 line]  ~  starts chown_database_dir_to_redis_user .
-[2023-06-14 23:44:05,370 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/install.py 50 line]  ~  going to chown .
-[2023-06-14 23:44:05,373 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/install.py 52 line]  ~  chown down.
-[2023-06-14 23:44:05,373 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/install.py 54 line]  ~  ends chown_database_dir_to_redis_user .
-[2023-06-14 23:44:05,373 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/install.py 78 line]  ~  ends create_redis_database_dir .
-[2023-06-14 23:44:05,374 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/install.py 135 line]  ~  starts decompression_redis_pkg .
-[2023-06-14 23:44:05,374 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/install.py 97 line]  ~  starts pkg_to_redis_basedir .
-[2023-06-14 23:44:05,374 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/install.py 107 line]  ~  ends pkg_to_redis_basedir .
-[2023-06-14 23:44:05,375 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/install.py 140 line]  ~  ends decompression_redis_pkg .
-[2023-06-14 23:44:05,376 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/config.py 53 line]  ~  starts render_config .
-[2023-06-14 23:44:05,381 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/config.py 76 line]  ~  ends render_config .
-[2023-06-14 23:44:05,382 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/install.py 97 line]  ~  starts pkg_to_redis_basedir .
-[2023-06-14 23:44:05,382 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/install.py 107 line]  ~  ends pkg_to_redis_basedir .
-[2023-06-14 23:44:05,383 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/systemd.py 59 line]  ~  starts generate_systemd_config .
-[2023-06-14 23:44:05,384 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/systemd.py 30 line]  ~  starts render_config .
-[2023-06-14 23:44:05,386 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/systemd.py 51 line]  ~  ends render_config .
-[2023-06-14 23:44:05,386 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/systemd.py 68 line]  ~  systemctl daemon-reload
-[2023-06-14 23:44:05,568 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/systemd.py 70 line]  ~  ends generate_systemd_config .
-[2023-06-14 23:44:05,588 INFO] - [MainThread] - [/usr/local/python/lib/python3.11/site-packages/dbma/components/redis/install.py 233 line]  ~  ends install_resdis_master .
-```
-检查
-```
-/usr/local/redis-7.0.11/bin/redis-cli -p 6381
-127.0.0.1:6381> set pserson:001:name "tom"
-OK
-127.0.0.1:6381> get pserson:001:name
-"tom"
-127.0.0.1:6381>
-```
+Redis 目前支持的功能列表如下
+|**功能名**|**详细文档**|
+|---------|-----------
+|Redis-master-安装| [MySQL-安装配置](./docs/redis-01-auto-install.md)|
+|Redis-replica-安装|[备份-MySQL](./docs/redis-02-build-replica.md)|
 
 ---
 
