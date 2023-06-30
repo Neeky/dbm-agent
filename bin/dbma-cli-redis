@@ -18,7 +18,7 @@ def parser_cmd_args():
     """
     实现命令行参数的处理
     """
-    parser = argparse.ArgumentParser(__name__)
+    parser = argparse.ArgumentParser(__name__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         "--pkg", default=default_redis_pkg, help="redis install pkg", type=str
     )

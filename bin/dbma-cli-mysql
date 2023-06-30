@@ -20,13 +20,15 @@ def parser_cmd_args():
     """
     实现命令行参数的处理
     """
-    parser = argparse.ArgumentParser(__name__)
+    parser = argparse.ArgumentParser(
+        __name__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument("--port", type=int, default=3306, help="instance port")
     parser.add_argument(
         "--pkg-name",
         type=str,
         default=default_pkg.name,
-        help="mysql install package name default {}".format(default_pkg.name),
+        help="mysql install package name ",
     )
     parser.add_argument(
         "--ibps",

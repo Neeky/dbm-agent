@@ -14,7 +14,10 @@ from dbma.version import DBM_AGENT_VESION
 
 
 def parser_cmd_args():
-    parser = argparse.ArgumentParser(f"dbma-agent {DBM_AGENT_VESION}")
+    parser = argparse.ArgumentParser(
+        f"dbma-agent {DBM_AGENT_VESION}",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument(
         "action",
         type=str,

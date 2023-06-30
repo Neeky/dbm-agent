@@ -12,7 +12,9 @@ from dbma.core.agent.init import init
 
 def parser_cmd_args():
     """ """
-    parser = argparse.ArgumentParser("dbma-cli-init")
+    parser = argparse.ArgumentParser(
+        "dbma-cli-init", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument("--net-card", default="eth0")
     parser.add_argument("--dbm-center-url-prefix", default="http://127.0.0.1:8080")
     return parser.parse_args()
