@@ -75,6 +75,9 @@ class ClearTask(object):
         # 没有匹配到正则、或是没有超过 3 天
         return False
 
+    def is_empty(self):
+        return len(self.glob()) == 0
+
     def glob(self):
         """
         返回 path 目录下的所有文件和目录
@@ -145,19 +148,19 @@ def clear_instance(task: ClearTask = None):
     logging.info(
         "task.path = '{}'  is_expire = '{}' ".format(task.path, task.is_expired())
     )
-    files = []
-    dirs = []
+    # files = []
+    # dirs = []
 
-    for item in glob.glob("{}/*".format(task.path)):
-        path = Path(item)
-        if path.is_dir():
-            dirs.append(path)
-        else:
-            files.append(path)
-    logging.info("files = {}, dirs = {}".format(len(files), len(dirs)))
+    # for item in glob.glob("{}/*".format(task.path)):
+    #     path = Path(item)
+    #     if path.is_dir():
+    #         dirs.append(path)
+    #     else:
+    #         files.append(path)
+    # logging.info("files = {}, dirs = {}".format(len(files), len(dirs)))
 
     # 先清理文件
-    for path in files:
+    for path in task.files:
         logging.info("deal-with file '{}' ".format(path))
         # 准备清理
         while True:
@@ -172,17 +175,17 @@ def clear_instance(task: ClearTask = None):
                 logging.info("file '{}' truncated ".format(path))
 
     # 清理子目录
-    for sub in dirs:
+    for sub in task.dirs:
         clear_instance(ClearTask(sub))
 
     # 清理当前目录
-    dirs = []
-    for item in glob.glob("{}/*".format(task.path)):
-        path = Path(item)
-        if path.is_dir():
-            dirs.append(path)
+    # dirs = []
+    # for item in glob.glob("{}/*".format(task.path)):
+    #     path = Path(item)
+    #     if path.is_dir():
+    #         dirs.append(path)
 
-    if len(dirs) == 0:
+    if task.is_empty():
         logging.info(
             "sub directorys not exists, rm current directory '{}' ".format(task.path)
         )
@@ -233,7 +236,8 @@ def sub_clear_task_thread():
             time.sleep(60)
             logging.info(messages.FUN_STARTS.format(fname()))
         except Exception as err:
-            logging.error(err)
+            logging.exception(err)
+            # logging.error(err)
 
 
 def start_clear_tasks():

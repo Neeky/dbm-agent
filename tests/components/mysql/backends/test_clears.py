@@ -120,5 +120,73 @@ class ClearTaskTestCase(unittest.TestCase):
         task.glob = Mock(return_value=expected)
         self.assertEqual(expected, task.glob())
 
+    def test_dirs_given_an_expired_instance_only_one_dir_case(self):
+        """
+        given: 给定一个过期的实例，假设它只包涵 mysql 目录
+        """
+        # given:1 设定只有一个目录 mysql
+        with patch.object(ClearTask, "glob") as mock:
+            mock.return_value = [
+                "/database/mysql/data/3308-backup-2000-01-01T00-00-00-000000/mysql"
+            ]
+            # given:1 mock 住 is_dir 让它返回 True
+            with patch.object(Path, "is_dir") as path_mock:
+                path_mock.return_value = True
+
+                # 开始真正的测试
+                task = ClearTask(
+                    "/database/mysql/data/3308-backup-2000-01-01T00-00-00-000000"
+                )
+                # 1 一定是一个过期实例
+                # 2 目录列表的长度应该是 1
+                # 3 比较目录列表的值，应该和我们给定的一样
+                self.assertEqual(task.is_expired(), True)
+                self.assertEqual(len(task.dirs), 1)
+                self.assertEqual(
+                    task.dirs,
+                    [
+                        Path(
+                            "/database/mysql/data/3308-backup-2000-01-01T00-00-00-000000/mysql"
+                        )
+                    ],
+                )
+
+    def test_dirs_given_an_expired_instance_only_one_file_case(self):
+        """
+        given: 给定一个过期的实例，假设它只包涵 mysql 目录
+        """
+        # given:1 设定只有一个 ibdata1.ibd 文件
+        with patch.object(ClearTask, "glob") as mock:
+            mock.return_value = [
+                "/database/mysql/data/3308-backup-2000-01-01T00-00-00-000000/ibdata1.ibd"
+            ]
+            # given:1 mock 住 is_dir 让它返回 True
+            with patch.object(Path, "is_dir") as path_mock:
+                path_mock.return_value = False
+
+                # 开始真正的测试
+                task = ClearTask(
+                    "/database/mysql/data/3308-backup-2000-01-01T00-00-00-000000/"
+                )
+                # 1 一定是一个过期实例
+                # 2 文件列表的长度应该是 1
+                # 3 比较文件列表的值，应该和我们给定的一样
+                self.assertEqual(task.is_expired(), True)
+                self.assertEqual(len(task.files), 1)
+                self.assertEqual(
+                    task.files,
+                    [
+                        Path(
+                            "/database/mysql/data/3308-backup-2000-01-01T00-00-00-000000/ibdata1.ibd"
+                        )
+                    ],
+                )
+
+    def test_is_empty(self):
+        with patch.object(ClearTask, "glob") as mock:
+            mock.return_value = []
+            task = ClearTask(self.path)
+            self.assertEqual(task.is_empty(), True)
+
 
 # endregion ClearTask
