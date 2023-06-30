@@ -148,16 +148,6 @@ def clear_instance(task: ClearTask = None):
     logging.info(
         "task.path = '{}'  is_expire = '{}' ".format(task.path, task.is_expired())
     )
-    # files = []
-    # dirs = []
-
-    # for item in glob.glob("{}/*".format(task.path)):
-    #     path = Path(item)
-    #     if path.is_dir():
-    #         dirs.append(path)
-    #     else:
-    #         files.append(path)
-    # logging.info("files = {}, dirs = {}".format(len(files), len(dirs)))
 
     # 先清理文件
     for path in task.files:
@@ -178,13 +168,7 @@ def clear_instance(task: ClearTask = None):
     for sub in task.dirs:
         clear_instance(ClearTask(sub))
 
-    # 清理当前目录
-    # dirs = []
-    # for item in glob.glob("{}/*".format(task.path)):
-    #     path = Path(item)
-    #     if path.is_dir():
-    #         dirs.append(path)
-
+    # 如果当前目录下已经没有文件、子目录了 就清理掉当前目录
     if task.is_empty():
         logging.info(
             "sub directorys not exists, rm current directory '{}' ".format(task.path)
@@ -206,7 +190,7 @@ def pub_clear_task_thread():
                 tasks = scan_data_dir_gen_task()
                 for task in tasks:
                     clear_tasks.append(task)
-            logging.info(messages.FUN_STARTS.format(fname()))
+            logging.info(messages.FUN_ENDS.format(fname()))
         except Exception as err:
             logging.error(err)
 
@@ -226,6 +210,7 @@ def sub_clear_task_thread():
                 task = clear_tasks.pop()
             except IndexError as err:
                 logging.info("task deque is empty .")
+                logging.info(messages.FUN_ENDS.format(fname()))
                 # 对于队列中没有任务的情况下线程休息 30 分钟
                 time.sleep(1800)
                 continue
@@ -234,7 +219,7 @@ def sub_clear_task_thread():
                 clear_instance(task)
             # 清理完成一个实例之后要休息 1 分钟
             time.sleep(60)
-            logging.info(messages.FUN_STARTS.format(fname()))
+            logging.info(messages.FUN_ENDS.format(fname()))
         except Exception as err:
             logging.exception(err)
             # logging.error(err)
