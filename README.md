@@ -90,7 +90,7 @@ MySQL 目前支持的功能列表如下
 
 |**功能名**|**详细文档**|
 |---------|-----------
-|MySQL单机&主从安装配置| [MySQL-安装配置](./docs/mysql-01-auto-install.md)|
+|MySQL单机&主从安装配置| [安装配置-MySQL](./docs/mysql-01-auto-install.md)|
 |MySQL备份|[备份-MySQL](./docs/mysql-02-auto-backup.md)|
 |MySQL卸载|[卸载-MySQL](./docs/mysql-03-auto-uninstall.md)|
 |MySQL清理|[清理-MySQL](./docs/mysql-04-clear-backup-files.md)|
@@ -104,8 +104,8 @@ MySQL 目前支持的功能列表如下
 Redis 目前支持的功能列表如下
 |**功能名**|**详细文档**|
 |---------|-----------
-|Redis-master-安装| [MySQL-安装配置](./docs/redis-01-auto-install.md)|
-|Redis-replica-安装|[备份-MySQL](./docs/redis-02-build-replica.md)|
+|Redis-master-安装| [Redis-master-安装](./docs/redis-01-auto-install.md)|
+|Redis-replica-安装|[Redis-replica-安装](./docs/redis-02-build-replica.md)|
 
 ---
 
