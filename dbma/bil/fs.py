@@ -193,7 +193,7 @@ def truncate_or_delete_file(file_path: Path = None, chunk_size: int = 16 * 1024 
 
     # 如果已经不足 chunk_size 大，就删除掉；然后就 truncate 指定大小
     file_size = get_file_size(file_path)
-    if file_size < chunk_size:
+    if file_size <= chunk_size:
         os.remove(file_path)
         return 0
 
