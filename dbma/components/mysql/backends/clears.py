@@ -212,14 +212,12 @@ def sub_clear_task_thread():
             except IndexError as err:
                 logging.info("task deque is empty .")
                 logging.info(messages.FUN_ENDS.format(fname()))
-                # 对于队列中没有任务的情况下线程休息 30 分钟
-                time.sleep(1800)
+                # 对于队列中没有任务的情况下要 sleep 下
+                time.sleep(dbm_agent_config.mysql_clear_empty_task_sleep_time)
                 continue
 
             with sudo():
                 clear_instance(task)
-            # 清理完成一个实例之后要休息 1 分钟
-            time.sleep(60)
             logging.info(messages.FUN_ENDS.format(fname()))
         except Exception as err:
             logging.exception(err)
