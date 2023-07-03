@@ -195,8 +195,8 @@ def pub_clear_task_thread():
         except Exception as err:
             logging.exception(err)
 
-        # 一小时扫一次目录，生成清理任务
-        time.sleep(3600)
+        # 扫过一次之后就 sleep 一下
+        time.sleep(dbm_agent_config.mysql_scan_thread_sleep_time)
 
 
 def sub_clear_task_thread():

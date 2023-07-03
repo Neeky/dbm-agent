@@ -54,6 +54,7 @@ class DBMAgentConfig(object):
     mysql_init_user_sql_file: str = "/tmp/mysql-init-user.sql"
     # clear 目录的过期时间默认 3 天
     mysql_clear_instance_expire_time: int = 86400 * 3
+    mysql_scan_thread_sleep_time: int = 30 * 60
 
     # redis
     redis_default_version: str = "7.0.11"
