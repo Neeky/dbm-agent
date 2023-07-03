@@ -186,13 +186,14 @@ def pub_clear_task_thread():
     while keep_threads_running:
         try:
             logging.info(messages.FUN_STARTS.format(fname()))
+            tasks = []
             with sudo():
                 tasks = scan_data_dir_gen_task()
-                for task in tasks:
-                    clear_tasks.append(task)
+            for task in tasks:
+                clear_tasks.append(task)
             logging.info(messages.FUN_ENDS.format(fname()))
         except Exception as err:
-            logging.error(err)
+            logging.exception(err)
 
         # 一小时扫一次目录，生成清理任务
         time.sleep(3600)
@@ -222,7 +223,6 @@ def sub_clear_task_thread():
             logging.info(messages.FUN_ENDS.format(fname()))
         except Exception as err:
             logging.exception(err)
-            # logging.error(err)
 
 
 def start_clear_tasks():
