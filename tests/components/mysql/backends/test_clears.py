@@ -5,7 +5,11 @@ import unittest
 from unittest.mock import Mock, patch, MagicMock, call
 from pathlib import Path
 from datetime import datetime
-from dbma.components.mysql.backends.clears import ClearTask, scan_data_dir_gen_task
+from dbma.components.mysql.backends.clears import (
+    ClearTask,
+    scan_data_dir_gen_task,
+    clear_instance,
+)
 
 
 # region scan_data_dir_gen_task
@@ -190,3 +194,69 @@ class ClearTaskTestCase(unittest.TestCase):
 
 
 # endregion ClearTask
+
+
+# region clear_instance
+class ClearInstanceTestCase(unittest.TestCase):
+    @patch("shutil.rmtree")
+    def test_clear_instance_given_dir_not_empty(self, mock_rmtree):
+        """
+        given: 目录下没有文件、也没有目录; hack is_empty 为 False 的场景
+        when: 调用 clear_instance
+        then: 由于 is_empty 是 False, 所以不会调用  shutil.rmtree
+        """
+        mock_clear_task = Mock()
+        mock_clear_task.files = []
+        mock_clear_task.dirs = []
+        mock_clear_task.is_empty.return_value = False
+
+        clear_instance(mock_clear_task)
+
+        mock_clear_task.is_empty.assert_called_once()
+        mock_rmtree.assert_not_called()
+
+    @patch("shutil.rmtree")
+    def test_clear_instance_given_dir_empty(self, mock_rmtree):
+        """
+        given: 目录下没有文件、也没有目录; hack is_empty 为 True 的场景
+        when: 调用 clear_instance
+        then: 由于 is_empty 是 True, 所以会调用  shutil.rmtree
+        """
+        mock_clear_task = Mock()
+        mock_clear_task.files = []
+        mock_clear_task.dirs = []
+        mock_clear_task.is_empty.return_value = True
+
+        clear_instance(mock_clear_task)
+
+        mock_clear_task.is_empty.assert_called_once()
+        mock_rmtree.assert_called_once()
+
+    @patch("dbma.components.mysql.backends.clears.truncate_or_delete_file")
+    @patch("shutil.rmtree")
+    def test_clear_instance_given_dir_empty(self, mock_rmtree, mock_tr_or_de):
+        """
+        given: 给定目录下只有一个文件了，并且文件小于 16MB
+        when: 调用 clear_instance
+        then: 文件会被清理，当前目录也会被清理
+        """
+        mock_clear_task = Mock()
+        mock_clear_task.files = [
+            "/database/mysql/data/3308-backup-2023-05-29T20-23-32-000000/ibdata1.ibd"
+        ]
+        mock_clear_task.dirs = []
+        mock_clear_task.is_empty.return_value = True
+
+        mock_tr_or_de.return_value = 0
+
+        clear_instance(mock_clear_task)
+
+        mock_clear_task.is_empty.assert_called_once()
+        mock_rmtree.assert_called_once()
+        mock_tr_or_de.assert_called_once_with(
+            "/database/mysql/data/3308-backup-2023-05-29T20-23-32-000000/ibdata1.ibd",
+            16777216,
+        )
+
+
+# endregion clear_instance
