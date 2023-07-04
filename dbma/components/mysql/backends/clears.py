@@ -225,5 +225,5 @@ def sub_clear_task_thread():
 
 def start_clear_tasks():
     threads.submit(pub_clear_task_thread)
-    time.sleep(5)
+    time.sleep(3)
     threads.submit(sub_clear_task_thread)
