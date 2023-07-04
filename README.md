@@ -136,6 +136,52 @@ Redis 目前支持的功能列表如下
 
   ---
 
+## 单元测试
+为了尽可能的减少 BUG ，我们尽全力把单元测试的覆盖率推向 100%，目前来看只达到了 83% 
+```bash
+# 单元测试用到的依赖
+# pip3 install pytest pytest-mock pytest-cov
+
+# 运行单元测试
+pytest --cov
+
+... ... ... ... ...
+---------- coverage: platform linux, python 3.11.3-final-0 -----------
+Name                                             Stmts   Miss  Cover
+--------------------------------------------------------------------
+dbma/__init__.py                                     0      0   100%
+dbma/bil/__init__.py                                 1      0   100%
+dbma/bil/cmdexecutor.py                              6      0   100%
+dbma/bil/daemon.py                                  66     36    45%
+dbma/bil/fs.py                                      56     25    55%
+dbma/bil/fun.py                                      4      0   100%
+dbma/bil/net.py                                     12      1    92%
+dbma/bil/osuser.py                                 139      0   100%
+dbma/bil/sudos.py                                   12      0   100%
+dbma/components/__init__.py                          0      0   100%
+dbma/components/mysql/__init__.py                    0      0   100%
+dbma/components/mysql/asserts.py                    24      1    96%
+dbma/components/mysql/backends/__init__.py           0      0   100%
+dbma/components/mysql/backends/clears.py           119     31    74%
+dbma/components/mysql/commons.py                   137     73    47%
+dbma/components/mysql/config.py                    387    116    70%
+dbma/components/mysql/exceptions.py                 16      0   100%
+dbma/components/mysql/install.py                   194     19    90%
+dbma/components/orchestrator/__init__.py             0      0   100%
+dbma/components/orchestrator/exceptions.py           6      0   100%
+dbma/components/orchestrator/install.py             40     22    45%
+dbma/core/__init__.py                                0      0   100%
+dbma/core/configs.py                                78     14    82%
+dbma/core/exception.py                              13      0   100%
+dbma/core/messages.py                               13      0   100%
+dbma/core/threads/__init__.py                        0      0   100%
+dbma/core/threads/backends.py                       31     16    48%
+dbma/version.py                                      7      0   100%
+--------------------------------------------------------------------
+TOTAL                                             2180    361    83%
+```
+---
+
 ## 源码安装
 ```bash
 # 生成 tar.gz 格式的安装包
