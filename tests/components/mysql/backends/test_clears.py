@@ -9,6 +9,7 @@ from dbma.components.mysql.backends.clears import (
     ClearTask,
     scan_data_dir_gen_task,
     clear_instance,
+    start_clear_tasks,
 )
 
 
@@ -260,3 +261,21 @@ class ClearInstanceTestCase(unittest.TestCase):
 
 
 # endregion clear_instance
+
+
+# region start_clear_tasks
+class StartClearTasksTestCase(unittest.TestCase):
+    @patch("time.sleep")
+    @patch("dbma.components.mysql.backends.clears.threads.submit")
+    def test_start_clear_tasks(self, mock_submit, mock_sleep):
+        """
+        given:
+        when: 调用 start_clear_tasks
+        then: 1、会调用两次 submit 2、会调用一次 sleep ，并且输入的参数是 3
+        """
+        start_clear_tasks()
+        self.assertEqual(mock_submit.call_count, 2)
+        mock_sleep.assert_called_with(3)
+
+
+# endregion start_clear_tasks
