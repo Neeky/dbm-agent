@@ -322,6 +322,9 @@ class MySQLConfig(object):
     performance_schema: str = "ON"
     # endregion ps
 
+    def __post_init__(self):
+        self.calcu_second_attrs()
+
     def calcu_second_attrs(self):
         """根据已有的配置推导出相关的其它配置"""
         logging.info(messages.FUN_STARTS.format(fname()))
