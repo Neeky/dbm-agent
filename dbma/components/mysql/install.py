@@ -297,29 +297,6 @@ def create_user_and_dirs(port: int = 3306):
     user = create_os_user_for_mysql(port)
     create_mysql_dirs(port, user)
 
-    # # 创建用户
-    # user = MySQLUser(port)
-    # user.create()
-
-    # # 创建 datadir & binlogdir
-    # datadir = Path(dbm_agent_config.mysql_datadir_parent) / str(port)
-    # binlogdir = Path(dbm_agent_config.mysql_binlogdir_parent) / str(port)
-
-    # if not datadir.exists():
-    #     logging.info(messages.CREATE_DIR.format(datadir))
-    #     os.mkdir(datadir)
-    # else:
-    #     logging.warning(messages.DIR_EXISTS.format(datadir))
-
-    # if not binlogdir.exists():
-    #     logging.info(messages.CREATE_DIR.format(binlogdir))
-    #     os.mkdir(binlogdir)
-    # else:
-    #     logging.warning(messages.DIR_EXISTS.format(binlogdir))
-
-    # user.chown(datadir)
-    # user.chown(binlogdir)
-
     logging.info(messages.FUN_ENDS.format(fname()))
 
 
