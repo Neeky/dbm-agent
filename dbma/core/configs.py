@@ -132,3 +132,27 @@ def _auto_save_to_disk():
 
 # 进退寻出的时候保存配置对象到磁盘
 atexit.register(_auto_save_to_disk)
+
+
+# 以下是为其它组件而定义的配置文件生成逻辑
+
+
+class Cnfri(object):
+    """
+    Cnfri(ConfigRenderInterface) 统一的配置文件渲染接口
+    """
+
+    def load(self) -> str:
+        """加载配置文件模板"""
+        raise NotImplementedError()
+
+    def render(self) -> str:
+        """渲染配置文件模板"""
+        raise NotImplementedError()
+
+    def save(self):
+        """保存配置文件到磁盘"""
+        raise NotImplementedError()
+
+    def __str__(self):
+        return self.render()
