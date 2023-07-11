@@ -18,6 +18,7 @@ from datetime import datetime
 from dataclasses import dataclass, asdict
 from dbma.core import messages
 from dbma.bil.fun import fname
+from dbma.bil.osuser import MySQLUser
 from dbma.core.configs import dbm_agent_config, Cnfri
 from dbma.components.mysql.exceptions import (
     MySQLTemplateFileNotExistsException,
@@ -598,7 +599,7 @@ class MySQLSystemdConfig(Cnfri):
 
     def __post_init__(self):
         """ """
-        self.user = "mysql{}".format(self.port)
+        self.user = MySQLUser(self.port).name
 
     def load(self) -> str:
         """
@@ -611,7 +612,6 @@ class MySQLSystemdConfig(Cnfri):
         # 设置模板文件为绝对路径
         template = self.cnfsdir / self.template
         if not template.exists():
-            # TODO 设计为专有异常
             raise MySQLSystemdTemplateFileNotExists(
                 "systemd template not exists '{}' .".format(template)
             )
@@ -620,5 +620,9 @@ class MySQLSystemdConfig(Cnfri):
         result = None
         with open(template) as f:
             result = f.read()
+
+        # 在读出来没有换行的情况下、就给它加上一个换行
+        if not result.endswith("\n"):
+            result = result + "\n"
 
         return result

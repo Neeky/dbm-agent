@@ -4,7 +4,11 @@ import unittest
 from unittest.mock import Mock, patch, MagicMock, call, mock_open
 from pathlib import Path
 
-from dbma.components.mysql.config import MySQLConfig
+from dbma.components.mysql.config import (
+    MySQLConfig,
+    MySQLSystemdConfig,
+    MySQLSystemdTemplateFileNotExists,
+)
 
 
 class MySQLConfigTestCase(unittest.TestCase):
@@ -51,3 +55,48 @@ class MySQLConfigTestCase(unittest.TestCase):
             cnf.save_to_target_dir(Path("/tmp/"))
             # 断言它有以写的方式打开文件
             m.assert_not_called()
+
+
+class MySQLSystemdConfigTestCase(unittest.TestCase):
+    """ """
+
+    port = 3306
+    basedir = "/usr/local/mysql-8.0.33-linux-glibc2.28-x86_64"
+
+    def test_user_given_port_3306(self):
+        """
+        given: 给定 MySQL 的端口是 3306
+        when: 创建 MySQLSystemdConfig 对象
+        then: 对象的 user属性应该是 mysql3306
+        """
+        syscnf = MySQLSystemdConfig(port=self.port, basedir=self.basedir)
+        self.assertEqual("mysql3306", syscnf.user)
+
+    @patch.object(Path, "exists")
+    def test_load_given_port_3306(self, mock_exists):
+        """"""
+        mock_exists.return_value = True
+        with patch(
+            "dbma.components.mysql.config.open", mock_open(read_data="x")
+        ) as mock:
+            syscnf = MySQLSystemdConfig(port=self.port, basedir=self.basedir)
+            syscnf.load()
+            # open, enter, read, exit 共四个调用
+            self.assertEqual(len(mock.mock_calls), 4)
+            self.assertEqual(mock.mock_calls[2], call().read())
+
+    @patch.object(Path, "exists")
+    def test_load_given_template_file_not_exists(self, mock_exists):
+        """"""
+        mock_exists.return_value = False
+        with self.assertRaises(MySQLSystemdTemplateFileNotExists):
+            syscnf = MySQLSystemdConfig(port=self.port, basedir=self.basedir)
+            syscnf.load()
+
+    def test_render_given_port_3306(self):
+        """ """
+        with patch.object(MySQLSystemdConfig, "load") as mock:
+            mock.return_value = "{{user}}\n"
+            syscnf = MySQLSystemdConfig(self.port, self.basedir)
+            expected = "mysql3306"
+            self.assertEqual(expected, syscnf.render())

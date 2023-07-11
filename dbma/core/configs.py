@@ -10,6 +10,7 @@ import json
 import atexit
 from pathlib import Path
 from dataclasses import dataclass, asdict
+from jinja2 import Template
 from dbma.version import VERSION
 from dbma.bil.osuser import DBMAUser
 
@@ -154,8 +155,12 @@ class Cnfri(object):
         raise NotImplementedError()
 
     def render(self) -> str:
-        """渲染配置文件模板"""
-        raise NotImplementedError()
+        """
+        渲染模板文件
+        """
+        content = self.load()
+        t = Template(content)
+        return t.render(asdict(self))
 
     def save(self):
         """保存配置文件到磁盘"""
