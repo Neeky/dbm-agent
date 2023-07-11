@@ -18,8 +18,11 @@ from datetime import datetime
 from dataclasses import dataclass, asdict
 from dbma.core import messages
 from dbma.bil.fun import fname
-from dbma.core.configs import dbm_agent_config
-from dbma.components.mysql.exceptions import MySQLTemplateFileNotExistsException
+from dbma.core.configs import dbm_agent_config, Cnfri
+from dbma.components.mysql.exceptions import (
+    MySQLTemplateFileNotExistsException,
+    MySQLSystemdTemplateFileNotExists,
+)
 
 
 class MySQLTemplateTypes(Enum):
@@ -582,3 +585,40 @@ class MySQLConfig(object):
         """根据 basedir 计算出 MySQL 的 version"""
         m = re.search(r"mysql-(?P<version>\d{1}.\d{1,2}.\d{1,2})-linux", self.basedir)
         self.version = m.group("version")
+
+
+@dataclass
+class MySQLSystemdConfig(Cnfri):
+    port: int = 3306
+    basedir: str = None
+
+    # 以下为自动参数
+    user: str = None
+    template: str = "mysqld.service.jinja"
+
+    def __post_init__(self):
+        """ """
+        self.user = "mysql{}".format(self.port)
+
+    def load(self) -> str:
+        """
+        加载 MySQL-Systemd 配置文件模板，把整个配置文件模板以字符串的形式返回
+
+        Return:
+        -------
+        str
+        """
+        # 设置模板文件为绝对路径
+        template = self.cnfsdir / self.template
+        if not template.exists():
+            # TODO 设计为专有异常
+            raise MySQLSystemdTemplateFileNotExists(
+                "systemd template not exists '{}' .".format(template)
+            )
+
+        # 读取模板的内容并返回
+        result = None
+        with open(template) as f:
+            result = f.read()
+
+        return result

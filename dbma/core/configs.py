@@ -142,6 +142,13 @@ class Cnfri(object):
     Cnfri(ConfigRenderInterface) 统一的配置文件渲染接口
     """
 
+    @property
+    def cnfsdir(self):
+        """返回配置文件模板所在的目录 dbma/static/cnfs 的绝对路径"""
+        import dbma
+
+        return Path(dbma.__file__).parent / "static/cnfs"
+
     def load(self) -> str:
         """加载配置文件模板"""
         raise NotImplementedError()

@@ -23,6 +23,12 @@ class InstanceHasBeenInstalledException(DBMAgentException):
     pass
 
 
+class MySQLSystemdTemplateFileNotExists(DBMAgentException):
+    """ """
+
+    pass
+
+
 class MySQLSystemdFileNotExists(DBMAgentException):
     """ """
 
