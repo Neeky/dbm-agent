@@ -138,9 +138,11 @@ atexit.register(_auto_save_to_disk)
 # 以下是为其它组件而定义的配置文件生成逻辑
 
 
-class Cnfri(object):
+class Cnfr(object):
     """
-    Cnfri(ConfigRenderInterface) 统一的配置文件渲染接口
+    Cnfr(ConfigRender) 统一的配置文件渲染接口
+
+    ** 注意子类必需要指定 config_file_path 属性的值，不然 save 不知道要保存到哪里
     """
 
     @property
@@ -159,12 +161,16 @@ class Cnfri(object):
         渲染模板文件
         """
         content = self.load()
-        t = Template(content)
+        t = Template(content, keep_trailing_newline=True)
         return t.render(asdict(self))
 
     def save(self):
         """保存配置文件到磁盘"""
-        raise NotImplementedError()
+        if not hasattr(self, "config_file_path"):
+            raise ValueError("sub class must contain's 'config_file_path' attr ")
+
+        with open(self.config_file_path, "w") as f:
+            f.write(str(self))
 
     def __str__(self):
         return self.render()

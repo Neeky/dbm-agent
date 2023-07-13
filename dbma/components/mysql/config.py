@@ -19,7 +19,7 @@ from dataclasses import dataclass, asdict
 from dbma.core import messages
 from dbma.bil.fun import fname
 from dbma.bil.osuser import MySQLUser
-from dbma.core.configs import dbm_agent_config, Cnfri
+from dbma.core.configs import dbm_agent_config, Cnfr
 from dbma.components.mysql.exceptions import (
     MySQLTemplateFileNotExistsException,
     MySQLSystemdTemplateFileNotExists,
@@ -589,7 +589,7 @@ class MySQLConfig(object):
 
 
 @dataclass
-class MySQLSystemdConfig(Cnfri):
+class MySQLSystemdConfig(Cnfr):
     port: int = 3306
     basedir: str = None
 
@@ -600,6 +600,9 @@ class MySQLSystemdConfig(Cnfri):
     def __post_init__(self):
         """ """
         self.user = MySQLUser(self.port).name
+        self.config_file_path = Path(
+            "/usr/lib/systemd/system/mysqld-{}.service".format(self.port)
+        )
 
     def load(self) -> str:
         """
