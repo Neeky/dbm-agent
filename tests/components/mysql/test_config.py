@@ -76,9 +76,7 @@ class MySQLSystemdConfigTestCase(unittest.TestCase):
     def test_load_given_port_3306(self, mock_exists):
         """"""
         mock_exists.return_value = True
-        with patch(
-            "dbma.components.mysql.config.open", mock_open(read_data="x")
-        ) as mock:
+        with patch("dbma.core.configs.open", mock_open(read_data="x")) as mock:
             syscnf = MySQLSystemdConfig(port=self.port, basedir=self.basedir)
             syscnf.load()
             # open, enter, read, exit 共四个调用
@@ -89,7 +87,7 @@ class MySQLSystemdConfigTestCase(unittest.TestCase):
     def test_load_given_template_file_not_exists(self, mock_exists):
         """"""
         mock_exists.return_value = False
-        with self.assertRaises(MySQLSystemdTemplateFileNotExists):
+        with self.assertRaises(ValueError):
             syscnf = MySQLSystemdConfig(port=self.port, basedir=self.basedir)
             syscnf.load()
 
@@ -98,5 +96,5 @@ class MySQLSystemdConfigTestCase(unittest.TestCase):
         with patch.object(MySQLSystemdConfig, "load") as mock:
             mock.return_value = "{{user}}\n"
             syscnf = MySQLSystemdConfig(self.port, self.basedir)
-            expected = "mysql3306"
+            expected = "mysql3306\n"
             self.assertEqual(expected, syscnf.render())

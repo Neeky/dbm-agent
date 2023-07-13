@@ -153,8 +153,29 @@ class Cnfr(object):
         return Path(dbma.__file__).parent / "static/cnfs"
 
     def load(self) -> str:
-        """加载配置文件模板"""
-        raise NotImplementedError()
+        """
+        加载配置文件模板，把整个配置文件模板以字符串的形式返回
+
+        Return:
+        -------
+        str
+        """
+        # 设置模板文件为绝对路径
+        template = self.cnfsdir / self.template
+        if not template.exists():
+            # TODO 增加新的异常
+            raise ValueError("systemd template not exists '{}' .".format(template))
+
+        # 读取模板的内容并返回
+        result = None
+        with open(template) as f:
+            result = f.read()
+
+        # 在读出来没有换行的情况下、就给它加上一个换行
+        if not result.endswith("\n"):
+            result = result + "\n"
+
+        return result
 
     def render(self) -> str:
         """
