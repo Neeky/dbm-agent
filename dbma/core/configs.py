@@ -145,6 +145,9 @@ class Cnfr(object):
     ** 注意子类必需要指定 config_file_path 属性的值，不然 save 不知道要保存到哪里
     """
 
+    template: str = ""
+    config_file_path: str = None
+
     @property
     def cnfsdir(self):
         """返回配置文件模板所在的目录 dbma/static/cnfs 的绝对路径"""
@@ -187,8 +190,10 @@ class Cnfr(object):
 
     def save(self):
         """保存配置文件到磁盘"""
-        if not hasattr(self, "config_file_path"):
-            raise ValueError("sub class must contain's 'config_file_path' attr ")
+        if self.config_file_path is None:
+            raise ValueError(
+                "self.config_file_path is None, can't read|write config file. "
+            )
 
         with open(self.config_file_path, "w") as f:
             f.write(str(self))
