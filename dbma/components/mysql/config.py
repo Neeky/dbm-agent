@@ -44,8 +44,8 @@ class MySQLConfig(object):
     """MySQL 配置文件的动态生成"""
 
     # basic
-    basedir: str = None
     port: str = None
+    basedir: str = None
     innodb_buffer_pool_size: str = None
     now: str = datetime.now().isoformat()
 
@@ -595,8 +595,8 @@ class MySQLOptionsMixin(object):
     """
 
     # basic
+    port: int = 3306
     basedir: str = None
-    port: str = None
     innodb_buffer_pool_size: str = None
     now: str = datetime.now().isoformat()
 
@@ -885,20 +885,100 @@ class MySQLSRConfig(Cnfr, MySQLOptionsMixin):
     """
 
     # basic
+    port: int = None
     basedir: str = None
-    port: str = None
     innodb_buffer_pool_size: str = None
     template: str = None
 
     def __post_init__(self):
         """
-        1、配置 config_file_path 属性
+        根据传入的 port, basedir 计算出其它的属性
         """
-        self.config_file_path = "/tmp/a.cnf"
-        self.template = "mysql-{}-cnf.jinja".format(self.port)
+        # 1 根据 port 识别出 user, 配置文件 ...
+        self._init_ports()
 
-    def load(self):
-        """ """
+        # 2 根据 basedir 识别出 version ....
+        self._init_basedirs()
+
+        # 3 根据 buffer pool 的值调整其它配置
+        self._init_buffer_pools()
+
+        # 4 设置其它非依赖项
+        self._init_others()
+
+    def _init_ports(self):
+        """
+        设置那些当我们知道 port 就能抢断出来的配置项, 在这里统一完成设置
+        """
+        # 用户名
+        self.user = MySQLUser(self.port).name
+
+        # 数据目录+binlog目录
+        self.datadir = os.path.join(
+            dbm_agent_config.mysql_datadir_parent, str(self.port)
+        )
+        self.log_bin = os.path.join(
+            dbm_agent_config.mysql_binlogdir_parent, str(self.port) + "/binlog"
+        )
+
+        # 管理端口+ mysqlx 端口
+        self.admin_port = self.port * 10 + 2
+        self.mysqlx_port = self.port * 10
+
+        # socket 文件 + pid 文件的位置
+        self.socket = os.path.join(self.datadir, "mysql.sock")
+        self.mysqlx_socket = os.path.join(self.datadir, "mysqlx.sock")
+        self.pid_file = os.path.join(self.datadir, "mysql.pid")
+
+        # 配置文件的全路径
+        self.config_file_path = "/etc/my-{}.cnf".format(self.port)
+
+    def _init_basedirs(self):
+        """
+        由于每一个版本的配置文件都有差别，dbm-agent 为 mysql 的每一个小版本都提供了配置文件，
+        所以这里就要根据版本号来确认要执行哪个配置文件模板。
+
+        """
+        p = re.compile("mysql-(?P<version>\d{1}.\d{1}.\d{1,2})")
+        # 根据 basedir 识别出版本号
+        self.version = p.search(self.basedir).group("version")
+        # 根据版本号识别出模板文件
+        self.template = "mysql-{}.cnf.jinja".format(self.version)
+
+    def _init_others(self):
+        """
+        计算其它属性值
+        """
+        # 随机生成一个 server-id
+        self.server_id = random.randint(1024, 8192)
+
+    def _init_buffer_pools(self):
+        """
+        根据给定的 buffer_pool 的大小，调整 buffer pool 的配置， log_buffer 的配置
+        """
+        if self.innodb_buffer_pool_size.endswith("M"):
+            # M 级别
+            self.innodb_buffer_pool_instances = 1
+            self.innodb_log_buffer_size = "64M"
+        elif self.innodb_buffer_pool_size.endswith("G"):
+            # G 级别
+            size = re.match(r"\d*", self.innodb_buffer_pool_size).group(0)
+            size = int(size)
+            if size <= 2:
+                self.innodb_buffer_pool_instances = 1
+                self.innodb_log_buffer_size = "64M"
+            elif size <= 4:
+                self.innodb_buffer_pool_instances = size
+                self.innodb_log_buffer_size = "128M"
+            elif size <= 8:
+                self.innodb_buffer_pool_instances = size
+                self.innodb_log_buffer_size = "256M"
+            elif size <= 16:
+                self.innodb_buffer_pool_instances = size
+                self.innodb_log_buffer_size = "512M"
+            else:
+                self.innodb_buffer_pool_instances = 16
+                self.innodb_log_buffer_size = "1G"
 
 
 @dataclass
