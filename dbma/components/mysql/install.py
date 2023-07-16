@@ -14,10 +14,11 @@ from pathlib import Path
 from datetime import datetime
 from dbma.bil.fun import fname
 from dbma.core import messages
-from dbma.bil.osuser import MySQLUser
+
+# from dbma.bil.osuser import MySQLUser
 from dbma.bil.cmdexecutor import exe_shell_cmd
 from dbma.core.configs import dbm_agent_config
-from dbma.components.mysql.config import MySQLConfig
+from dbma.components.mysql.config import MySQLSRConfig, MySQLSystemdConfig
 from dbma.components.mysql.commons import get_mysql_version
 from dbma.components.mysql.commons import export_cmds_to_path
 from dbma.components.mysql.commons import pkg_to_basedir, default_pkg
@@ -440,14 +441,21 @@ def create_mysql_config_file(
         )
     )
 
-    config = MySQLConfig(
-        basedir=str(basedir), port=port, innodb_buffer_pool_size=innodb_buffer_pool_size
+    # config = MySQLConfig(
+    #     basedir=str(basedir), port=port, innodb_buffer_pool_size=innodb_buffer_pool_size
+    # )
+    config = MySQLSRConfig(
+        port=port, basedir=basedir, innodb_buffer_pool_size=innodb_buffer_pool_size
     )
+    config.save()
 
-    config.calcu_second_attrs()
-    config.generate_cnf_config_file()
-    config.generate_init_cnf_config_file()
-    config.generate_systemd_cnf_config()
+    sysconfig = MySQLSystemdConfig(config.port, config.basedir, config.user)
+    sysconfig.save()
+
+    # config.calcu_second_attrs()
+    # config.generate_cnf_config_file()
+    # config.generate_init_cnf_config_file()
+    # config.generate_systemd_cnf_config()
 
     logging.info(messages.FUN_ENDS.format(fname()))
 
@@ -537,8 +545,13 @@ def install_mysql(
         port=port, basedir=basedir, innodb_buffer_pool_size=innodb_buffer_pool_size
     )
 
-    # 第五步 复制 init 文件
-    create_init_sql_file(version)
+    # 第五步 复制 init-user 文件
+    # create_init_sql_file(version)
+
+    config = MySQLSRConfig(
+        port=port, basedir=basedir, innodb_buffer_pool_size=innodb_buffer_pool_size
+    )
+    config.save_init_cnf()
 
     # 第五步 初始化 mysql 实例
     init_mysql(port=port, basedir=basedir)
@@ -559,7 +572,7 @@ def install_mysql(
     export_so_files(pkg)
 
     # 清理 init-sql
-    remove_init_sql_file()
+    # remove_init_sql_file()
 
     logging.info(messages.FUN_ENDS.format(fname()))
 

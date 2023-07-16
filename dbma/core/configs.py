@@ -8,6 +8,7 @@
 
 import json
 import atexit
+import logging
 from pathlib import Path
 from dataclasses import dataclass, asdict
 from jinja2 import Template
@@ -163,6 +164,7 @@ class Cnfr(object):
         -------
         str
         """
+        logging.info("load config file template : {}".format(self.template))
         # 设置模板文件为绝对路径
         template = self.cnfsdir / self.template
         if not template.exists():
@@ -197,6 +199,10 @@ class Cnfr(object):
 
         with open(self.config_file_path, "w") as f:
             f.write(str(self))
+
+        logging.info(
+            "save config file cofnig_file_path: {}".format(self.config_file_path)
+        )
 
     def __str__(self):
         return self.render()
