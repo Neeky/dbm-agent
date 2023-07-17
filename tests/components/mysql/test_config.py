@@ -63,3 +63,11 @@ class MySQLSRConfigTestCase(unittest.TestCase):
         """ """
         cnf = MySQLSRConfig(3306, "/usr/local/mysql-8.0.33/", "128M")
         self.assertEqual(cnf.user, "mysql3306")
+
+    def test_save_init_cnf_given_port_3306(self):
+        """ """
+        cnf = MySQLSRConfig(3306, "/usr/local/mysql-8.0.33/", "128M")
+        cnf.save = Mock()
+        cnf.save_init_cnf()
+        # 断言会调用两次 cnf.save()
+        self.assertEqual(len(cnf.save.mock_calls), 2)
