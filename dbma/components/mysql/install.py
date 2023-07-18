@@ -14,8 +14,6 @@ from pathlib import Path
 from datetime import datetime
 from dbma.bil.fun import fname
 from dbma.core import messages
-
-# from dbma.bil.osuser import MySQLUser
 from dbma.bil.cmdexecutor import exe_shell_cmd
 from dbma.core.configs import dbm_agent_config
 from dbma.components.mysql.config import MySQLSRConfig, MySQLSystemdConfig
