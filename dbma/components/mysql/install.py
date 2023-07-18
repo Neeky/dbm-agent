@@ -439,21 +439,14 @@ def create_mysql_config_file(
         )
     )
 
-    # config = MySQLConfig(
-    #     basedir=str(basedir), port=port, innodb_buffer_pool_size=innodb_buffer_pool_size
-    # )
     config = MySQLSRConfig(
         port=port, basedir=basedir, innodb_buffer_pool_size=innodb_buffer_pool_size
     )
     config.save()
+    config.save_init_cnf()
 
     sysconfig = MySQLSystemdConfig(config.port, config.basedir, config.user)
     sysconfig.save()
-
-    # config.calcu_second_attrs()
-    # config.generate_cnf_config_file()
-    # config.generate_init_cnf_config_file()
-    # config.generate_systemd_cnf_config()
 
     logging.info(messages.FUN_ENDS.format(fname()))
 
@@ -545,11 +538,6 @@ def install_mysql(
 
     # 第五步 复制 init-user 文件
     # create_init_sql_file(version)
-
-    config = MySQLSRConfig(
-        port=port, basedir=basedir, innodb_buffer_pool_size=innodb_buffer_pool_size
-    )
-    config.save_init_cnf()
 
     # 第五步 初始化 mysql 实例
     init_mysql(port=port, basedir=basedir)
