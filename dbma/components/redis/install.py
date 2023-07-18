@@ -14,11 +14,7 @@ from dbma.components.redis.exceptions import (
     RedisDatabaseDirectoryExistsException,
     RedisPkgFileNotExistsException,
 )
-from dbma.components.redis.commons import (
-    default_redis_pkg,
-    redis_pkg_re_pattern,
-    default_redis_port,
-)
+from dbma.components.redis.commons import default_redis_pkg, redis_pkg_re_pattern
 from dbma.bil.cmdexecutor import exe_shell_cmd
 from dbma.components.redis.config import RedisConfig, RedisReplicaConfig
 from dbma.components.redis.systemd import RedisSystemdConfig
