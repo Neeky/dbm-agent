@@ -406,13 +406,13 @@ class MySQLSRConfig(Cnfr, MySQLOptionsMixin):
                 self.innodb_buffer_pool_instances = 1
                 self.innodb_log_buffer_size = "64M"
             elif size <= 4:
-                self.innodb_buffer_pool_instances = size
+                self.innodb_buffer_pool_instances = 2
                 self.innodb_log_buffer_size = "128M"
             elif size <= 8:
-                self.innodb_buffer_pool_instances = size
+                self.innodb_buffer_pool_instances = 4
                 self.innodb_log_buffer_size = "256M"
             elif size <= 16:
-                self.innodb_buffer_pool_instances = size
+                self.innodb_buffer_pool_instances = 8
                 self.innodb_log_buffer_size = "512M"
             else:
                 self.innodb_buffer_pool_instances = 16
