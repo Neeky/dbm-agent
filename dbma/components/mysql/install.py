@@ -536,9 +536,6 @@ def install_mysql(
         port=port, basedir=basedir, innodb_buffer_pool_size=innodb_buffer_pool_size
     )
 
-    # 第五步 复制 init-user 文件
-    # create_init_sql_file(version)
-
     # 第五步 初始化 mysql 实例
     init_mysql(port=port, basedir=basedir)
 
