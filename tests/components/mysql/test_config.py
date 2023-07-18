@@ -71,3 +71,33 @@ class MySQLSRConfigTestCase(unittest.TestCase):
         cnf.save_init_cnf()
         # 断言会调用两次 cnf.save()
         self.assertEqual(len(cnf.save.mock_calls), 2)
+
+    def test_innodb_buffer_pool_instance_given_size_xx(self):
+        """
+        given: 给定不同的 buffer-pool-size 时
+        when: 调用构造函数
+        then: 验证 buffer-pool-instance 的是否匹配
+        """
+        # 1G -> 1
+        cnf = MySQLSRConfig(3306, "/usr/local/mysql-8.0.33/", "1G")
+        self.assertEqual(cnf.innodb_buffer_pool_instances, 1)
+
+        # 0 ~ 2G -> 1
+        cnf = MySQLSRConfig(3306, "/usr/local/mysql-8.0.33/", "2G")
+        self.assertEqual(cnf.innodb_buffer_pool_instances, 1)
+
+        # 2 ~ 4G -> 2
+        cnf = MySQLSRConfig(3306, "/usr/local/mysql-8.0.33/", "4G")
+        self.assertEqual(cnf.innodb_buffer_pool_instances, 2)
+
+        # 4G ~ 8G -> 4
+        cnf = MySQLSRConfig(3306, "/usr/local/mysql-8.0.33/", "8G")
+        self.assertEqual(cnf.innodb_buffer_pool_instances, 4)
+
+        # 8G ~ 16G -> 8
+        cnf = MySQLSRConfig(3306, "/usr/local/mysql-8.0.33/", "16G")
+        self.assertEqual(cnf.innodb_buffer_pool_instances, 8)
+
+        # 16+G -> 16
+        cnf = MySQLSRConfig(3306, "/usr/local/mysql-8.0.33/", "20G")
+        self.assertEqual(cnf.innodb_buffer_pool_instances, 16)
