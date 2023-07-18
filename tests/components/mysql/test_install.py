@@ -466,15 +466,12 @@ class InitMysqlTestCase(unittest.TestCase):
 class InstallMysqlTestCase(unittest.TestCase):
     """ """
 
-    @unittest.skip("配置文件生成逻辑还没有，独立到单独的函数，先不要测试这个流程")
-    @patch("dbma.components.mysql.install.remove_init_sql_file")
     @patch("dbma.components.mysql.install.export_so_files")
     @patch("dbma.components.mysql.install.export_header_files")
     @patch("dbma.components.mysql.install.export_cmds_to_path")
     @patch("dbma.components.mysql.install.start_mysql")
     @patch("dbma.components.mysql.install.enable_systemd_for_mysql")
     @patch("dbma.components.mysql.install.init_mysql")
-    @patch("dbma.components.mysql.install.create_init_sql_file")
     @patch("dbma.components.mysql.install.create_mysql_config_file")
     @patch("dbma.components.mysql.install.decompression_pkg")
     @patch("dbma.components.mysql.install.create_user_and_dirs")
@@ -489,14 +486,12 @@ class InstallMysqlTestCase(unittest.TestCase):
         mock_create_user,
         mock_decompression_pkg,
         mock_create_mysql_config_file,
-        mock_create_init_sql_file,
         mock_init_mysql,
         mock_enable_systemd_for_mysql,
         mock_start_mysql,
         mock_export_cmds_to_path,
         mock_export_header_files,
         mock_export_so_files,
-        mock_remove_init_sql_file,
     ):
         """ """
         install_mysql(3306, Path("/usr/local/mysql/"))
@@ -507,14 +502,12 @@ class InstallMysqlTestCase(unittest.TestCase):
         mock_create_user.assert_called_once()
         mock_decompression_pkg.assert_called_once()
         mock_create_mysql_config_file.assert_called_once()
-        mock_create_init_sql_file.assert_called_once()
         mock_init_mysql.assert_called_once()
         mock_enable_systemd_for_mysql.assert_called_once()
         mock_start_mysql.assert_called_once()
         mock_export_cmds_to_path.assert_called_once()
         mock_export_header_files.assert_called_once()
         mock_export_so_files.assert_called_once()
-        mock_remove_init_sql_file.assert_called_once()
 
 
 # endregion install_mysql
