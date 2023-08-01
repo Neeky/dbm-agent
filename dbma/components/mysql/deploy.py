@@ -13,7 +13,7 @@ from dbma.core.configs import dbm_agent_config
 
 class MySQLUserMixin(object):
     """
-    OS 层面 mysql${port} 用户域
+    OS 层面 mysql{port} 用户域
     """
 
     def __init__(self, port: int):
@@ -23,7 +23,7 @@ class MySQLUserMixin(object):
         self.backup_dir_path = Path(dbm_agent_config.mysql_backupdir_parent) / str(port)
         self.etc_cnf_path = Path("/etc/my-{}.cnf".format(port))
 
-    def create(self):
+    def create_os_user(self):
         """
         创建 MySQL 用户
         """
@@ -39,10 +39,18 @@ class MySQLUserMixin(object):
                 self.user.chown(path)
 
 
-class MySQLInstaller(object):
+class MySQLInstaller(MySQLUserMixin):
     """ """
 
-    def install():
+    def __init__(self, port: int = 3306):
+        MySQLUserMixin.__init__(self, port)
+
+    def install(self):
+        # 0. 检查
+        # 1. 创建操作系统层面的用户
+        self.create_os_user()
+        # 2. 创建目录
+        self.create_dirs()
         pass
 
 
