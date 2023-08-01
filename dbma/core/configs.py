@@ -45,7 +45,7 @@ class DBMAgentConfig(object):
     mysql_binlogdir_parent: str = "/database/mysql/binlog/"
     mysql_backupdir_parent: str = "/database/mysql/backup/"
     mysql_user_prefix: str = "mysql"
-    mysql_default_version: str = "8.0.33"
+    mysql_default_version: str = "8.0.34"
 
     mysql_dbma_user: str = "dbma"
     mysql_dbma_password: str = "dbma@0352"
