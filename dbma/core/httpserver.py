@@ -68,6 +68,11 @@ def start():
     start_daemon(dbm_agent_config.pid_file)
     print("log file '{}' .".format(dbm_agent_config.log_file))
 
+    # aiohttp.server 在启动的时候会向 stdout 打信息这个一点都不友好
+    # 先关闭 stdout ，再让 stdout 指向 /dev/null
+    os.close(1)
+    os.open("/dev/null", os.O_CREAT | os.O_RDWR | os.O_APPEND)
+
     # 配置日志
     levels = {
         "info": logging.INFO,
