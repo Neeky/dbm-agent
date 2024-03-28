@@ -26,6 +26,30 @@ default_pkg = Path(
 )
 
 
+def _get_default_pkg():
+    p = re.compile(
+        r"^/usr/local/dbm-agent/pkgs/mysql-{}-linux-glibc.+\.tar\.(gz|xz)$".format(
+            dbm_agent_config.mysql_default_version
+        )
+    )
+
+    # 从 pkgs 目录扫一下有没有对应的包
+    pkgs = Path("/usr/local/dbm-agent/pkgs")
+    for pkg in pkgs.iterdir():
+        if p.match(str(pkg)):
+            return pkg
+
+    # 给个兜底
+    return Path(
+        "/usr/local/dbm-agent/pkgs/mysql-{}-linux-glibc2.28-x86_64.tar.gz".format(
+            dbm_agent_config.mysql_default_version
+        )
+    )
+
+
+default_pkg = _get_default_pkg()
+
+
 class MySQLDirs(Enum):
     DATA = 1
     BINLOG = 2
