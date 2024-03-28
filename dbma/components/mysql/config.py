@@ -371,7 +371,7 @@ class MySQLSRConfig(Cnfr, MySQLOptionsMixin):
         所以这里就要根据版本号来确认要执行哪个配置文件模板。
 
         """
-        p = re.compile("mysql-(?P<version>\d{1}.\d{1}.\d{1,2})")
+        p = re.compile("mysql-(?P<version>\d{1}.\d{1})")
         # 根据 basedir 识别出版本号
         self.version = p.search(str(self.basedir)).group("version")
         # 根据版本号识别出模板文件
