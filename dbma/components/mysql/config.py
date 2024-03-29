@@ -423,16 +423,16 @@ class MySQLSRConfig(Cnfr, MySQLOptionsMixin):
         # 2. init-cnf 专用的配置
         self.config_file_path = dbm_agent_config.mysql_init_cnf
         self.template = (
-            "mysql-8.0-init-only.jinja"
-            if self.version.startswith("8.0")
-            else "mysql-5.7-init-only.jinja"
+            "mysql-5.7-init-only.jinja"
+            if self.version.startswith("5.7")
+            else "mysql-8.0-init-only.jinja"
         )
         self.save()
 
         # 4. init-user 专用的配置
         self.config_file_path = dbm_agent_config.mysql_init_user_sql_file
         self.template = (
-            "init-8.0.x.sql" if self.version.startswith("8.0") else "init-5.7.x.sql"
+            "init-5.7.x.sql" if self.version.startswith("5.7") else "init-8.0.x.sql"
         )
         self.save()
 
