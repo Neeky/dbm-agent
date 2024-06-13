@@ -31,7 +31,7 @@ def get_change_source_stmt(version: str = None):
     str
     """
     stmt = "CHANGE REPLICATION SOURCE TO SOURCE_USER='{}', SOURCE_PASSWORD='{}', SOURCE_HOST='{}', SOURCE_PORT={}, SOURCE_AUTO_POSITION=1, SOURCE_SSL=1;"
-    if not version.startswith("8.0"):
+    if version.startswith("5.7"):
         stmt = "CHANGE REPLICATION MASTER TO MASTER_USER='{}', MASTER_PASSWORD='{}', MASTER_HOST='{}', MASTER_PORT={}, MASTER_AUTO_POSITION=1, MASTER_SSL=1;"
     return stmt
 
@@ -49,7 +49,7 @@ def get_start_replica_stmt(version: str = None):
     str
     """
     stmt = "start replica;"
-    if not version.startswith("8.0"):
+    if version.startswith("5.7"):
         stmt = "start slave;"
     return stmt
 
