@@ -105,6 +105,17 @@ grant encryption_key_admin on *.* to 'mysqlbackup'@'localhost';
 -- grant seelct on non-InnoDB_tbl to 'mysqlbackup'@'localhost';
 grant innodb_redo_log_archive on *.* to 'mysqlbackup'@'localhost';
 
+
+-- orchestrator
+create user orc_server_user@'127.0.0.1' identified by 'OAi_z0v_82DBMA_E';
+grant all on *.* to orc_server_user@'127.0.0.1';
+create user orc_server_user@'localhost' identified by 'OAi_z0v_82DBMA_E';
+grant all on *.* to orc_server_user@'localhost';
+
+create user orc_topo_user@'127.0.0.1' identified by 'DBM_a0z_ae63Fu_S';
+grant all on *.* to orc_topo_user@'127.0.0.1';
+create user orc_topo_user@'localhost' identified by 'DBM_a0z_ae63Fu_S';
+grant all on *.* to orc_topo_user@'localhost';
 -- 
 
 set @@sql_log_bin=1;
