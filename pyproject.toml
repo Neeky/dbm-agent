@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dbmagent"
+version = "8.41.0"
+dependencies = [
+  "requests==2.32.3",
+  "mysql-connector-python>=8.0.31",
+  "redis>=4.5.4",
+  "aiohttp>=3.8.1",
+  "Jinja2>=2.10.1",
+  "psutil>=5.6.6",
+  "distro>=1.4.0",
+]
+
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "dbmagent/*"
+]
+
+
+[project.scripts]
+dbm-agent = "dbmagent.clis.dbm_agent:main"
+dbma-cli-init = "dbmagent.clis.dbma_cli_init:main"
+dbma-cli-mysql = "dbmagent.clis.dbma_cli_mysql:main"

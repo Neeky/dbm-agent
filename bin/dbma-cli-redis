@@ -10,15 +10,20 @@ import time
 import logging
 import argparse
 from pathlib import Path
-from dbma.components.redis.install import install_resdis_master, install_redis_replica
-from dbma.components.redis.commons import default_redis_pkg, default_redis_port
+from dbmagent.components.redis.install import (
+    install_resdis_master,
+    install_redis_replica,
+)
+from dbmagent.components.redis.commons import default_redis_pkg, default_redis_port
 
 
 def parser_cmd_args():
     """
     实现命令行参数的处理
     """
-    parser = argparse.ArgumentParser(__name__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(
+        __name__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument(
         "--pkg", default=default_redis_pkg, help="redis install pkg", type=str
     )
