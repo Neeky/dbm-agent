@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "dbmagent"
-version = "8.41.0"
+name = "dbm-agent"
+version = "8.41.1"
 dependencies = [
   "requests==2.32.3",
   "mysql-connector-python>=8.0.31",
@@ -21,6 +21,8 @@ include = [
   "dbmagent/*"
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = ["dbmagent"]
 
 [project.scripts]
 dbm-agent = "dbmagent.clis.dbm_agent:main"
