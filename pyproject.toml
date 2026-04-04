@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "dbm-agent"
 version = "8.41.1"
 dependencies = [
-  "requests==2.32.3",
+  "requests==2.33.0",
   "mysql-connector-python>=8.0.31",
   "redis>=4.5.4",
   "aiohttp>=3.8.1",
